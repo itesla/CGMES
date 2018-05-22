@@ -12,18 +12,6 @@ This project depends on `powsybl-core`. It can be obtained and built using:
 
 Currently master branch of this projects depends on `cgmes_validation` branch of `powsybl-core`.
 
-# License
-
-Maven License plugin can be used to update file header info:
-
-	mvn license:update-file-header
-
-If copyright data (organization name or inception year) is changed the goal must be called with the canUpdateCopyright set to true:
-
-	mvn license:update-file-header -Dlicense.canUpdateCopyright=true
-
-This parameter is set to true by default in the plugin configuration section of main pom.xml file.
-
 # Logging
 
 Jena and Blazegraph both depend directly on `log4j`. 
