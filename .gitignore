@@ -1,0 +1,24 @@
+# private folders
+private/
+private_hidden/
+/data/csi/
+/data/csi_hidden/
+
+# targets
+target/
+
+# IntelliJ
+/.idea
+*.iml
+
+# Eclipse projects
+.classpath
+.project
+.checkstyle
+org.eclipse.core.resources.prefs
+org.eclipse.jdt.core.prefs
+org.eclipse.jdt.ui.prefs
+org.eclipse.m2e.core.prefs
+
+# compilation/install settings
+install.cfg
