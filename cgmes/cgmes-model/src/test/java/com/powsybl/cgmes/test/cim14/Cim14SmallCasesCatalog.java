@@ -25,7 +25,7 @@ public class Cim14SmallCasesCatalog {
 
     public final TestGridModel small1() {
         return new TestGridModel(
-                Paths.get("../data/cim14/smallcase1"), "case1",
+                Paths.get("../../data/cim14/smallcase1"), "case1",
                 expectedSmall1(),
                 false,
                 true);
@@ -33,7 +33,7 @@ public class Cim14SmallCasesCatalog {
 
     public final TestGridModel m7buses() {
         return new TestGridModel(
-                Paths.get("../data/cim14/m7buses"), "m7buses",
+                Paths.get("../../data/cim14/m7buses"), "m7buses",
                 expectedM7Buses(),
                 false,
                 true);
@@ -41,7 +41,7 @@ public class Cim14SmallCasesCatalog {
 
     public TestGridModel m7busesBiggerZ() {
         return new TestGridModel(
-                Paths.get("../data/cim14/m7buses_bigger_z"), "m7buses",
+                Paths.get("../../data/cim14/m7buses_bigger_z"), "m7buses",
                 expectedM7Buses(),
                 false,
                 true);
@@ -49,7 +49,7 @@ public class Cim14SmallCasesCatalog {
 
     public final TestGridModel m7busesNoSwitches() {
         return new TestGridModel(
-                Paths.get("../data/cim14/m7busesNoSwitches"), "m7buses",
+                Paths.get("../../data/cim14/m7busesNoSwitches"), "m7buses",
                 expectedM7Buses(),
                 false,
                 true);
@@ -57,7 +57,7 @@ public class Cim14SmallCasesCatalog {
 
     public final TestGridModel ieee14() {
         return new TestGridModel(
-                Paths.get("../data/cim14/ieee14"),
+                Paths.get("../../data/cim14/ieee14"),
                 "ieee14bus",
                 expectedIeee14(),
                 false,
@@ -66,7 +66,7 @@ public class Cim14SmallCasesCatalog {
 
     public final TestGridModel ieee14zipped() {
         return new TestGridModel(
-                Paths.get("../data/cim14"),
+                Paths.get("../../data/cim14"),
                 "ieee14",
                 CompressionFormat.ZIP,
                 expectedIeee14(),
@@ -76,7 +76,7 @@ public class Cim14SmallCasesCatalog {
 
     public final TestGridModel nordic32() {
         return new TestGridModel(
-                Paths.get("../data/cim14/Nordic32"),
+                Paths.get("../../data/cim14/Nordic32"),
                 "Nordic32",
                 expectedNordic32(),
                 false,

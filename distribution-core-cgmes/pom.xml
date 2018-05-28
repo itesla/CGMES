@@ -13,25 +13,25 @@
 
     <parent>
         <groupId>com.powsybl</groupId>
-        <artifactId>cgmes</artifactId>
+        <artifactId>powsybl-core-cgmes</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
     <packaging>pom</packaging>
-    <artifactId>powsybl-distribution-cgmes</artifactId>
+    <artifactId>powsybl-distribution-core-cgmes</artifactId>
     <name>Distribution</name>
-    <description>powsybl-cgmes distribution module</description>
+    <description>powsybl CGMES distribution module</description>
 
     <dependencies>
  
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>cgmes-conformity</artifactId>
+            <artifactId>powsybl-cgmes-conformity</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>cgmes-conversion</artifactId>
+            <artifactId>powsybl-cgmes-conversion</artifactId>
             <version>${project.version}</version>
             <exclusions>
                 <exclusion>
@@ -42,7 +42,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>cgmes-model</artifactId>
+            <artifactId>powsybl-cgmes-model</artifactId>
             <version>${project.version}</version>
 			<exclusions>
                 <exclusion>
@@ -53,7 +53,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>cgmes-model-alternatives</artifactId>
+            <artifactId>powsybl-cgmes-model-alternatives</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

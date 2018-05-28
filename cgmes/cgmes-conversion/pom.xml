@@ -11,11 +11,11 @@
 
     <parent>
         <groupId>com.powsybl</groupId>
-        <artifactId>cgmes</artifactId>
+        <artifactId>powsybl-cgmes</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>cgmes-conversion</artifactId>
+    <artifactId>powsybl-cgmes-conversion</artifactId>
 
     <name>CGMES conversion</name>
     <description>Common Grid Model Exchange Specification conversion to/from Network</description>
@@ -24,7 +24,7 @@
         <!-- Compilation dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>cgmes-model</artifactId>
+            <artifactId>powsybl-cgmes-model</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -70,14 +70,14 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>cgmes-conformity</artifactId>
+            <artifactId>powsybl-cgmes-conformity</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>cgmes-model</artifactId>
+            <artifactId>powsybl-cgmes-model</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

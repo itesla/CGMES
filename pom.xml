@@ -9,12 +9,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<groupId>com.powsybl</groupId>
-	<artifactId>cgmes</artifactId>
+	<artifactId>powsybl-core-cgmes</artifactId>
 	<version>0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	
-	<name>powsybl-cgmes</name>
-	<description>CGMES Importer/Exporter for powsybl framework</description>
+	<name>powsybl-cgmes-for-core</name>
+	<description>CGMES Importer/Exporter for PowSyBl framework</description>
 	<url>http://www.powsybl.com/</url>
 	
 	<organization>
@@ -46,12 +46,9 @@
 	</developers>
 	
 	<modules>
-		<module>powsybl-triple-store</module>
-		<module>cgmes-model</module>
-		<module>cgmes-model-alternatives</module>
-		<module>cgmes-conversion</module>
-		<module>cgmes-conformity</module>
-		<module>distribution-cgmes</module>
+		<module>triple-store</module>
+		<module>cgmes</module>
+		<module>distribution-core-cgmes</module>
 	</modules>
 	
 	<properties>

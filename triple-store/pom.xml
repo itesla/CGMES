@@ -10,7 +10,7 @@
 
     <parent>
         <groupId>com.powsybl</groupId>
-        <artifactId>cgmes</artifactId>
+        <artifactId>powsybl-core-cgmes</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 

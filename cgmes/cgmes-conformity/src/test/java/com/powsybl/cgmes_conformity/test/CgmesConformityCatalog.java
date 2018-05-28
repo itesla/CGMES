@@ -805,5 +805,5 @@ public class CgmesConformityCatalog {
                         "_f184d87b-5565-45ee-89b4-29e8a42d3ad1");
     }
 
-    private static final Path ENTSOE_CONFORMITY = Paths.get("../data/conformity");
+    private static final Path ENTSOE_CONFORMITY = Paths.get("../../data/conformity");
 }
