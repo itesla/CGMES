@@ -10,7 +10,7 @@ sourceDir=$(dirname $(readlink -f $0))
 
 ## install default settings
 ###############################################################################
-cgmes_prefix=$HOME/itesla_cgmes
+cgmes_prefix=$HOME/powsybl
 cgmes_package_version=` mvn -f "$sourceDir/pom.xml" org.apache.maven.plugins:maven-help-plugin:evaluate -Dexpression=project.version | grep -v "Download" | grep -v "\["`
 cgmes_package_name=cgmes-$cgmes_package_version
 cgmes_package_type=zip
@@ -51,7 +51,7 @@ usage() {
     echo ""
     echo "CGMES options:"
     echo "  --help                   Display this help"
-    echo "  --prefix                 Set the installation directory (default is $HOME/itesla)"
+    echo "  --prefix                 Set the installation directory (default is $HOME/powsybl)"
     echo "  --package-type           Set the package format. The supported formats are zip, tar, tar.gz and tar.bz2 (default is zip)"
     echo "  --skip-tests             compile modules without testing"
     echo "  --with-tests             compile modules with testing (default)"
@@ -120,7 +120,7 @@ cgmes_java()
         if [ $cgmes_docs = true ]; then
             echo "**** Generating Javadoc documentation"
             mvn -f "$sourceDir/pom.xml" javadoc:javadoc || exit $?
-            mvn -f "$sourceDir/distribution-cgmes/pom.xml" install || exit $?
+            mvn -f "$sourceDir/distribution-core-cgmes/pom.xml" install || exit $?
         fi
     fi
 }
@@ -135,25 +135,25 @@ cgmes_package()
         case "$cgmes_package_type" in
             zip)
                 [ -f "${cgmes_package_name}.zip" ] && rm -f "${cgmes_package_name}.zip"
-                $(cd "$sourceDir/distribution-cgmes/target/powsybl-distribution-cgmes-${cgmes_package_version}-full" && zip -rq "$sourceDir/${cgmes_package_name}.zip" "powsybl")
+                $(cd "$sourceDir/distribution-core-cgmes/target/powsybl-distribution-core-cgmes-${cgmes_package_version}-full" && zip -rq "$sourceDir/${cgmes_package_name}.zip" "powsybl")
                 zip -qT "${cgmes_package_name}.zip" > /dev/null 2>&1 || exit $?
                 ;;
 
             tar)
                 [ -f "${cgmes_package_name}.tar" ] && rm -f "${cgmes_package_name}.tar"
-                tar -cf "${cgmes_package_name}.tar" -C "$sourceDir/distribution-cgmes/target/powsybl-distribution-cgmes-${cgmes_package_version}-full" . || exit $?
+                tar -cf "${cgmes_package_name}.tar" -C "$sourceDir/distribution-core-cgmes/target/powsybl-distribution-core-cgmes-${cgmes_package_version}-full" . || exit $?
                 ;;
 
             tar.gz | tgz)
                 [ -f "${cgmes_package_name}.tar.gz" ] && rm -f "${cgmes_package_name}.tar.gz"
                 [ -f "${cgmes_package_name}.tgz" ] && rm -f "${cgmes_package_name}.tgz"
-                tar -czf "${cgmes_package_name}.tar.gz" -C "$sourceDir/distribution-cgmes/target/powsybl-distribution-cgmes-${cgmes_package_version}-full" . || exit $?
+                tar -czf "${cgmes_package_name}.tar.gz" -C "$sourceDir/distribution-core-cgmes/target/powsybl-distribution-core-cgmes-${cgmes_package_version}-full" . || exit $?
                 ;;
 
             tar.bz2 | tbz)
                 [ -f "${cgmes_package_name}.tar.bz2" ] && rm -f "${cgmes_package_name}.tar.bz2"
                 [ -f "${cgmes_package_name}.tbz" ] && rm -f "${cgmes_package_name}.tbz"
-                tar -cjf "${cgmes_package_name}.tar.bz2" -C "$sourceDir/distribution-cgmes/target/powsybl-distribution-cgmes-${cgmes_package_version}-full" . || exit $?
+                tar -cjf "${cgmes_package_name}.tar.bz2" -C "$sourceDir/distribution-core-cgmes/target/powsybl-distribution-core-cgmes-${cgmes_package_version}-full" . || exit $?
                 ;;
 
             *)
@@ -173,7 +173,7 @@ cgmes_install()
 
         echo "**** Copying files"
         mkdir -p "$cgmes_prefix" || exit $?
-        cp -Rp "$sourceDir/distribution-cgmes/target/powsybl-distribution-cgmes-${cgmes_package_version}-full/powsybl"/* "$cgmes_prefix" || exit $?
+        cp -Rp "$sourceDir/distribution-core-cgmes/target/powsybl-distribution-core-cgmes-${cgmes_package_version}-full/powsybl"/* "$cgmes_prefix" || exit $?
 
     fi
 }
