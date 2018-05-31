@@ -1,7 +1,5 @@
 package com.powsybl.cgmes;
 
-import java.io.IOException;
-
 /*
  * #%L
  * CGMES data model
@@ -15,18 +13,15 @@ import java.io.IOException;
  */
 
 import java.io.PrintStream;
-import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.joda.time.DateTime;
 
 import com.powsybl.commons.datasource.DataSource;
-import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.triplestore.PropertyBag;
 import com.powsybl.triplestore.PropertyBags;
 
@@ -34,13 +29,6 @@ import com.powsybl.triplestore.PropertyBags;
  * @author Luma Zamarreño <zamarrenolm at aia.es>
  */
 public interface CgmesModel {
-
-    public static final String RDF_NAMESPACE    = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-    // cim14 is the CIM version corresponding to ENTSO-E Profile 1
-    // It is used in this project to explore how to support future CGMES versions
-    // We have sample models in cim14 and we use a different set of queries to obtain data
-    public static final String CIM_14_NAMESPACE = "http://iec.ch/TC57/2009/CIM-schema-cim14#";
-    public static final String CIM_16_NAMESPACE = "http://iec.ch/TC57/2013/CIM-schema-cim16#";
 
     Properties getProperties();
 
@@ -131,7 +119,7 @@ public interface CgmesModel {
 
     void dump(Consumer<String> liner);
 
-    void serialize(DataSource ds);
+    void write(DataSource ds);
 
     public static class CgmesTerminal {
         private final String    id;
@@ -604,8 +592,8 @@ public interface CgmesModel {
         }
 
         @Override
-        public void serialize(DataSource ds) {
-            // Fake model, no need to implement serialization
+        public void write(DataSource ds) {
+            // Fake model, no need to implement write
         }
 
         @Override
@@ -638,38 +626,5 @@ public interface CgmesModel {
             // Fake model does not provide info on terminals
             return null;
         }
-    }
-
-    public static String[] filenames(ReadOnlyDataSource dataSource) {
-        String[] filenames;
-        try {
-            filenames = dataSource.listFileNames("^.*\\.xml$");
-        } catch (IOException x) {
-            throw new CgmesModelException(
-                    String.format("Listing filenames in data source %s", dataSource), x);
-        }
-        if (filenames == null || filenames.length == 0) {
-            throw new CgmesModelException(
-                    String.format("Data source %s does not contain filenames", dataSource));
-        }
-        return filenames;
-    }
-
-    public static Set<String> namespaces(ReadOnlyDataSource dataSource) {
-        try {
-            String[] fileNames = filenames(dataSource);
-            return NamespaceReader.namespaces(dataSource.newInputStream(fileNames[0]));
-        } catch (IOException x) {
-            throw new UncheckedIOException(x);
-        }
-    }
-
-    public static String cimNamespace(ReadOnlyDataSource dataSource) {
-        // Return the first namespace that contains the string "CIM-schema-cim"
-        // If no namespace is found, return CIM16 namespace
-        Set<String> foundNamespaces = CgmesModel.namespaces(dataSource);
-        return foundNamespaces.stream()
-                .filter(ns -> ns.indexOf("CIM-schema-cim") >= 0)
-                .findFirst().orElse(CIM_16_NAMESPACE);
     }
 }

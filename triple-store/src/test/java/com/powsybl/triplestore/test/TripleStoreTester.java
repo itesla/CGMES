@@ -60,10 +60,10 @@ public class TripleStoreTester {
             AbstractPowsyblTripleStore ts = TripleStoreFactory.create(impl);
             for (Path f : files) {
                 try (InputStream is = new BufferedInputStream(Files.newInputStream(f))) {
-                    ts.deserialize(is, f.getFileName().toString(), base);
+                    ts.read(base, f.getFileName().toString(), is);
                 } catch (IOException e) {
                     throw new TripleStoreException(
-                            String.format("Deserializing %s %s", f.getFileName().toString(), base), e);
+                            String.format("Reading %s %s", base, f.getFileName().toString()), e);
                 }
             }
             ts.dump(line -> LOG.info(line));
@@ -71,12 +71,12 @@ public class TripleStoreTester {
         }
     }
 
-    public void testSerialization() throws Exception {
+    public void testWrite() throws Exception {
         for (String impl : implementations) {
-            Path output = workingDir.resolve("temp-tstest-serialization").resolve(impl);
+            Path output = workingDir.resolve("temp-tstest-write").resolve(impl);
             ensureFolder(output);
             String baseName = "";
-            tripleStores.get(impl).serialize(new FileDataSource(output, baseName));
+            tripleStores.get(impl).write(new FileDataSource(output, baseName));
         }
     }
 
@@ -85,7 +85,7 @@ public class TripleStoreTester {
             Files.createDirectories(p);
         } catch (IOException x) {
             throw new TripleStoreException(
-                    String.format("Serialize. Creating directories %s", p), x);
+                    String.format("testWrite. Creating directories %s", p), x);
         }
     }
 

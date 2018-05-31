@@ -50,7 +50,7 @@ public class CgmesExport implements Exporter {
         // Fill the SV data of the CgmesModel with the network current state
         sv(network, cgmes);
 
-        cgmes.serialize(ds);
+        cgmes.write(ds);
     }
 
     @Override

@@ -58,16 +58,16 @@ public class TripleStoreRDF4J extends AbstractPowsyblTripleStore {
     }
 
     @Override
-    public void deserialize(InputStream is, String filename, String base) {
+    public void read(String base, String name, InputStream is) {
         try (RepositoryConnection conn = repo.getConnection()) {
             conn.setIsolationLevel(IsolationLevels.NONE);
-            Resource context = contextFromFile(conn, filename);
+            Resource context = contextFromFile(conn, name);
             // We add data with a context (graph) to keep the source of information
-            // If we serialize we want to keep data split by graph
-            conn.add(is, base, formatFromFile(filename), context);
+            // When we write we want to keep data split by graph
+            conn.add(is, base, formatFromFile(name), context);
             setNamespaces(conn, base);
         } catch (IOException x) {
-            throw new TripleStoreException(String.format("Deserializing %s %s", filename, base), x);
+            throw new TripleStoreException(String.format("Reading %s %s", base, name), x);
         }
     }
 
@@ -81,12 +81,12 @@ public class TripleStoreRDF4J extends AbstractPowsyblTripleStore {
     }
 
     @Override
-    public void serialize(DataSource ds) {
+    public void write(DataSource ds) {
         try (RepositoryConnection conn = repo.getConnection()) {
             RepositoryResult<Resource> contexts = conn.getContextIDs();
             while (contexts.hasNext()) {
                 Resource context = contexts.next();
-                LOGGER.info("serializing context {}", context);
+                LOGGER.info("Writing context {}", context);
 
                 RepositoryResult<Statement> statements;
                 statements = conn.getStatements(null, null, null, context);
@@ -94,7 +94,7 @@ public class TripleStoreRDF4J extends AbstractPowsyblTripleStore {
                 setNamespaces(model, conn);
 
                 String outname = context.toString();
-                serialize(model, outputStream(ds, outname));
+                write(model, outputStream(ds, outname));
             }
         }
     }
@@ -201,7 +201,7 @@ public class TripleStoreRDF4J extends AbstractPowsyblTripleStore {
         });
     }
 
-    private void serialize(Model m, OutputStream out) {
+    private void write(Model m, OutputStream out) {
         try (PrintStream pout = new PrintStream(out)) {
             RDFWriter w = new PowsyblWriter(out);
             w.getWriterConfig().set(BasicWriterSettings.PRETTY_PRINT, true);

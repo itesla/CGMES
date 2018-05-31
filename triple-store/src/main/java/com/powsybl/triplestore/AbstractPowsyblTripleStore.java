@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.powsybl.commons.datasource.DataSource;
-import com.powsybl.commons.datasource.ReadOnlyDataSource;
 
 /**
  * @author Luma Zamarreño <zamarrenolm at aia.es>
@@ -41,32 +40,9 @@ public abstract class AbstractPowsyblTripleStore {
         cacheQueryPrefixes();
     }
 
-    public void deserialize(ReadOnlyDataSource dataSource) {
-        String base = baseName(dataSource);
-        for (String filename : filenames(dataSource)) {
-            LOG.info("deserializing [{}]", filename);
-            try (InputStream is = dataSource.newInputStream(filename)) {
-                deserialize(is, filename, base);
-            } catch (IOException e) {
-                String msg = String.format("Deserializing file [%s]", filename);
-                LOG.warn(msg);
-                throw new TripleStoreException(msg, e);
-            }
-        }
-    }
+    public abstract void read(String base, String name, InputStream is);
 
-    private String baseName(ReadOnlyDataSource dataSource) {
-        // Build an absolute IRI from the data source base name
-        String ds = dataSource.getBaseName().toLowerCase();
-        if (ds.isEmpty()) {
-            ds = "default";
-        }
-        return "http://" + ds;
-    }
-
-    public abstract void deserialize(InputStream is, String filename, String base);
-
-    public abstract void serialize(DataSource ds);
+    public abstract void write(DataSource ds);
 
     public abstract void dump(PrintStream out);
 
@@ -153,22 +129,6 @@ public abstract class AbstractPowsyblTripleStore {
 
         private final Consumer<String> liner;
         private String                 line = "";
-    }
-
-    // FIXME This code is duplicated in CgmesModel
-    public static String[] filenames(ReadOnlyDataSource dataSource) {
-        String[] filenames;
-        try {
-            filenames = dataSource.listFileNames("^.*\\.xml$");
-        } catch (IOException x) {
-            throw new TripleStoreException(
-                    String.format("Listing filenames in data source %s", dataSource), x);
-        }
-        if (filenames == null || filenames.length == 0) {
-            throw new TripleStoreException(
-                    String.format("Data source %s does not contain filenames", dataSource));
-        }
-        return filenames;
     }
 
     private List<String>        queryPrefixes;

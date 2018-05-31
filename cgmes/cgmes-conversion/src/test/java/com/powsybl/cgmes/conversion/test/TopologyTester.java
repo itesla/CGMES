@@ -70,7 +70,7 @@ public class TopologyTester {
         Map<String, String> cb2mb = new HashMap<>();
         network.getBusBreakerView().getBusStream().forEach(b -> {
             String cb = b.getId();
-            Bus mbb = b.getVoltageLevel().getBusView().getMergedBusFromConfiguredBus(b);
+            Bus mbb = b.getVoltageLevel().getBusView().getMergedBus(cb);
             if (mbb != null) {
                 String mb = mbb.getId();
                 mbcbs.computeIfAbsent(mb, x -> new HashSet<>()).add(cb);

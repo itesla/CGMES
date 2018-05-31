@@ -83,58 +83,60 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
     }
 
     @Override
-    public void deserialize(InputStream is, String filename, String base) {
+    public void read(String base, String name, InputStream is) {
         RepositoryConnection cnx = null;
         try {
             cnx = repo.getConnection();
             cnx.begin();
-            Resource context = contextFromFile(cnx, filename);
-            deserialize(is, filename, base, cnx, context);
+            Resource context = contextFromName(cnx, name);
+            read(base, name, is, cnx, context);
             cnx.commit();
             setNamespaces(cnx, base);
         } catch (RepositoryException x) {
-            throw new TripleStoreException(String.format("Deseriale. Repo problem %s %s", filename, base),
+            throw new TripleStoreException(
+                    String.format("Reading. Repo problem %s %s", name, base),
                     x);
         } finally {
             if (cnx != null) {
                 try {
                     cnx.close();
                 } catch (RepositoryException x) {
-                    LOG.error("Deserialize. Closing repo connection {} {}", filename, base);
+                    LOG.error("Reading. Closing repo connection {} {}", name, base);
                 }
             }
         }
     }
 
-    private void deserialize(InputStream is, String filename, String base, RepositoryConnection cnx, Resource context)
+    private void read(String base, String name, InputStream is, RepositoryConnection cnx,
+            Resource context)
             throws RepositoryException {
         try {
-            cnx.add(is, base, formatFromFile(filename), context);
+            cnx.add(is, base, formatFromName(name), context);
         } catch (IOException x) {
-            LOG.error("Deserialize, IO problem {}", x.getMessage());
+            LOG.error("Reading. IO problem {}", x.getMessage());
         } catch (RDFParseException x) {
-            LOG.error("Deserialize, RDF parsing problem {}", x.getMessage());
+            LOG.error("Reading. RDF parsing problem {}", x.getMessage());
         }
     }
 
-    RDFFormat formatFromFile(String filename) {
-        if (filename.endsWith(".ttl")) {
+    RDFFormat formatFromName(String name) {
+        if (name.endsWith(".ttl")) {
             return RDFFormat.TURTLE;
-        } else if (filename.endsWith(".xml")) {
+        } else if (name.endsWith(".xml")) {
             return RDFFormat.RDFXML;
         }
         return RDFFormat.RDFXML;
     }
 
     @Override
-    public void serialize(DataSource ds) {
+    public void write(DataSource ds) {
         RepositoryConnection conn = null;
         try {
             conn = repo.getConnection();
             RepositoryResult<Resource> contexts = conn.getContextIDs();
             while (contexts.hasNext()) {
                 Resource context = contexts.next();
-                LOG.info("Serialize context {}", context);
+                LOG.info("Writing context {}", context);
 
                 RepositoryResult<Statement> statements = conn.getStatements(null, null, null,
                         true, context);
@@ -143,16 +145,16 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
                 setNamespaces(model, conn);
 
                 String outname = context.toString();
-                serialize(model, outputStream(ds, outname));
+                write(model, outputStream(ds, outname));
             }
         } catch (RepositoryException x) {
-            throw new TripleStoreException(String.format("Serializing over %s", ds), x);
+            throw new TripleStoreException(String.format("Writing on %s", ds), x);
         } finally {
             if (conn != null) {
                 try {
                     conn.close();
                 } catch (RepositoryException x) {
-                    LOG.error("Serializing over {}. Closing repository connection", ds);
+                    LOG.error("Writing on {}. Closing repository connection", ds);
                 }
             }
         }
@@ -355,12 +357,12 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
         return counter;
     }
 
-    private void serialize(Model statements, OutputStream out) {
+    private void write(Model statements, OutputStream out) {
         try (PrintStream pout = new PrintStream(out)) {
             RDFWriter w = new RDFXMLPrettyWriter(pout);
             Rio.write(statements, w);
         } catch (Exception x) {
-            throw new TripleStoreException("Serializing model statements", x);
+            throw new TripleStoreException("Writing model statements", x);
         }
     }
 
@@ -376,7 +378,7 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
         cnx.setNamespace("data", base + "#");
     }
 
-    private Resource contextFromFile(RepositoryConnection conn, String filename) {
+    private Resource contextFromName(RepositoryConnection conn, String filename) {
         return conn.getValueFactory().createURI(namespaceForContexts(), filename);
     }
 

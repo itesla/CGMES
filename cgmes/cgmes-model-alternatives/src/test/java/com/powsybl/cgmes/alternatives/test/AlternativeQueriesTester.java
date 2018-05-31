@@ -23,14 +23,13 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.powsybl.cgmes.CgmesModelFactory;
 import com.powsybl.cgmes.test.TestGridModel;
 import com.powsybl.cgmes.triplestore.CgmesModelTripleStore;
 import com.powsybl.commons.datasource.DataSourceUtil;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
-import com.powsybl.triplestore.AbstractPowsyblTripleStore;
 import com.powsybl.triplestore.PropertyBags;
 import com.powsybl.triplestore.QueryCatalog;
-import com.powsybl.triplestore.TripleStoreFactory;
 
 import cern.colt.Arrays;
 
@@ -80,11 +79,9 @@ public class AlternativeQueriesTester {
 
         // Load the model for every triple store implementation
         for (String impl : implementations) {
-            AbstractPowsyblTripleStore tripleStore = TripleStoreFactory.create(impl);
-            ReadOnlyDataSource dataSource = DataSourceUtil.createDataSource(
-                    gridModel.path(), "", null, null);
-            CgmesModelTripleStore cgmes = new CgmesModelTripleStore(dataSource, tripleStore);
-            cgmes.load();
+            ReadOnlyDataSource dataSource;
+            dataSource = DataSourceUtil.createDataSource(gridModel.path(), "", null, null);
+            CgmesModelTripleStore cgmes = CgmesModelFactory.create(dataSource, impl);
             models.put(impl, cgmes);
         }
     }

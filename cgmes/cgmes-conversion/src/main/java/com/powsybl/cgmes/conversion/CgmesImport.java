@@ -13,15 +13,18 @@ package com.powsybl.cgmes.conversion;
  */
 
 import java.util.Properties;
-import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.auto.service.AutoService;
 import com.powsybl.cgmes.CgmesModel;
-import com.powsybl.cgmes.triplestore.CgmesModelTripleStore;
+import com.powsybl.cgmes.CgmesModelFactory;
+import com.powsybl.cgmes.CgmesOnDataSource;
+import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.iidm.import_.Importer;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.triplestore.AbstractPowsyblTripleStore;
 import com.powsybl.triplestore.TripleStoreFactory;
 
 /**
@@ -32,17 +35,13 @@ public class CgmesImport implements Importer {
 
     @Override
     public boolean exists(ReadOnlyDataSource ds) {
-        // check that RDF and CIM16 (or CIM14 if we are configured to support it)
-        // are defined as namespaces in the data source
-        Set<String> foundNamespaces = CgmesModel.namespaces(ds);
-        if (!foundNamespaces.contains(CgmesModel.RDF_NAMESPACE)) {
-            return false;
-        } else if (foundNamespaces.contains(CgmesModel.CIM_16_NAMESPACE)) {
-            return true;
-        } else if (importCim14 && foundNamespaces.contains(CgmesModel.CIM_14_NAMESPACE)) {
+        CgmesOnDataSource cds = new CgmesOnDataSource(ds);
+        if (cds.exists()) {
             return true;
         }
-        return false;
+        // If we are configured to support CIM14,
+        // check if there is this CIM14 data
+        return importCim14 && cds.existsCim14();
     }
 
     @Override
@@ -57,9 +56,7 @@ public class CgmesImport implements Importer {
 
     @Override
     public Network importData(ReadOnlyDataSource ds, Properties p) {
-        AbstractPowsyblTripleStore ts = TripleStoreFactory.create(tripleStoreImpl(p));
-        CgmesModelTripleStore cgmes = new CgmesModelTripleStore(ds, ts);
-        cgmes.load();
+        CgmesModel cgmes = CgmesModelFactory.create(ds, tripleStoreImpl(p));
 
         Conversion.Config config = new Conversion.Config();
         if (p != null && p.containsKey("changeSignForShuntReactivePowerFlowInitialState")) {
@@ -83,6 +80,11 @@ public class CgmesImport implements Importer {
         return network;
     }
 
+    @Override
+    public void copy(ReadOnlyDataSource fromDataSource, DataSource toDataSource) {
+        throw new UnsupportedOperationException("Pending implementation");
+    }
+
     private String tripleStoreImpl(Properties p) {
         if (p == null) {
             return TripleStoreFactory.DEFAULT_IMPLEMENTATION;
@@ -98,4 +100,6 @@ public class CgmesImport implements Importer {
     // but to decide if we are importers also for CIM 14 files
     // we must implement the exists method, that has not access to parameters
     private boolean             importCim14            = false;
+
+    private static final Logger LOG                    = LoggerFactory.getLogger(CgmesImport.class);
 }

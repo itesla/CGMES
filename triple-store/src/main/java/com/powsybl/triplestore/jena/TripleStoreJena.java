@@ -54,14 +54,14 @@ public class TripleStoreJena extends AbstractPowsyblTripleStore {
     }
 
     @Override
-    public void deserialize(InputStream is, String filename, String base) {
+    public void read(String base, String name, InputStream is) {
         Model m = ModelFactory.createDefaultModel();
-        m.read(is, base, formatFromFile(filename));
-        dataset.addNamedModel(namedFromFile(filename), m);
+        m.read(is, base, formatFromName(name));
+        dataset.addNamedModel(namedModelFromName(name), m);
         union = union.union(m);
     }
 
-    private String formatFromFile(String filename) {
+    private String formatFromName(String filename) {
         if (filename.endsWith(".ttl")) {
             return "TURTLE";
         } else if (filename.endsWith(".xml")) {
@@ -71,7 +71,7 @@ public class TripleStoreJena extends AbstractPowsyblTripleStore {
     }
 
     @Override
-    public void serialize(DataSource ds) {
+    public void write(DataSource ds) {
         Iterator<String> k = dataset.listNames();
         while (k.hasNext()) {
             String n = k.next();
@@ -258,7 +258,7 @@ public class TripleStoreJena extends AbstractPowsyblTripleStore {
         return !(split == 0 || split == uri.length());
     }
 
-    private String namedFromFile(String filename) {
+    private String namedModelFromName(String filename) {
         return namespaceForContexts() + filename;
     }
 

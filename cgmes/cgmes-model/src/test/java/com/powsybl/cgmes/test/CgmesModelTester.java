@@ -23,10 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.powsybl.cgmes.CgmesModel;
-import com.powsybl.cgmes.triplestore.CgmesModelTripleStore;
+import com.powsybl.cgmes.CgmesModelFactory;
 import com.powsybl.commons.datasource.DataSourceUtil;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
-import com.powsybl.triplestore.AbstractPowsyblTripleStore;
 import com.powsybl.triplestore.PropertyBags;
 import com.powsybl.triplestore.TripleStoreFactory;
 
@@ -52,9 +51,7 @@ public class CgmesModelTester {
                 gridModel.basename(),
                 gridModel.getCompressionExtension(),
                 null);
-        AbstractPowsyblTripleStore tripleStore = TripleStoreFactory.create(impl);
-        CgmesModelTripleStore actual = new CgmesModelTripleStore(ds, tripleStore);
-        actual.load();
+        CgmesModel actual = CgmesModelFactory.create(ds, impl);
         actual.dump(line -> LOG.info(line));
         return actual;
     }

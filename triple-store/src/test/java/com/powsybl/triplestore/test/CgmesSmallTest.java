@@ -47,8 +47,8 @@ public class CgmesSmallTest {
     }
 
     @Test
-    public void testSerialization() throws Exception {
-        tester.testSerialization();
+    public void testWrite() throws Exception {
+        tester.testWrite();
     }
 
     @Test

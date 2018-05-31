@@ -1,5 +1,7 @@
 package com.powsybl.cgmes.triplestore;
 
+import java.io.InputStream;
+
 /*
  * #%L
  * CGMES data model
@@ -14,6 +16,7 @@ package com.powsybl.cgmes.triplestore;
 
 import java.io.PrintStream;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.joda.time.DateTime;
@@ -21,10 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.powsybl.cgmes.AbstractCgmesModel;
-import com.powsybl.cgmes.CgmesModel;
 import com.powsybl.cgmes.CgmesModelException;
 import com.powsybl.commons.datasource.DataSource;
-import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.triplestore.AbstractPowsyblTripleStore;
 import com.powsybl.triplestore.PropertyBag;
 import com.powsybl.triplestore.PropertyBags;
@@ -36,29 +37,17 @@ import com.powsybl.triplestore.TripleStoreException;
  */
 public class CgmesModelTripleStore extends AbstractCgmesModel {
 
-    public CgmesModelTripleStore(
-            ReadOnlyDataSource dataSource,
-            AbstractPowsyblTripleStore tripleStore) {
-        this.getProperties().put("dataSource", dataSource);
-        this.dataSource = dataSource;
+    public CgmesModelTripleStore(String cimNamespace, AbstractPowsyblTripleStore tripleStore) {
+        this.cimNamespace = cimNamespace;
         this.tripleStore = tripleStore;
-        this.cimNamespace = CgmesModel.cimNamespace(dataSource);
         tripleStore.addQueryPrefix("prefix cim: <" + cimNamespace + "> ");
         queryCatalog = queryCatalogFor(cimNamespace);
+        Objects.requireNonNull(queryCatalog);
+        queryCatalog.load();
     }
 
-    public void load() {
-        queryCatalog.load();
-        try {
-            tripleStore.deserialize(dataSource);
-        } catch (Exception e) {
-            String msg = String.format("Loading from dataSource [%s]", dataSource);
-            LOG.warn(msg);
-            throw new CgmesModelException(msg, e);
-        }
-        if (LOG.isDebugEnabled()) {
-            dump(LOG::debug);
-        }
+    public void read(String base, String name, InputStream is) {
+        tripleStore.read(base, name, is);
     }
 
     @Override
@@ -72,12 +61,12 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
     }
 
     @Override
-    public void serialize(DataSource ds) {
+    public void write(DataSource ds) {
         try {
-            tripleStore.serialize(ds);
+            tripleStore.write(ds);
         } catch (TripleStoreException x) {
             throw new CgmesModelException(
-                    String.format("Serialize. Triple store problem %s", ds), x);
+                    String.format("Writing. Triple store problem %s", ds), x);
         }
     }
 
@@ -416,7 +405,6 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
         return injected;
     }
 
-    private final ReadOnlyDataSource         dataSource;
     private final String                     cimNamespace;
     private final AbstractPowsyblTripleStore tripleStore;
     private final QueryCatalog               queryCatalog;
