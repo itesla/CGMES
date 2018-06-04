@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.powsybl.cgmes.alternatives.test.AlternativeQueriesTester.Expected;
 import com.powsybl.cgmes.test.TestGridModel;
-import com.powsybl.cgmes_conformity.test.CgmesConformityCatalog;
+import com.powsybl.cgmes_conformity.test.CgmesConformity1Catalog;
 import com.powsybl.triplestore.PropertyBags;
 import com.powsybl.triplestore.QueryCatalog;
 import com.powsybl.triplestore.TripleStoreFactory;
@@ -33,7 +33,7 @@ public class AlternativeQueriesForRatioTapChangers {
 
     @BeforeClass
     public static void setUp() {
-        TestGridModel model = new CgmesConformityCatalog()
+        TestGridModel model = new CgmesConformity1Catalog()
                 .microBeModifiedNotAllTapChangersHaveControl();
         Expected expected = new Expected()
                 .resultSize(3)

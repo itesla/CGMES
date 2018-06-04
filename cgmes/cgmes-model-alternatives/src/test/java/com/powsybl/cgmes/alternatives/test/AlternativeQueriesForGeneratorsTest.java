@@ -19,7 +19,7 @@ import org.junit.Test;
 
 import com.powsybl.cgmes.alternatives.test.AlternativeQueriesTester.Expected;
 import com.powsybl.cgmes.test.TestGridModel;
-import com.powsybl.cgmes_conformity.test.CgmesConformityCatalog;
+import com.powsybl.cgmes_conformity.test.CgmesConformity1Catalog;
 import com.powsybl.triplestore.PropertyBags;
 import com.powsybl.triplestore.QueryCatalog;
 import com.powsybl.triplestore.TripleStoreFactory;
@@ -31,7 +31,7 @@ public class AlternativeQueriesForGeneratorsTest {
 
     @BeforeClass
     public static void setUp()  {
-        TestGridModel model = new CgmesConformityCatalog().real();
+        TestGridModel model = new CgmesConformity1Catalog().real();
         Expected expected = new Expected()
                 .resultSize(1347)
                 .propertyCount("regulatingControlTargetValue", 1347)
