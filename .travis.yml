@@ -7,7 +7,7 @@ jdk:
 
 install:
 # Build powsybl core
-- git clone https://github.com/powsybl/powsybl-core -b cgmes_validation --single-branch powsybl/powsybl-core
+- git clone https://github.com/powsybl/powsybl-core powsybl/powsybl-core
 - cd powsybl/powsybl-core && mvn install -DskipTests=true
 # Default configuration for powsybl
 - mkdir ~/.itools
