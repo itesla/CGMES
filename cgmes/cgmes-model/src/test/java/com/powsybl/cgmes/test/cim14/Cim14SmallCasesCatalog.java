@@ -23,6 +23,15 @@ import com.powsybl.commons.datasource.CompressionFormat;
  */
 public class Cim14SmallCasesCatalog {
 
+    public TestGridModel txMicroBEAdapted() {
+        return new TestGridModel(
+                Paths.get("../../data/cim14/tx-from-microBE-adapted"),
+                "tx-from-microBE-adapted",
+                null,
+                false,
+                true);
+    }
+
     public final TestGridModel small1() {
         return new TestGridModel(
                 Paths.get("../../data/cim14/smallcase1"), "case1",

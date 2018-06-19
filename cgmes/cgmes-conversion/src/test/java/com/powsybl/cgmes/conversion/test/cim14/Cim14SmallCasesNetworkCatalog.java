@@ -195,9 +195,14 @@ public class Cim14SmallCasesNetworkCatalog {
         return cimImport(catalog.m7busesBiggerZ());
     }
 
+    public Network txMicroBEAdapted() {
+        return cimImport(catalog.txMicroBEAdapted());
+    }
+
     private Network cimImport(TestGridModel gm) {
         return new CIM1Importer().importData(
-                DataSourceUtil.createDataSource(gm.path(), gm.basename(), gm.getCompressionExtension(), null),
+                DataSourceUtil.createDataSource(gm.path(), gm.basename(),
+                        gm.getCompressionExtension(), null),
                 null);
     }
 

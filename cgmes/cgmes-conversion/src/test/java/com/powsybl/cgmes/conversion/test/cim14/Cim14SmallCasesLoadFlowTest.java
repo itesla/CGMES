@@ -16,6 +16,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.powsybl.cgmes.conversion.test.LoadFlowTester;
+import com.powsybl.cgmes.conversion.test.LoadFlowValidation;
+import com.powsybl.cgmes.test.TestGridModel;
 import com.powsybl.cgmes.test.cim14.Cim14SmallCasesCatalog;
 import com.powsybl.triplestore.TripleStoreFactory;
 
@@ -32,6 +34,18 @@ public class Cim14SmallCasesLoadFlowTest {
     @Test
     public void smallcase1() {
         tester.testLoadFlow(catalog.small1());
+    }
+
+    @Test
+    public void txMicroBEAdapted() {
+        TestGridModel tm = catalog.txMicroBEAdapted();
+        LoadFlowValidation validation = new LoadFlowValidation.Builder()
+                .workingDirectory(tm.path())
+                .writeNetworksInputsResults(true)
+                .specificCompatibility(true)
+                .validateInitialState(true)
+                .build();
+        tester.testLoadFlow(tm, validation);
     }
 
     @Test

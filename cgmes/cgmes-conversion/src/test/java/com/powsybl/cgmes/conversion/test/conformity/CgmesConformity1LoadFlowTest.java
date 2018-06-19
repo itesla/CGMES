@@ -40,10 +40,7 @@ public class CgmesConformity1LoadFlowTest {
                 .workingDirectory(microBE.path())
                 .writeNetworksInputsResults(true)
                 .validateInitialState(true)
-                // PP_Brussels 10.5 kV has a small mismatch in P and Q (1.4458, 0.8212)
                 .specificCompatibility(true)
-                .threshold(1.45f)
-                // CIMDesk computes a bigger mismatch there (5.6, 10.5)
                 // PP_Brussels 110 kV has huge mismatch due to phase shifter
                 // If we use the given SV tap position (16) mismatch is > 850 MW in P
                 // If we use starting step for steady state (10) mismatch in P, Q are < 1.4 MVA

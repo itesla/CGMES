@@ -35,6 +35,11 @@ public class Cim14SmallCasesConversionTest {
     }
 
     @Test
+    public void txMicroBEAdapted() {
+        tester.testConversion(expected.txMicroBEAdapted(), actuals.txMicroBEAdapted());
+    }
+
+    @Test
     public void smallcase1() {
         tester.testConversion(expected.smallcase1(), actuals.small1());
     }

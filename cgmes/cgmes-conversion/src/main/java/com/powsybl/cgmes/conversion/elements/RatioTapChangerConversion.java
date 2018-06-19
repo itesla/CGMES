@@ -1,5 +1,8 @@
 package com.powsybl.cgmes.conversion.elements;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /*
  * #%L
  * CGMES conversion
@@ -101,22 +104,44 @@ public class RatioTapChangerConversion extends AbstractIdentifiedObjectConversio
     }
 
     private void addSteps(RatioTapChangerAdder rtca) {
+        boolean rtcAtSide1 = rtcAtSide1();
+        if (LOG.isDebugEnabled() && rtcAtSide1) {
+            LOG.debug(
+                    "Transformer {} ratio tap changer moved from side 2 to side 1, impedance/admittance corrections",
+                    tx2.getId());
+        }
         float stepVoltageIncrement = p.asFloat("stepVoltageIncrement");
+        float du = stepVoltageIncrement / 100;
         for (int step = lowStep; step <= highStep; step++) {
             int n = step - neutralStep;
-            float du = stepVoltageIncrement / 100;
-            float rho = rho1() ? 1 / (1 + n * du) : (1 + n * du);
+            float rho = rtcAtSide1 ? 1 / (1 + n * du) : (1 + n * du);
+
+            // Impedance/admittance deviation is required when ratio tap changer is defined at side
+            // 2
+            // (In IIDM model the ideal ratio is always at side 1)
+            float dz = 0;
+            float dy = 0;
+            if (!rtcAtSide1) {
+                float rho2 = rho * rho;
+                dz = (rho2 - 1) * 100;
+                dy = (1 / rho2 - 1) * 100;
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(String.format("RTC2to1 corrections  %4d  %12.8f  %12.8f  %12.8f",
+                            step, n * du, dz, dy));
+                }
+            }
             rtca.beginStep()
                     .setRho(rho)
-                    .setR(0f)
-                    .setX(0f)
-                    .setG(0f)
-                    .setB(0f)
+                    .setR(dz)
+                    .setX(dz)
+                    .setG(dy)
+                    .setB(dy)
                     .endStep();
         }
     }
 
-    private boolean rho1() {
+    private boolean rtcAtSide1() {
+        // From CIM1 converter:
         // For 2 winding transformers, rho is 1/(1 + n*du) if rtc is at side 1
         // For 3 winding transformers rho is always 1 + n*du
         if (tx2 != null) {
@@ -188,4 +213,7 @@ public class RatioTapChangerConversion extends AbstractIdentifiedObjectConversio
     private final int                      highStep;
     private final int                      neutralStep;
     private final int                      position;
+
+    private static final Logger            LOG = LoggerFactory
+            .getLogger(RatioTapChangerConversion.class);
 }

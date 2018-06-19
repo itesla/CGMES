@@ -304,12 +304,19 @@ public class CgmesConformity1NetworkCatalog {
                 int n = k - neutral;
                 float du = voltageInc / 100;
                 float rhok = side.equals(Branch.Side.ONE) ? 1 / (1 + n * du) : (1 + n * du);
+                float dz = 0;
+                float dy = 0;
+                if (side.equals(Branch.Side.TWO)) {
+                    float rhok2 = rhok * rhok;
+                    dz = (rhok2 - 1) * 100;
+                    dy = (1 / rhok2 - 1) * 100;
+                }
                 rtca.beginStep()
                         .setRho(rhok)
-                        .setR(0f)
-                        .setX(0f)
-                        .setG(0f)
-                        .setB(0f)
+                        .setR(dz)
+                        .setX(dz)
+                        .setG(dy)
+                        .setB(dy)
                         .endStep();
             }
             rtca.setLoadTapChangingCapabilities(true)
