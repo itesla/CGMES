@@ -29,16 +29,16 @@ public class SynchronousMachineConversion extends AbstractConductingEquipmentCon
 
     @Override
     public void convert() {
-        float minP = p.asFloat("minP", 0);
-        float maxP = p.asFloat("maxP", 0);
-        float ratedS = p.asFloat("ratedS");
-        ratedS = ratedS > 0 ? ratedS : Float.NaN;
+        double minP = p.asDouble("minP", 0);
+        double maxP = p.asDouble("maxP", 0);
+        double ratedS = p.asDouble("ratedS");
+        ratedS = ratedS > 0 ? ratedS : Double.NaN;
         String generatingUnitType = p.getLocal("generatingUnitType");
         PowerFlow f = powerFlow();
 
-        float initialP = p.asFloat("initialP", 0);
-        float targetP = initialP;
-        float targetQ = 0;
+        double initialP = p.asDouble("initialP", 0);
+        double targetP = initialP;
+        double targetQ = 0;
         if (f.defined()) {
             targetP = -f.p();
             targetQ = -f.q();
@@ -60,7 +60,7 @@ public class SynchronousMachineConversion extends AbstractConductingEquipmentCon
                 .setRegulatingTerminal(control.terminal())
                 .setTargetP(targetP)
                 .setTargetQ(targetQ)
-                .setTargetV((float) control.targetV())
+                .setTargetV(control.targetV())
                 .setEnergySource(fromGeneratingUnitType(generatingUnitType))
                 .setRatedS(ratedS)
                 .add();

@@ -54,19 +54,19 @@ public class Cim14SmallCasesNetworkCatalog {
         VoltageLevel vlInf = sInf.newVoltageLevel()
                 .setId("_INF______VL")
                 .setName("INF     _VL")
-                .setNominalV(380.0f)
+                .setNominalV(380.0)
                 .setTopologyKind(TopologyKind.BUS_BREAKER)
                 .add();
         VoltageLevel vlGrid = sGen.newVoltageLevel()
                 .setId("_GRID_____VL")
                 .setName("GRID    _VL")
-                .setNominalV(380.0f)
+                .setNominalV(380.0)
                 .setTopologyKind(TopologyKind.BUS_BREAKER)
                 .add();
         VoltageLevel vlGen = sGen.newVoltageLevel()
                 .setId("_GEN______VL")
                 .setName("GEN     _VL")
-                .setNominalV(21.0f)
+                .setNominalV(21.0)
                 .setTopologyKind(TopologyKind.BUS_BREAKER)
                 .add();
         Bus busGrid = vlGrid.getBusBreakerView().newBus()
@@ -86,9 +86,9 @@ public class Cim14SmallCasesNetworkCatalog {
                 .setBus(busGen.getId())
                 .setMinP(-999)
                 .setMaxP(999)
-                .setTargetP(-0.0f)
-                .setTargetQ(-0.0f)
-                .setTargetV(21.0f)
+                .setTargetP(-0.0)
+                .setTargetQ(-0.0)
+                .setTargetV(21.0)
                 .setVoltageRegulatorOn(true)
                 .add();
         gen.newMinMaxReactiveLimits()
@@ -108,16 +108,16 @@ public class Cim14SmallCasesNetworkCatalog {
                 .setName(genInfName)
                 .setConnectableBus(busInf.getId())
                 .setBus(busInf.getId())
-                .setMinP(-999999.0f)
-                .setMaxP(999999.0f)
-                .setTargetP(-0.0f)
-                .setTargetQ(-0.0f)
-                .setTargetV(419.0f)
+                .setMinP(-999999.0)
+                .setMaxP(999999.0)
+                .setTargetP(-0.0)
+                .setTargetQ(-0.0)
+                .setTargetV(419.0)
                 .setVoltageRegulatorOn(true)
                 .add();
         genInf.newMinMaxReactiveLimits()
-                .setMinQ(-999999.0f)
-                .setMaxQ(999999.0f)
+                .setMinQ(-999999.0)
+                .setMaxQ(999999.0)
                 .add();
         genInf.getTerminal().setP(0);
         genInf.getTerminal().setQ(0);
@@ -125,12 +125,12 @@ public class Cim14SmallCasesNetworkCatalog {
         Line line = network.newLine()
                 .setId("_GRID____-INF_____-1_AC")
                 .setName("GRID    -INF     -1")
-                .setR(0.0f)
-                .setX(86.64f)
-                .setG1(0.0f)
-                .setB1(0.0f)
-                .setG2(0.0f)
-                .setB2(0.0f)
+                .setR(0.0)
+                .setX(86.64)
+                .setG1(0.0)
+                .setB1(0.0)
+                .setG2(0.0)
+                .setB2(0.0)
                 .setConnectableBus1(busGrid.getId())
                 .setBus1(busGrid.getId())
                 .setConnectableBus2(busInf.getId())
@@ -138,24 +138,24 @@ public class Cim14SmallCasesNetworkCatalog {
                 .setVoltageLevel1(vlGrid.getId())
                 .setVoltageLevel2(vlInf.getId())
                 .add();
-        line.newCurrentLimits1().setPermanentLimit(9116.06f).add();
+        line.newCurrentLimits1().setPermanentLimit(9116.06).add();
         {
-            float u2 = 419.0f;
-            float u1 = 21.0f;
-            float rho = u2 / u1;
-            float rho2 = rho * rho;
-            float r1 = 0.001323f;
-            float x1 = 0.141114f;
-            float g1 = 0.0f;
-            float b1 = -0.0f;
-            float r2 = 0.0f;
-            float x2 = 0.0f;
-            float g2 = 0.0f;
-            float b2 = 0.0f;
-            float r = r1 * rho2 + r2;
-            float x = x1 * rho2 + x2;
-            float g = g1 / rho2 + g2;
-            float b = b1 / rho2 + b2;
+            double u2 = 419.0;
+            double u1 = 21.0;
+            double rho = u2 / u1;
+            double rho2 = rho * rho;
+            double r1 = 0.001323;
+            double x1 = 0.141114;
+            double g1 = 0.0;
+            double b1 = -0.0;
+            double r2 = 0.0;
+            double x2 = 0.0;
+            double g2 = 0.0;
+            double b2 = 0.0;
+            double r = r1 * rho2 + r2;
+            double x = x1 * rho2 + x2;
+            double g = g1 / rho2 + g2;
+            double b = b1 / rho2 + b2;
             TwoWindingsTransformer tx = sGen.newTwoWindingsTransformer()
                     .setId("_GEN_____-GRID____-1_PT")
                     .setName("GEN     -GRID    -1")
@@ -172,8 +172,8 @@ public class Cim14SmallCasesNetworkCatalog {
                     .setRatedU1(u1)
                     .setRatedU2(u2)
                     .add();
-            tx.newCurrentLimits1().setPermanentLimit(13746.4f).add();
-            tx.newCurrentLimits2().setPermanentLimit(759.671f).add();
+            tx.newCurrentLimits1().setPermanentLimit(13746.4).add();
+            tx.newCurrentLimits2().setPermanentLimit(759.671).add();
         }
 
         return network;

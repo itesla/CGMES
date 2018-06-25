@@ -58,12 +58,12 @@ public abstract class AbstractObjectConversion {
 
     protected abstract String complete(String what);
 
-    public static int fromContinuous(float value) {
+    public static int fromContinuous(double value) {
         // ShuntCompensator sections and TapChanger step/position
         // coming from SV or SSH may be continuous,
-        // we must read these values as floats
+        // we must read these values as floating point numbers
         // and convert them to integers for IIDM.
-        // We should consider storing these attributes in IIDM also as floats.
+        // We should consider storing these attributes in IIDM also as real numbers.
         // This method is used only to clearly identify the affected properties
         return (int) value;
     }

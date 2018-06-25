@@ -50,7 +50,7 @@ public final class RegulatingControlConversion {
         boolean regulatingControlEnabled = p.asBoolean("regulatingControlEnabled", true);
         if (regulatingControl) {
             String regulatingMode = p.get("regulatingControlMode");
-            float regulatingTargetValue = p.asFloat("regulatingControlTargetValue");
+            double regulatingTargetValue = p.asDouble("regulatingControlTargetValue");
             String regulatingTerminalId = p.getId("regulatingControlTerminal");
             // TODO A better way to identify regulating control modes
             if (regulatingMode != null && regulatingMode.toLowerCase().endsWith("voltage")) {

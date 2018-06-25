@@ -44,7 +44,7 @@ public class AcDcConverterConversion extends AbstractConductingEquipmentConversi
     @Override
     public void convert() {
         Objects.requireNonNull(converterType);
-        float xxxlossFactor = p.asFloat("lossFactor", 0);
+        double lossFactor = p.asDouble("lossFactor", 0);
 
         HvdcConverterStation c = null;
         if (converterType.equals(HvdcType.VSC)) {
@@ -54,7 +54,7 @@ public class AcDcConverterConversion extends AbstractConductingEquipmentConversi
                     .setId(iidmId())
                     .setName(iidmName())
                     .setEnsureIdUnicity(false)
-                    .setLossFactor(xxxlossFactor)
+                    .setLossFactor((float) lossFactor)
                     .setVoltageRegulatorOn(xxxvoltageRegulatorOn)
                     .add();
         } else if (converterType.equals(HvdcType.LCC)) {
@@ -64,8 +64,8 @@ public class AcDcConverterConversion extends AbstractConductingEquipmentConversi
                     .setEnsureIdUnicity(false)
                     .setBus(terminalConnected() ? busId() : null)
                     .setConnectableBus(busId())
-                    .setLossFactor(xxxlossFactor)
-                    .setPowerFactor(0.8f)
+                    .setLossFactor((float) lossFactor)
+                    .setPowerFactor((float) 0.8)
                     .add();
         }
         Objects.requireNonNull(c);

@@ -94,10 +94,10 @@ public class ACLineSegmentConversion extends AbstractConductingEquipmentConversi
     }
 
     private void convertLine() {
-        float r = p.asFloat("r");
-        float x = p.asFloat("x");
-        float bch = p.asFloat("bch");
-        float gch = p.asFloat("gch", 0.0f);
+        double r = p.asDouble("r");
+        double x = p.asDouble("x");
+        double bch = p.asDouble("bch");
+        double gch = p.asDouble("gch", 0.0);
 
         String busId1 = busId(1);
         String busId2 = busId(2);
@@ -145,10 +145,10 @@ public class ACLineSegmentConversion extends AbstractConductingEquipmentConversi
             missing("Equipment for modeling consumption/injection at boundary node");
         }
 
-        float r = p.asFloat("r");
-        float x = p.asFloat("x");
-        float bch = p.asFloat("bch");
-        float gch = p.asFloat("gch", 0.0f);
+        double r = p.asDouble("r");
+        double x = p.asDouble("x");
+        double bch = p.asDouble("bch");
+        double gch = p.asDouble("gch", 0.0);
         boolean connected = terminalConnected(modelSide);
         DanglingLine dl = voltageLevel(modelSide).newDanglingLine()
                 .setId(iidmId())
@@ -173,8 +173,8 @@ public class ACLineSegmentConversion extends AbstractConductingEquipmentConversi
                 && connected
                 && !powerFlow(modelSide).defined()
                 && context.boundary().hasVoltage(boundaryNode)) {
-            float v = context.boundary().vAtBoundary(boundaryNode);
-            float angle = context.boundary().angleAtBoundary(boundaryNode);
+            double v = context.boundary().vAtBoundary(boundaryNode);
+            double angle = context.boundary().angleAtBoundary(boundaryNode);
             // The net sum of power flow "entering" at boundary is "exiting" through the line,
             // we have to change the sign of the sum of flows at the node when we consider flow
             // at line end
@@ -182,8 +182,8 @@ public class ACLineSegmentConversion extends AbstractConductingEquipmentConversi
             // The other side power flow must be computed taking into account
             // the same criteria used for ACLineSegment: total shunt admittance
             // is divided in 2 equal shunt admittance at each side of series impedance
-            float g = dl.getG() / 2;
-            float b = dl.getB() / 2;
+            double g = dl.getG() / 2;
+            double b = dl.getB() / 2;
             SV svmodel = svboundary.otherSide(dl.getR(), dl.getX(), g, b, g, b, 1);
             dl.getTerminal().setP(svmodel.getP());
             dl.getTerminal().setQ(svmodel.getQ());
@@ -229,14 +229,14 @@ public class ACLineSegmentConversion extends AbstractConductingEquipmentConversi
         String mbus1 = busId(thisEnd);
         String mbus2 = otherc.busId(otherEnd);
 
-        float lineR = p.asFloat("r");
-        float lineX = p.asFloat("x");
-        float lineGch = p.asFloat("gch", 0f);
-        float lineBch = p.asFloat("bch", 0f);
-        float otherR = other.asFloat("r");
-        float otherX = other.asFloat("x");
-        float otherGch = other.asFloat("gch", 0f);
-        float otherBch = other.asFloat("bch", 0f);
+        double lineR = p.asDouble("r");
+        double lineX = p.asDouble("x");
+        double lineGch = p.asDouble("gch", 0);
+        double lineBch = p.asDouble("bch", 0);
+        double otherR = other.asDouble("r");
+        double otherX = other.asDouble("x");
+        double otherGch = other.asDouble("gch", 0);
+        double otherBch = other.asDouble("bch", 0);
 
         String id1 = context.namingStrategy().getId("Line", id);
         String id2 = context.namingStrategy().getId("Line", otherId);
@@ -248,15 +248,15 @@ public class ACLineSegmentConversion extends AbstractConductingEquipmentConversi
             PiModel pi1 = new PiModel();
             pi1.r = lineR;
             pi1.x = lineX;
-            pi1.g1 = lineGch / 2.0f;
-            pi1.b1 = lineBch / 2.0f;
+            pi1.g1 = lineGch / 2.0;
+            pi1.b1 = lineBch / 2.0;
             pi1.g2 = pi1.g1;
             pi1.b2 = pi1.b1;
             PiModel pi2 = new PiModel();
             pi2.r = otherR;
             pi2.x = otherX;
-            pi2.g1 = otherGch / 2.0f;
-            pi2.b1 = otherBch / 2.0f;
+            pi2.g1 = otherGch / 2.0;
+            pi2.b1 = otherBch / 2.0;
             pi2.g2 = pi2.g1;
             pi2.b2 = pi2.b1;
             PiModel pim = Quadripole.from(pi1).cascade(Quadripole.from(pi2)).toPiModel();
@@ -323,12 +323,12 @@ public class ACLineSegmentConversion extends AbstractConductingEquipmentConversi
     }
 
     static class PiModel {
-        float r;
-        float x;
-        float g1;
-        float b1;
-        float g2;
-        float b2;
+        double r;
+        double x;
+        double g1;
+        double b1;
+        double g2;
+        double b2;
     }
 
     static class Quadripole {
@@ -380,12 +380,12 @@ public class ACLineSegmentConversion extends AbstractConductingEquipmentConversi
             Complex y1 = d.add(-1).divide(b);
             Complex y2 = a.add(-1).divide(b);
 
-            pi.r = (float) b.getReal();
-            pi.x = (float) b.getImaginary();
-            pi.g1 = (float) y1.getReal();
-            pi.b1 = (float) y1.getImaginary();
-            pi.g2 = (float) y2.getReal();
-            pi.b2 = (float) y2.getImaginary();
+            pi.r = b.getReal();
+            pi.x = b.getImaginary();
+            pi.g1 = y1.getReal();
+            pi.b1 = y1.getImaginary();
+            pi.g2 = y2.getReal();
+            pi.b2 = y2.getImaginary();
             return pi;
         }
     }

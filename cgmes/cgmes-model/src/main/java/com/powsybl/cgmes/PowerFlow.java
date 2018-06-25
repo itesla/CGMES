@@ -18,23 +18,23 @@ import com.powsybl.triplestore.PropertyBag;
  * @author Luma Zamarreño <zamarrenolm at aia.es>
  */
 public class PowerFlow {
-    public static final PowerFlow UNDEFINED = new PowerFlow(false, Float.NaN, Float.NaN);
+    public static final PowerFlow UNDEFINED = new PowerFlow(false, Double.NaN, Double.NaN);
 
-    private PowerFlow(boolean defined, float p, float q) {
+    private PowerFlow(boolean defined, double p, double q) {
         this.defined = defined;
         this.p = p;
         this.q = q;
     }
 
-    public PowerFlow(float p, float q) {
+    public PowerFlow(double p, double q) {
         defined = true;
         this.p = p;
         this.q = q;
     }
 
     public PowerFlow(PropertyBag b, String pname, String qname) {
-        p = b.asFloat(pname);
-        q = b.asFloat(qname);
+        p = b.asDouble(pname);
+        q = b.asDouble(qname);
         defined = b.containsKey(pname) && b.containsKey(qname);
     }
 
@@ -42,11 +42,11 @@ public class PowerFlow {
         return defined;
     }
 
-    public float p() {
+    public double p() {
         return p;
     }
 
-    public float q() {
+    public double q() {
         return q;
     }
 
@@ -57,7 +57,7 @@ public class PowerFlow {
         return new PowerFlow(this.p + f.p, this.q + f.q);
     }
 
-    private final float   p;
-    private final float   q;
+    private final double  p;
+    private final double  q;
     private final boolean defined;
 }

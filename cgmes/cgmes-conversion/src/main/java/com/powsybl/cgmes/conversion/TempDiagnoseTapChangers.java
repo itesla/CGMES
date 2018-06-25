@@ -127,11 +127,11 @@ public class TempDiagnoseTapChangers {
             int k;
             for (k = 0; k < ends.size(); k++) {
                 PropertyBag end = ends.get(k);
-                d.col(end.asFloat("ratedU"));
-                d.col(end.asFloat("r"));
-                d.col(end.asFloat("x"));
-                d.col(end.asFloat("g"));
-                d.col(end.asFloat("b"));
+                d.col(end.asDouble("ratedU"));
+                d.col(end.asDouble("r"));
+                d.col(end.asDouble("x"));
+                d.col(end.asDouble("g"));
+                d.col(end.asDouble("b"));
             }
             for (; k < 3; k++) {
                 d.col("-");
@@ -167,7 +167,7 @@ public class TempDiagnoseTapChangers {
                     int lowStep = tc.asInt("lowStep");
                     int highStep = tc.asInt("highStep");
                     int neutralStep = tc.asInt("neutralStep");
-                    int step = (int) tc.asFloat("SVtapStep", neutralStep);
+                    int step = (int) tc.asDouble("SVtapStep", neutralStep);
                     boolean atNeutral = neutralStep == step;
                     boolean regulating = tc.asBoolean("regulatingControlEnabled", false);
                     d.col(tcId);

@@ -27,13 +27,13 @@ public class StaticVarCompensatorConversion extends AbstractConductingEquipmentC
 
     @Override
     public void convert() {
-        float slope = p.asFloat("slope", 0.0f);
+        double slope = p.asDouble("slope", 0.0);
         ignored(String.format("Slope %f", slope));
 
-        float capacitiveRating = p.asFloat("capacitiveRating", 0.0f);
-        float inductiveRating = p.asFloat("inductiveRating", 0.0f);
+        double capacitiveRating = p.asDouble("capacitiveRating", 0.0);
+        double inductiveRating = p.asDouble("inductiveRating", 0.0);
         String controlMode = p.getId("controlMode");
-        float voltageSetPoint = p.asFloat("voltageSetPoint", 1.0f);
+        double voltageSetPoint = p.asDouble("voltageSetPoint", 1.0);
         boolean controlEnabled = p.asBoolean("controlEnabled", true);
 
         StaticVarCompensator.RegulationMode regulationMode;

@@ -35,7 +35,7 @@ public class RatioTapChangerConversion extends AbstractIdentifiedObjectConversio
         lowStep = rtc.asInt("lowStep");
         highStep = rtc.asInt("highStep");
         neutralStep = rtc.asInt("neutralStep");
-        position = fromContinuous(p.asFloat("SVtapStep", neutralStep));
+        position = fromContinuous(p.asDouble("SVtapStep", neutralStep));
     }
 
     @Override
@@ -110,19 +110,19 @@ public class RatioTapChangerConversion extends AbstractIdentifiedObjectConversio
                     "Transformer {} ratio tap changer moved from side 2 to side 1, impedance/admittance corrections",
                     tx2.getId());
         }
-        float stepVoltageIncrement = p.asFloat("stepVoltageIncrement");
-        float du = stepVoltageIncrement / 100;
+        double stepVoltageIncrement = p.asDouble("stepVoltageIncrement");
+        double du = stepVoltageIncrement / 100;
         for (int step = lowStep; step <= highStep; step++) {
             int n = step - neutralStep;
-            float rho = rtcAtSide1 ? 1 / (1 + n * du) : (1 + n * du);
+            double rho = rtcAtSide1 ? 1 / (1 + n * du) : (1 + n * du);
 
             // Impedance/admittance deviation is required when ratio tap changer is defined at side
             // 2
             // (In IIDM model the ideal ratio is always at side 1)
-            float dz = 0;
-            float dy = 0;
+            double dz = 0;
+            double dy = 0;
             if (!rtcAtSide1) {
-                float rho2 = rho * rho;
+                double rho2 = rho * rho;
                 dz = (rho2 - 1) * 100;
                 dy = (1 / rho2 - 1) * 100;
                 if (LOG.isDebugEnabled()) {
@@ -163,10 +163,10 @@ public class RatioTapChangerConversion extends AbstractIdentifiedObjectConversio
     }
 
     private void addRegulatingControlVoltage(RatioTapChangerAdder rtca) {
-        float regulatingControlValue = p.asFloat("regulatingControlTargetValue");
+        double regulatingControlValue = p.asDouble("regulatingControlTargetValue");
         boolean regulating = p.asBoolean("regulatingControlEnabled", false);
         // Even if regulating is false, we reset the target voltage if it is not valid
-        float targetV = regulatingControlValue;
+        double targetV = regulatingControlValue;
         if (targetV <= 0) {
             String reg = p.getId("TapChangerControl");
             ignored(reg, String.format("Regulating control has a bad target voltage %f", targetV));

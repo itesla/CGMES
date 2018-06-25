@@ -48,8 +48,8 @@ public class DcLineSegmentConversion extends AbstractIdentifiedObjectConversion 
         Objects.requireNonNull(iconverter1);
         Objects.requireNonNull(iconverter2);
 
-        float p = activePowerSetpoint();
-        float maxP = p * 1.2f;
+        double p = activePowerSetpoint();
+        double maxP = p * 1.2;
         missing("maxP", maxP);
 
         context.network().newHvdcLine()
@@ -66,20 +66,20 @@ public class DcLineSegmentConversion extends AbstractIdentifiedObjectConversion 
                 .add();
     }
 
-    private float r() {
-        float r = p.asFloat("r", 0);
+    private double r() {
+        double r = p.asDouble("r", 0);
         if (r < 0) {
-            float r1 = 0.1f;
+            double r1 = 0.1;
             fixed("resistance", "was zero", r, r1);
             r = r1;
         }
         return r;
     }
 
-    private float ratedUdc() {
-        float ratedUdc1 = cconverter1.asFloat("ratedUdc");
-        float ratedUdc2 = cconverter2.asFloat("ratedUdc");
-        float ratedUdc = ratedUdc1;
+    private double ratedUdc() {
+        double ratedUdc1 = cconverter1.asDouble("ratedUdc");
+        double ratedUdc2 = cconverter2.asDouble("ratedUdc");
+        double ratedUdc = ratedUdc1;
         if (ratedUdc2 != ratedUdc1) {
             invalid("ratedUdc",
                     String.format("different ratedUdc1, ratedUdc2; use ratedUdc1 by default: %f %f",
@@ -90,25 +90,25 @@ public class DcLineSegmentConversion extends AbstractIdentifiedObjectConversion 
         return ratedUdc;
     }
 
-    private float activePowerSetpoint() {
+    private double activePowerSetpoint() {
         // Take the targetPpcc from the side that regulates activePower
-        float p = activePowerSetpoint(cconverter1);
+        double p = activePowerSetpoint(cconverter1);
         if (Double.isNaN(p)) {
             p = activePowerSetpoint(cconverter2);
         }
-        if (Float.isNaN(p)) {
-            p = 0f;
+        if (Double.isNaN(p)) {
+            p = 0;
             missing("activePowerSetpoint", p);
         }
         return p;
     }
 
-    private float activePowerSetpoint(PropertyBag cc) {
+    private double activePowerSetpoint(PropertyBag cc) {
         String control = cc.getLocal("CsPpccControlKind");
         if (control != null && control.endsWith("activePower")) {
-            return cc.asFloat("targetPpcc");
+            return cc.asDouble("targetPpcc");
         }
-        return Float.NaN;
+        return Double.NaN;
     }
 
     private HvdcLine.ConvertersMode decodeMode() {

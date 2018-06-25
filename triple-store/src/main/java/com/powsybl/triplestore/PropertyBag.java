@@ -73,15 +73,15 @@ public class PropertyBag extends HashMap<String, String> {
         return id.substring(0, h);
     }
 
-    public float asFloat(String property) {
-        return asFloat(property, Float.NaN);
+    public double asDouble(String property) {
+        return asDouble(property, Double.NaN);
     }
 
-    public float asFloat(String property, float defaultValue) {
+    public double asDouble(String property, double defaultValue) {
         if (!containsKey(property)) {
             return defaultValue;
         }
-        return Float.parseFloat(get(property));
+        return Double.parseDouble(get(property));
     }
 
     public boolean asBoolean(String property, boolean defaultValue) {

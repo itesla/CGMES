@@ -67,10 +67,10 @@ public class SwitchConversion extends AbstractConductingEquipmentConversion {
                     .setConnectableBus2(busId(2))
                     .setR(context.config().lowImpedanceLineR())
                     .setX(context.config().lowImpedanceLineX())
-                    .setG1(0f)
-                    .setB1(0f)
-                    .setG2(0f)
-                    .setB2(0f)
+                    .setG1(0)
+                    .setB1(0)
+                    .setG2(0)
+                    .setB2(0)
                     .add();
             convertedTerminals(line.getTerminal1(), line.getTerminal2());
         } else {

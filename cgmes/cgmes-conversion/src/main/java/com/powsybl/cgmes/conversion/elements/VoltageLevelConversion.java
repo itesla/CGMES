@@ -43,15 +43,17 @@ public class VoltageLevelConversion extends AbstractIdentifiedObjectConversion {
     @Override
     public void convert() {
         String baseVoltage = p.getId("BaseVoltage");
-        float nominalVoltage = p.asFloat("nominalVoltage");
-        float lowVoltageLimit = p.asFloat("lowVoltageLimit");
-        float highVoltageLimit = p.asFloat("highVoltageLimit");
+        double nominalVoltage = p.asDouble("nominalVoltage");
+        double lowVoltageLimit = p.asDouble("lowVoltageLimit");
+        double highVoltageLimit = p.asDouble("highVoltageLimit");
+        System.err.println("low, high   = " + lowVoltageLimit + ", " + highVoltageLimit + " : " + id);
+        System.err.println("slow, shigh = " + p.get("lowVoltageLimit") + ", " + p.get("highVoltageLimit") + " : " + id);
 
         // Missing elements in the boundary file
-        if (Float.isNaN(nominalVoltage)) {
-            nominalVoltage = (lowVoltageLimit + highVoltageLimit) / 2.0f;
-            if (Float.isNaN(nominalVoltage)) {
-                nominalVoltage = 3.1415927f;
+        if (Double.isNaN(nominalVoltage)) {
+            nominalVoltage = (lowVoltageLimit + highVoltageLimit) / 2.0;
+            if (Double.isNaN(nominalVoltage)) {
+                nominalVoltage = Math.PI;
             }
             missing(String.format("BaseVoltage %s", baseVoltage), nominalVoltage);
         }

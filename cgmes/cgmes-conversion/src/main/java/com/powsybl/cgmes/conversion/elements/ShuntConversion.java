@@ -30,8 +30,8 @@ public class ShuntConversion extends AbstractConductingEquipmentConversion {
     public void convert() {
         int maximumSections = p.asInt("maximumSections", 0);
         int normalSections = p.asInt("normalSections", 0);
-        float bPerSection = p.asFloat("bPerSection", 0.0f);
-        int sections = fromContinuous(p.asFloat("SVsections", normalSections));
+        double bPerSection = p.asDouble("bPerSection", 0.0);
+        int sections = fromContinuous(p.asDouble("SVsections", normalSections));
 
         // Adjustments
         sections = Math.abs(sections);
@@ -56,11 +56,11 @@ public class ShuntConversion extends AbstractConductingEquipmentConversion {
         // At a shunt terminal, only Q can be set
         PowerFlow f = powerFlow();
         if (f.defined()) {
-            float q = f.q();
+            double q = f.q();
             if (context.config().changeSignForShuntReactivePowerFlowInitialState()) {
                 q = -q;
             }
-            f = new PowerFlow(Float.NaN, q);
+            f = new PowerFlow(Double.NaN, q);
         }
         convertedTerminal(terminalId(), shunt.getTerminal(), 1, f);
     }

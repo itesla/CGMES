@@ -25,8 +25,8 @@ public final class ReactiveLimitsConversion {
 
     public static void convert(PropertyBag p, Generator g) {
         if (p.containsKey("minQ") && p.containsKey("maxQ")) {
-            float minQ = p.asFloat("minQ");
-            float maxQ = p.asFloat("maxQ");
+            double minQ = p.asDouble("minQ");
+            double maxQ = p.asDouble("maxQ");
             g.newMinMaxReactiveLimits()
                     .setMinQ(minQ)
                     .setMaxQ(maxQ)

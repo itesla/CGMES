@@ -15,6 +15,8 @@ package com.powsybl.cgmes.conversion.test.conformity;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.powsybl.cgmes.PowerFlow;
+import com.powsybl.cgmes.conversion.test.DebugPhaseTapChanger;
 import com.powsybl.cgmes.conversion.test.LoadFlowTester;
 import com.powsybl.cgmes.conversion.test.LoadFlowValidation;
 import com.powsybl.cgmes.test.TestGridModel;
@@ -43,6 +45,11 @@ public class CgmesConformity2LoadFlowTest {
                 .maxGeneratorsFailInitialState(1)
                 .maxBusesFailComputedState(1)
                 .maxGeneratorsFailComputedState(1)
+                .debugNetwork(network -> new DebugPhaseTapChanger(
+                        network.getTwoWindingsTransformer("_a708c3bc-465d-4fe7-b6ef-6fa6408a62b0"),
+                        2,
+                        new PowerFlow(-55.08795, 221.867401))
+                                .debug())
                 .build();
         tester.testLoadFlow(tm, validation);
     }

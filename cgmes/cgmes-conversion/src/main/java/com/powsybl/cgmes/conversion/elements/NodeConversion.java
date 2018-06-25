@@ -39,13 +39,13 @@ public class NodeConversion extends AbstractIdentifiedObjectConversion {
     @Override
     public void convertInsideBoundary() {
         if (context.config().convertBoundary()) {
-            float v = p.asFloat("nominalVoltage");
+            double v = p.asDouble("nominalVoltage");
             LOG.info("Boundary node will be converted {}, nominalVoltage {}", id, v);
             VoltageLevel voltageLevel = context.createSubstationVoltageLevel(id, v);
             createBus(voltageLevel);
         } else {
-            float v = p.asFloat("v");
-            float angle = p.asFloat("angle");
+            double v = p.asDouble("v");
+            double angle = p.asDouble("angle");
             if (valid(v, angle)) {
                 context.boundary().addVoltageAtBoundary(id, v, angle);
             }
@@ -79,8 +79,8 @@ public class NodeConversion extends AbstractIdentifiedObjectConversion {
                 .setId(context.namingStrategy().getId("Bus", id))
                 .setName(context.namingStrategy().getName("Bus", name))
                 .add();
-        float v = p.asFloat("v");
-        float angle = p.asFloat("angle");
+        double v = p.asDouble("v");
+        double angle = p.asDouble("angle");
         if (valid(v, angle)) {
             bus.setV(v);
             bus.setAngle(angle);
@@ -95,7 +95,7 @@ public class NodeConversion extends AbstractIdentifiedObjectConversion {
         }
     }
 
-    private boolean valid(float v, float angle) {
+    private boolean valid(double v, double angle) {
         // TTG data for DACF has some 380 kV buses connected with v=0 and bad angle
 
         // LITGRID data for DACF contains some buses with v=0, angle=0

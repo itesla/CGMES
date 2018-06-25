@@ -66,7 +66,7 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
                         tx3.getName(),
                         tx3.getSubstation().getName());
                 // Check if the step is at neutral and regulating control is disabled
-                int position = fromContinuous(p.asFloat("SVtapStep", neutralStep));
+                int position = fromContinuous(p.asDouble("SVtapStep", neutralStep));
                 boolean regulating = p.asBoolean("regulatingControlEnabled", false);
                 if (position == neutralStep && !regulating) {
                     String reason = String.format(
@@ -101,7 +101,7 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
 
     @Override
     public void convert() {
-        int position = fromContinuous(p.asFloat("SVtapStep", defaultStep));
+        int position = fromContinuous(p.asDouble("SVtapStep", defaultStep));
         PhaseTapChangerAdder ptca = tx.newPhaseTapChanger()
                 .setLowTapPosition(lowStep)
                 .setTapPosition(position);
@@ -137,15 +137,15 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
         table.sort(byStep);
         for (int i = 0; i < table.size(); i++) {
             PropertyBag point = table.get(i);
-            float alpha = point.asFloat("angle");
-            float rho = point.asFloat("ratio");
+            double alpha = point.asDouble("angle");
+            double rho = point.asDouble("ratio");
             // When given in PhaseTapChangerTablePoint
             // r, x, g, b of the step are already percentage deviations of nominal values
-            float r = point.asFloat("r", 0f);
-            float x = point.asFloat("x", 0f);
-            float g = point.asFloat("g", 0f);
-            float b = point.asFloat("b", 0f);
-            float step = point.asInt("step");
+            double r = point.asDouble("r", 0);
+            double x = point.asDouble("x", 0);
+            double g = point.asDouble("g", 0);
+            double b = point.asDouble("b", 0);
+            int step = point.asInt("step");
             if (LOG.isDebugEnabled()) {
                 LOG.debug("    {} {} {} {}", step, alpha, rho, x);
             }
@@ -161,8 +161,8 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
     }
 
     private double du0() {
-        double neutralU = p.asFloat("neutralU");
-        double transformerWindingRatedU = p.asFloat("transformerWindingRatedU");
+        double neutralU = p.asDouble("neutralU");
+        double transformerWindingRatedU = p.asDouble("transformerWindingRatedU");
         double du0 = neutralU / transformerWindingRatedU;
         if (Math.abs(du0) > 0.5) {
             du0 = 0;
@@ -172,11 +172,11 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
 
     private double du() {
         double du;
-        double transformerWindingRatedU = p.asFloat("transformerWindingRatedU");
-        double voltageStepIncrementOutOfPhase = p.asFloat("voltageStepIncrementOutOfPhase");
+        double transformerWindingRatedU = p.asDouble("transformerWindingRatedU");
+        double voltageStepIncrementOutOfPhase = p.asDouble("voltageStepIncrementOutOfPhase");
         boolean voltageStepIncrementOutOfPhaseIsSet = p
                 .containsKey("voltageStepIncrementOutOfPhase");
-        double voltageStepIncrement = p.asFloat("voltageStepIncrement");
+        double voltageStepIncrement = p.asDouble("voltageStepIncrement");
         boolean voltageStepIncrementIsSet = p.containsKey("voltageStepIncrement");
         if (voltageStepIncrementOutOfPhaseIsSet && voltageStepIncrementOutOfPhase != 0) {
             du = (configIsInvertVoltageStepIncrementOutOfPhase ? -1 : 1)
@@ -194,7 +194,7 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
 
     private double theta() {
         double theta;
-        double windingConnectionAngle = p.asFloat("windingConnectionAngle");
+        double windingConnectionAngle = p.asDouble("windingConnectionAngle");
         boolean windingConnectionAngleIsSet = p.containsKey("windingConnectionAngle");
         if (windingConnectionAngleIsSet) {
             theta = Math.toRadians(windingConnectionAngle);
@@ -237,7 +237,7 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
             double du0, double du, double theta,
             List<Double> alphas,
             List<Double> rhos) {
-        double stepPhaseShiftIncrement = p.asFloat("stepPhaseShiftIncrement");
+        double stepPhaseShiftIncrement = p.asDouble("stepPhaseShiftIncrement");
         boolean stepPhaseShiftIncrementIsSet = p.containsKey("stepPhaseShiftIncrement");
         if (stepPhaseShiftIncrementIsSet && stepPhaseShiftIncrement != 0) {
             for (int step = lowStep; step <= highStep; step++) {
@@ -280,8 +280,8 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
 
         // rho0 adjustment computed the same way that is done in TwoWindingsTransformer,
         // using factor rho0square as a float
-        float rho0 = tx.getRatedU2() / tx.getRatedU1();
-        float rho0square = rho0 * rho0;
+        double rho0 = tx.getRatedU2() / tx.getRatedU1();
+        double rho0square = rho0 * rho0;
 
         for (int i = 0; i < alphas.size(); i++) {
             double alpha = alphas.get(i);
@@ -297,19 +297,19 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
                 }
                 x = adjustx(x, rho0square);
             }
-            float dx = (float) ((x - tx.getX()) / tx.getX() * 100);
+            double dx = (x - tx.getX()) / tx.getX() * 100;
             ptca.beginStep()
-                    .setAlpha((float) Math.toDegrees(alpha))
-                    .setRho((float) rho)
-                    .setR(0f)
+                    .setAlpha(Math.toDegrees(alpha))
+                    .setRho(rho)
+                    .setR(0)
                     .setX(dx)
-                    .setG(0f)
-                    .setB(0f)
+                    .setG(0)
+                    .setB(0)
                     .endStep();
             if (LOG.isDebugEnabled()) {
                 int n = (lowStep + i) - neutralStep;
                 LOG.debug("ACTUAL    n,rho,alpha,x,dx   {} {} {} {} {}",
-                        n, (float) rho, (float) Math.toDegrees(alpha), x, dx);
+                        n, rho, Math.toDegrees(alpha), x, dx);
             }
         }
     }
@@ -353,8 +353,8 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
         boolean xStepMinIsSet = p.containsKey("xStepMin") || p.containsKey("xMin");
         boolean xStepMaxIsSet = p.containsKey("xStepMax") || p.containsKey("xMax");
         if (xStepMinIsSet && xStepMaxIsSet) {
-            xStepMin = p.asFloat("xStepMin", p.asFloat("xMin"));
-            xStepMax = p.asFloat("xStepMax", p.asFloat("xMax"));
+            xStepMin = p.asDouble("xStepMin", p.asDouble("xMin"));
+            xStepMax = p.asDouble("xStepMax", p.asDouble("xMax"));
         }
 
         boolean xStepRangeIsConsistent = true;
@@ -390,7 +390,7 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
 
         String regulatingControl = p.getId("RegulatingControl");
         String regulatingControlMode = p.getLocal("regulatingControlMode");
-        float regulatingControlTargetValue = p.asFloat("regulatingControlTargetValue");
+        double regulatingControlTargetValue = p.asDouble("regulatingControlTargetValue");
         String regulatingControlTerminal = p.getId("RegulatingControlTerminal");
         if (regulatingControl != null) {
             if (regulatingControlMode.endsWith("currentFlow")) {

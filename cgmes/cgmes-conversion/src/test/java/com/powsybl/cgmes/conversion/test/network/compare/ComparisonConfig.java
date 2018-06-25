@@ -32,7 +32,7 @@ public final class ComparisonConfig {
         checkGeneratorReactiveCapabilityCurve = true;
         checkGeneratorRegulatingTerminal = true;
         compareNamesAllowSuffixes = false; // Must be identical
-        tolerance = 1e-12f;
+        tolerance = 1e-12;
     }
 
     public ComparisonConfig checkNetworkId(boolean checkNetworkId) {
@@ -67,7 +67,7 @@ public final class ComparisonConfig {
         return this;
     }
 
-    public ComparisonConfig tolerance(float tolerance) {
+    public ComparisonConfig tolerance(double tolerance) {
         this.tolerance = tolerance;
         return this;
     }
@@ -84,5 +84,5 @@ public final class ComparisonConfig {
     boolean               checkGeneratorReactiveCapabilityCurve;
     boolean               checkGeneratorRegulatingTerminal;
     boolean               compareNamesAllowSuffixes;
-    float                 tolerance;
+    double                tolerance;
 }

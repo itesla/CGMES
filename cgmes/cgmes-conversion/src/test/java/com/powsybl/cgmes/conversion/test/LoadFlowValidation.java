@@ -68,7 +68,7 @@ public final class LoadFlowValidation {
     private LoadFlowValidation(
             boolean validateInitialState,
             boolean changeSignForShuntReactivePowerFlowInitialState,
-            float threshold,
+            double threshold,
             boolean specificCompatibility,
             boolean compareWithInitialState,
             BusValues tolerancesComparingWithInitialState,
@@ -173,7 +173,7 @@ public final class LoadFlowValidation {
     }
 
     private void computeMissingFlows(Network network) {
-        float epsilonX = 0f;
+        float epsilonX = 0;
         boolean applyXCorrection = false;
         LoadFlowResultsCompletionParameters p;
         p = new LoadFlowResultsCompletionParameters(epsilonX, applyXCorrection);
@@ -275,7 +275,7 @@ public final class LoadFlowValidation {
 
     private void validateStateValues(Network network,
             String stateLabel,
-            int maxGeneratorsFail, int maxBusesFail, float threshold) {
+            int maxGeneratorsFail, int maxBusesFail, double threshold) {
         try (FileSystem fileSystem = Jimfs.newFileSystem(Configuration.unix())) {
             InMemoryPlatformConfig platformConfig = new InMemoryPlatformConfig(fileSystem);
             MapModuleConfig defaultConfig = platformConfig
@@ -296,7 +296,7 @@ public final class LoadFlowValidation {
             // Some values could be missing
             // TODO powsybl results completion LoadFlow does not compute flows in dangling lines
             config.setOkMissingValues(true);
-            // config.setEpsilonX(0.02f);
+            // config.setEpsilonX(0.02);
             // config.setApplyReactanceCorrection(true);
 
             boolean validBuses = validateBuses(network, config, working, maxBusesFail);
@@ -391,7 +391,7 @@ public final class LoadFlowValidation {
                 .map(l -> {
                     boolean r;
                     // Do not perform the check if x is too low
-                    if (l.getX() < 0.01f) {
+                    if (l.getX() < 0.01) {
                         r = true;
                     } else {
                         r = FlowsValidation.checkFlows(l, configFor(l, config), flowsWriter);
@@ -504,13 +504,13 @@ public final class LoadFlowValidation {
         public Builder() {
             validateInitialState = true;
             compareWithInitialState = true;
-            threshold = 0.1f;
+            threshold = 0.1;
             specificCompatibility = false;
             tolerancesComparingWithInitialState = new BusValues();
-            tolerancesComparingWithInitialState.v = 0.1f; // kV
-            tolerancesComparingWithInitialState.a = 0.1f; // degrees
-            tolerancesComparingWithInitialState.p = 0.1f; // MW
-            tolerancesComparingWithInitialState.q = 0.1f; // MVAr
+            tolerancesComparingWithInitialState.v = 0.1; // kV
+            tolerancesComparingWithInitialState.a = 0.1; // degrees
+            tolerancesComparingWithInitialState.p = 0.1; // MW
+            tolerancesComparingWithInitialState.q = 0.1; // MVAr
             ignoreQBusesComparingWithInitialState = new HashSet<>();
             maxGeneratorsFailInitialState = 0;
             maxGeneratorsFailComputedState = 1; // Slack
@@ -537,7 +537,7 @@ public final class LoadFlowValidation {
             return this;
         }
 
-        public Builder threshold(float threshold) {
+        public Builder threshold(double threshold) {
             this.threshold = threshold;
             return this;
         }
@@ -634,7 +634,7 @@ public final class LoadFlowValidation {
 
         private boolean           validateInitialState;
         private boolean           changeSignForShuntReactivePowerFlowInitialState;
-        private float             threshold;
+        private double            threshold;
         private boolean           specificCompatibility;
         private boolean           compareWithInitialState;
         private BusValues         tolerancesComparingWithInitialState;
@@ -652,7 +652,7 @@ public final class LoadFlowValidation {
 
     private final boolean             validateInitialState;
     private final boolean             changeSignForShuntReactivePowerFlowInitialState;
-    private final float               threshold;
+    private final double              threshold;
     private final boolean             compareWithInitialState;
     private final BusValues           tolerancesComparingWithInitialState;
     private Set<String>               ignoreQBusesComparingWithInitialState;

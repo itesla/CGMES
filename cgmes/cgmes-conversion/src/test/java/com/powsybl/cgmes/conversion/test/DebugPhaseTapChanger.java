@@ -52,7 +52,7 @@ public class DebugPhaseTapChanger {
                 .getHighTapPosition(); k++) {
             tx.getPhaseTapChanger().setTapPosition(k);
             pre.accept(tx);
-            BranchData b = new BranchData(tx, 0.0f, false, false);
+            BranchData b = new BranchData(tx, (float) 0.0, false, false);
             debugTapPosition(option, k, b);
             post.accept(tx);
         }
@@ -61,12 +61,10 @@ public class DebugPhaseTapChanger {
 
     private void debugTapPosition(String option, int tap, BranchData b) {
         Branch.Side bside = Branch.Side.values()[side - 1];
-        PowerFlow actual = new PowerFlow(
-                (float) b.getComputedP(bside),
-                (float) b.getComputedQ(bside));
+        PowerFlow actual = new PowerFlow(b.getComputedP(bside), b.getComputedQ(bside));
         double d = Math.abs(actual.p() - expected.p()) + Math.abs(actual.q() - expected.q());
-        float alpha = tx.getPhaseTapChanger().getCurrentStep().getAlpha();
-        float rho = tx.getPhaseTapChanger().getCurrentStep().getRho();
+        double alpha = tx.getPhaseTapChanger().getCurrentStep().getAlpha();
+        double rho = tx.getPhaseTapChanger().getCurrentStep().getRho();
         boolean header = tap == tx.getPhaseTapChanger().getLowTapPosition();
         if (header) {
             System.err.printf(

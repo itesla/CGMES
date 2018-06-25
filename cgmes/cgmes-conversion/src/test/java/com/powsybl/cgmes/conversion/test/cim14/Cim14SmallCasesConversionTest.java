@@ -31,7 +31,10 @@ public class Cim14SmallCasesConversionTest {
         tester = new ConversionTester(
                 TripleStoreFactory.allImplementations(),
                 new ComparisonConfig()
-                        .checkNetworkId(false));
+                        .checkNetworkId(false)
+                        // Expected cases are read using CIM1Importer, that uses floats to read numbers
+                        // IIDM and CGMES now stores numbers as doubles
+                        .tolerance(2.4e-4));
     }
 
     @Test

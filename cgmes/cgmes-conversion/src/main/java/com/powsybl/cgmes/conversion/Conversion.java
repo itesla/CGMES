@@ -256,12 +256,12 @@ public class Conversion {
             return true;
         }
 
-        public float lowImpedanceLineR() {
-            return 0.05f;
+        public double lowImpedanceLineR() {
+            return 0.05;
         }
 
-        public float lowImpedanceLineX() {
-            return 0.05f;
+        public double lowImpedanceLineX() {
+            return 0.05;
         }
 
         public boolean convertBoundary() {
@@ -373,7 +373,7 @@ public class Conversion {
             return nodeId + "_S";
         }
 
-        public VoltageLevel createSubstationVoltageLevel(String nodeId, float nominalV) {
+        public VoltageLevel createSubstationVoltageLevel(String nodeId, double nominalV) {
             String substationId = boundarySubstationId(nodeId);
             String vlId = boundaryVoltageLevelId(nodeId);
             String substationName = "boundary";

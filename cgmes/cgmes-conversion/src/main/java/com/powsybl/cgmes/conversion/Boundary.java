@@ -77,7 +77,7 @@ public class Boundary {
         nodesPowerFlow.compute(node, (n, f0) -> f0 == null ? f : f0.sum(f));
     }
 
-    public void addVoltageAtBoundary(String node, float v, float angle) {
+    public void addVoltageAtBoundary(String node, double v, double angle) {
         Voltage voltage = new Voltage();
         voltage.v = v;
         voltage.angle = angle;
@@ -88,12 +88,12 @@ public class Boundary {
         return nodesVoltage.containsKey(node);
     }
 
-    public float vAtBoundary(String node) {
-        return nodesVoltage.containsKey(node) ? nodesVoltage.get(node).v : Float.NaN;
+    public double vAtBoundary(String node) {
+        return nodesVoltage.containsKey(node) ? nodesVoltage.get(node).v : Double.NaN;
     }
 
-    public float angleAtBoundary(String node) {
-        return nodesVoltage.containsKey(node) ? nodesVoltage.get(node).angle : Float.NaN;
+    public double angleAtBoundary(String node) {
+        return nodesVoltage.containsKey(node) ? nodesVoltage.get(node).angle : Double.NaN;
     }
 
     public List<PropertyBag> linesAtNode(String node) {
@@ -101,8 +101,8 @@ public class Boundary {
     }
 
     private static class Voltage {
-        float v;
-        float angle;
+        double v;
+        double angle;
     }
 
     private final Set<String>                    nodes;

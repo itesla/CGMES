@@ -46,10 +46,10 @@ public class EquivalentBranchConversion extends AbstractConductingEquipmentConve
 
     @Override
     public void convert() {
-        float r = p.asFloat("r");
-        float x = p.asFloat("x");
-        float r21 = p.asFloat("r21", r);
-        float x21 = p.asFloat("x21", x);
+        double r = p.asDouble("r");
+        double x = p.asDouble("x");
+        double r21 = p.asDouble("r21", r);
+        double x21 = p.asDouble("x21", x);
         if (r21 != r || x21 != x) {
             // r21 Notes:
             // Resistance from terminal sequence 2 to terminal sequence 1.
@@ -62,8 +62,8 @@ public class EquivalentBranchConversion extends AbstractConductingEquipmentConve
             // EquivalentBranch is a result of network reduction prior to the data exchange.
             invalid("Impedance 21 different of impedance 12 not supported");
         }
-        float bch = 0f;
-        float gch = 0f;
+        double bch = 0;
+        double gch = 0;
 
         String busId1 = busId(1);
         String busId2 = busId(2);

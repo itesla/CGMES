@@ -51,7 +51,7 @@ public class CgmesConformity1LoadFlowTest {
                 .debugNetwork(network -> new DebugPhaseTapChanger(
                         network.getTwoWindingsTransformer("_a708c3bc-465d-4fe7-b6ef-6fa6408a62b0"),
                         2,
-                        new PowerFlow(-53.765f, 220.3866f))
+                        new PowerFlow(-55.2263, 221.8674))
                                 .debug())
                 // TODO _3a3b27be does not have reactive margins as synchronous machine properties
                 // But it has a reactive capability curve
@@ -88,7 +88,7 @@ public class CgmesConformity1LoadFlowTest {
                 .validateInitialState(true)
                 .specificCompatibility(true)
                 // Validation considerations from microNL and microBE apply here
-                .threshold(1.45f)
+                .threshold(1.45)
                 .maxBusesFailInitialState(1)
                 .maxGeneratorsFailInitialState(3)
                 .compareWithInitialState(true)
@@ -140,7 +140,7 @@ public class CgmesConformity1LoadFlowTest {
                 .workingDirectory(smallBusBranch.path())
                 .writeNetworksInputsResults(true)
                 .validateInitialState(true)
-                .threshold(0.1711f)
+                .threshold(0.1711)
                 .specificCompatibility(true)
                 .compareWithInitialState(true)
                 .build();
@@ -155,7 +155,7 @@ public class CgmesConformity1LoadFlowTest {
                 .workingDirectory(smallNodeBreaker.path())
                 .writeNetworksInputsResults(true)
                 .validateInitialState(true)
-                .threshold(0.1711f)
+                .threshold(0.1711)
                 .specificCompatibility(true)
                 .compareWithInitialState(true)
                 .build();
@@ -171,7 +171,7 @@ public class CgmesConformity1LoadFlowTest {
                 .validateInitialState(true)
                 .changeSignForShuntReactivePowerFlowInitialState(true)
                 // Doubts about SV data corresponding to a solved state
-                .threshold(10.0f)
+                .threshold(10.0)
                 .maxBusesFailInitialState(62)
                 .compareWithInitialState(true)
                 .maxBusesFailComputedState(62)

@@ -74,7 +74,7 @@ public class AlternativeQueriesForVoltageLevels {
                 .propertyCount("nominalVoltage", 29);
         Consumer<PropertyBags> consumer = r -> r.stream()
                 .forEach(bv -> LOG.info("{} {}", bv.getId("BaseVoltage"),
-                        bv.asFloat("nominalVoltage")));
+                        bv.asDouble("nominalVoltage")));
         tester.test("baseVoltages", expected, consumer);
     }
 

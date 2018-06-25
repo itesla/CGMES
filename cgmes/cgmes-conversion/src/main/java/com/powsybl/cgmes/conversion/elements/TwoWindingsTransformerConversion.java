@@ -32,23 +32,23 @@ public class TwoWindingsTransformerConversion extends AbstractConductingEquipmen
     @Override
     public void convert() {
 
-        float r1 = end1.asFloat("r");
-        float x1 = end1.asFloat("x");
-        float b1 = end1.asFloat("b");
-        float g1 = end1.asFloat("g", 0);
-        float r2 = end2.asFloat("r");
-        float x2 = end2.asFloat("x");
-        float b2 = end2.asFloat("b");
-        float g2 = end2.asFloat("g", 0);
-        float ratedU1 = end1.asFloat("ratedU");
-        float ratedU2 = end2.asFloat("ratedU");
+        double r1 = end1.asDouble("r");
+        double x1 = end1.asDouble("x");
+        double b1 = end1.asDouble("b");
+        double g1 = end1.asDouble("g", 0);
+        double r2 = end2.asDouble("r");
+        double x2 = end2.asDouble("x");
+        double b2 = end2.asDouble("b");
+        double g2 = end2.asDouble("g", 0);
+        double ratedU1 = end1.asDouble("ratedU");
+        double ratedU2 = end2.asDouble("ratedU");
 
-        float rho0 = ratedU2 / ratedU1;
-        float rho0Square = rho0 * rho0;
-        float r0 = r1 * rho0Square + r2;
-        float x0 = x1 * rho0Square + x2;
-        float g0 = g1 / rho0Square + g2;
-        float b0 = b1 / rho0Square + b2;
+        double rho0 = ratedU2 / ratedU1;
+        double rho0Square = rho0 * rho0;
+        double r0 = r1 * rho0Square + r2;
+        double x0 = x1 * rho0Square + x2;
+        double g0 = g1 / rho0Square + g2;
+        double b0 = b1 / rho0Square + b2;
 
         TwoWindingsTransformer tx = substation().newTwoWindingsTransformer()
                 .setId(iidmId())

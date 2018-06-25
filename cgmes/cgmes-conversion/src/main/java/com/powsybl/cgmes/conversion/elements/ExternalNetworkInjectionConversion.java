@@ -29,11 +29,11 @@ public class ExternalNetworkInjectionConversion extends AbstractConductingEquipm
 
     @Override
     public void convert() {
-        float minP = p.asFloat("minP", 0);
-        float maxP = p.asFloat("maxP", 0);
+        double minP = p.asDouble("minP", 0);
+        double maxP = p.asDouble("maxP", 0);
 
-        float targetP = 0;
-        float targetQ = 0;
+        double targetP = 0;
+        double targetQ = 0;
         PowerFlow f = powerFlow();
         if (f.defined()) {
             targetP = -f.p();
@@ -56,7 +56,7 @@ public class ExternalNetworkInjectionConversion extends AbstractConductingEquipm
                 .setRegulatingTerminal(control.terminal())
                 .setTargetP(targetP)
                 .setTargetQ(targetQ)
-                .setTargetV((float) control.targetV())
+                .setTargetV(control.targetV())
                 .setEnergySource(EnergySource.OTHER)
                 .add();
 

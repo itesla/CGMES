@@ -47,8 +47,8 @@ public class AlternativeQueriesForRatioTapChangers {
                             r.getId0("TapChangerControl"),
                             r.getId0("TapChangerControlSSH"),
                             r.containsKey("regulatingControlTargetValue"),
-                            r.asFloat("regulatingControlTargetValue"),
-                            r.asFloat("regulatingControlTargetDeadband"),
+                            r.asDouble("regulatingControlTargetValue"),
+                            r.asDouble("regulatingControlTargetDeadband"),
                             r.asBoolean("regulatingControlEnabled", false),
                             r.get("RatioTapChanger")));
             LOG.info(rs.tabulateLocals());

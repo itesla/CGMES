@@ -42,7 +42,7 @@ public class TerminalLimitConversion extends AbstractIdentifiedObjectConversion 
     @Override
     public void convert() {
         String type = p.getLocal("operationalLimitTypeName");
-        float value = p.asFloat("value");
+        double value = p.asDouble("value");
         int terminalNumber = context.terminalMapping().number(terminalId);
         Connectable eq = terminal.getConnectable();
         boolean assigned = false;

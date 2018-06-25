@@ -29,13 +29,13 @@ public class EquivalentInjectionConversion extends AbstractConductingEquipmentCo
 
     @Override
     public void convert() {
-        float minP = p.asFloat("minP", 0);
-        float maxP = p.asFloat("maxP", 0);
+        double minP = p.asDouble("minP", 0);
+        double maxP = p.asDouble("maxP", 0);
         EnergySource energySource = EnergySource.OTHER;
         PowerFlow f = powerFlow();
 
-        float targetP = 0;
-        float targetQ = 0;
+        double targetP = 0;
+        double targetQ = 0;
         if (f.defined()) {
             targetP = -f.p();
             targetQ = -f.q();
@@ -45,7 +45,7 @@ public class EquivalentInjectionConversion extends AbstractConductingEquipmentCo
         regulationStatus = regulationStatus && terminalConnected();
         double targetV = Double.NaN;
         if (terminalConnected() && regulationStatus) {
-            targetV = p.asFloat("regulationTarget");
+            targetV = p.asDouble("regulationTarget");
             if (targetV == 0) {
                 fixed("regulationTarget", "Target voltage value can not be zero", targetV,
                         voltageLevel().getNominalV());
@@ -65,7 +65,7 @@ public class EquivalentInjectionConversion extends AbstractConductingEquipmentCo
                 // .setRegulatingTerminal(regulatingTerminal)
                 .setTargetP(targetP)
                 .setTargetQ(targetQ)
-                .setTargetV((float) targetV)
+                .setTargetV(targetV)
                 .setEnergySource(energySource)
                 // .setRatedS(ratedS)
                 .add();

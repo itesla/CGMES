@@ -56,22 +56,22 @@ public class ThreeWindingsTransformerConversion extends AbstractConductingEquipm
     @Override
     public void convert() {
         // g is optional
-        float r1 = winding1.asFloat("r");
-        float x1 = winding1.asFloat("x");
-        float b1 = winding1.asFloat("b");
-        float g1 = winding1.asFloat("g", 0);
-        float r2 = winding2.asFloat("r");
-        float x2 = winding2.asFloat("x");
-        float b2 = winding2.asFloat("b");
-        float g2 = winding2.asFloat("g", 0);
-        float r3 = winding3.asFloat("r");
-        float x3 = winding3.asFloat("x");
-        float b3 = winding3.asFloat("b");
-        float g3 = winding3.asFloat("g", 0);
+        double r1 = winding1.asDouble("r");
+        double x1 = winding1.asDouble("x");
+        double b1 = winding1.asDouble("b");
+        double g1 = winding1.asDouble("g", 0);
+        double r2 = winding2.asDouble("r");
+        double x2 = winding2.asDouble("x");
+        double b2 = winding2.asDouble("b");
+        double g2 = winding2.asDouble("g", 0);
+        double r3 = winding3.asDouble("r");
+        double x3 = winding3.asDouble("x");
+        double b3 = winding3.asDouble("b");
+        double g3 = winding3.asDouble("g", 0);
         String ratedU = "ratedU";
-        float ratedU1 = winding1.asFloat(ratedU);
-        float ratedU2 = winding2.asFloat(ratedU);
-        float ratedU3 = winding3.asFloat(ratedU);
+        double ratedU1 = winding1.asDouble(ratedU);
+        double ratedU2 = winding2.asDouble(ratedU);
+        double ratedU3 = winding3.asDouble(ratedU);
         String rtc = "RatioTapChanger";
         String rtc1 = winding1.getId(rtc);
         String rtc2 = winding2.getId(rtc);
@@ -81,18 +81,18 @@ public class ThreeWindingsTransformerConversion extends AbstractConductingEquipm
         String ptc2 = winding2.getId(ptc);
         String ptc3 = winding3.getId(ptc);
 
-        float rho2Square = (float) Math.pow(ratedU2 / ratedU1, 2);
-        float rho3Square = (float) Math.pow(ratedU3 / ratedU1, 2);
+        double rho2Square = (double) Math.pow(ratedU2 / ratedU1, 2);
+        double rho3Square = (double) Math.pow(ratedU3 / ratedU1, 2);
 
         // IIDM model impedances for each leg, computed from winding impedances
-        float ir1 = r1;
-        float ix1 = x1;
-        float ig1 = g1 + g2 * rho2Square + g3 * rho3Square;
-        float ib1 = b1 + b2 * rho2Square + b3 * rho3Square;
-        float ir2 = r2 / rho2Square;
-        float ix2 = x2 / rho2Square;
-        float ir3 = r3 / rho3Square;
-        float ix3 = x3 / rho3Square;
+        double ir1 = r1;
+        double ix1 = x1;
+        double ig1 = g1 + g2 * rho2Square + g3 * rho3Square;
+        double ib1 = b1 + b2 * rho2Square + b3 * rho3Square;
+        double ir2 = r2 / rho2Square;
+        double ix2 = x2 / rho2Square;
+        double ir3 = r3 / rho3Square;
+        double ix3 = x3 / rho3Square;
 
         ThreeWindingsTransformer tx = substation().newThreeWindingsTransformer()
                 .setId(context.namingStrategy().getId("Transformer", id))

@@ -31,7 +31,7 @@ public class PropertyBagTest {
         boolean removeUnderscoreFromIdentifiers = true;
         locals = new PropertyBag(Arrays.asList("id", "name", "enum"),
                 removeUnderscoreFromIdentifiers);
-        floats = new PropertyBag(Arrays.asList("value"));
+        numbers = new PropertyBag(Arrays.asList("value"));
         booleans = new PropertyBag(Arrays.asList("value"));
         ints = new PropertyBag(Arrays.asList("value"));
 
@@ -85,45 +85,45 @@ public class PropertyBagTest {
 
     @Test
     public void testValidFloats() {
-        float defaultValue = -1.0f;
+        double defaultValue = -1.0;
 
-        floats.put("value", "0");
-        assertEquals(0.0f, floats.asFloat("value", defaultValue), 1e-15);
+        numbers.put("value", "0");
+        assertEquals(0.0, numbers.asDouble("value", defaultValue), 1e-15);
 
-        floats.put("value", "1.0");
-        assertEquals(1.0, floats.asFloat("value", defaultValue), 1e-15);
+        numbers.put("value", "1.0");
+        assertEquals(1.0, numbers.asDouble("value", defaultValue), 1e-15);
 
-        floats.put("value", "-123.45");
-        assertEquals(-123.45f, floats.asFloat("value", defaultValue), 1e-15);
+        numbers.put("value", "-123.45");
+        assertEquals(-123.45, numbers.asDouble("value", defaultValue), 1e-15);
 
-        floats.put("value", "NaN");
-        assertEquals(Float.NaN, floats.asFloat("value", defaultValue), 1e-15);
+        numbers.put("value", "NaN");
+        assertEquals(Double.NaN, numbers.asDouble("value", defaultValue), 1e-15);
 
-        floats.put("value", "1e-2");
-        assertEquals(0.01f, floats.asFloat("value", defaultValue), 1e-15);
+        numbers.put("value", "1e-2");
+        assertEquals(0.01, numbers.asDouble("value", defaultValue), 1e-15);
 
-        floats.put("value", "1.0");
-        assertEquals(1.0f, floats.asFloat("value"), 1e-15);
+        numbers.put("value", "1.0");
+        assertEquals(1.0, numbers.asDouble("value"), 1e-15);
 
-        assertEquals(Float.NaN, floats.asFloat("missingValue"), 1e-15);
+        assertEquals(Double.NaN, numbers.asDouble("missingValue"), 1e-15);
     }
 
     @Test(expected = NumberFormatException.class)
     public void testBadFloat0() {
-        floats.put("value", "bad0");
-        floats.asFloat("value", -1);
+        numbers.put("value", "bad0");
+        numbers.asDouble("value", -1);
     }
 
     @Test(expected = NumberFormatException.class)
     public void testBadFloat1() {
-        floats.put("value", "bad 1");
-        floats.asFloat("value", -1);
+        numbers.put("value", "bad 1");
+        numbers.asDouble("value", -1);
     }
 
     @Test(expected = NumberFormatException.class)
     public void testBadFloat2() {
-        floats.put("value", "2 bad");
-        floats.asFloat("value", -1);
+        numbers.put("value", "2 bad");
+        numbers.asDouble("value", -1);
     }
 
     @Test
@@ -146,7 +146,7 @@ public class PropertyBagTest {
     @Test(expected = NumberFormatException.class)
     public void testBadInt0() {
         ints.put("value", "bad0");
-        ints.asFloat("value", -1);
+        ints.asDouble("value", -1);
     }
 
     @Test
@@ -176,7 +176,7 @@ public class PropertyBagTest {
 
     private static PropertyBag locals_;
     private static PropertyBag locals;
-    private static PropertyBag floats;
+    private static PropertyBag numbers;
     private static PropertyBag booleans;
     private static PropertyBag ints;
 }
