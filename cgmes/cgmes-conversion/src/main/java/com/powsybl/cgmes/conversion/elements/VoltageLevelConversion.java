@@ -46,8 +46,6 @@ public class VoltageLevelConversion extends AbstractIdentifiedObjectConversion {
         double nominalVoltage = p.asDouble("nominalVoltage");
         double lowVoltageLimit = p.asDouble("lowVoltageLimit");
         double highVoltageLimit = p.asDouble("highVoltageLimit");
-        System.err.println("low, high   = " + lowVoltageLimit + ", " + highVoltageLimit + " : " + id);
-        System.err.println("slow, shigh = " + p.get("lowVoltageLimit") + ", " + p.get("highVoltageLimit") + " : " + id);
 
         // Missing elements in the boundary file
         if (Double.isNaN(nominalVoltage)) {
