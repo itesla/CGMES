@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import com.powsybl.cgmes.PowerFlow;
 import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
-import com.powsybl.loadflow.BranchData;
+import com.powsybl.iidm.network.util.BranchData;
 
 /**
  * @author Luma Zamarreño <zamarrenolm at aia.es>
