@@ -37,8 +37,6 @@ public class DifferencesFail implements Differences {
 
     @Override
     public void compare(String context, double expected, double actual, double tolerance) {
-        System.err.println("tol  = " + tolerance + ", context = " + completeContext(context));
-        System.err.println("diff = " + Math.abs(expected - actual));
         assertEquals(completeContext(context), expected, actual, tolerance);
     }
 
