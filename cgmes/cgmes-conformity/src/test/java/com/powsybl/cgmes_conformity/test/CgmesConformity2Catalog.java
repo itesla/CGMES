@@ -29,7 +29,7 @@ public class CgmesConformity2Catalog {
                 // The documentation and the solved case data do not take into account
                 // the attribute TapChangerTablePoint.x
                 // so we have set it to zero in the fixed test configuration
-                "fixed-ENTSOE_CGMES_V2.4_ExplicitLoadFlowCalculation",
+                "fixed-ENTSOE_CGMES_v2.4_ExplicitLoadFlowCalculation",
                 CompressionFormat.ZIP,
                 null,
                 false,
