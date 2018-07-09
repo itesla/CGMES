@@ -8,7 +8,7 @@ jdk:
 install:
 # Build powsybl core
 - git clone https://github.com/powsybl/powsybl-core powsybl/powsybl-core
-- cd powsybl/powsybl-core && mvn install -DskipTests=true
+- cd powsybl/powsybl-core && mvn install -DskipTests=true >& /dev/null
 # Default configuration for powsybl
 - mkdir ~/.itools
 - echo "LoadFlowFactory=com.powsybl.loadflow.mock.LoadFlowFactoryMock" > ~/.itools/componentDefaultConfig.properties
