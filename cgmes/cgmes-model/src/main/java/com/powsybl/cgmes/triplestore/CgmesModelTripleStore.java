@@ -139,7 +139,7 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
                             r.tabulateLocals());
                 }
                 String s = r.get(0).get(propertyName);
-                if (s != null) {
+                if (s != null && !s.isEmpty()) {
                     d = DateTime.parse(s);
                 }
             }

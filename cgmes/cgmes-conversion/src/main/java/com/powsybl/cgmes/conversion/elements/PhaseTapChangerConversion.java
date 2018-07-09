@@ -146,16 +146,28 @@ public class PhaseTapChangerConversion extends AbstractIdentifiedObjectConversio
             double g = point.asDouble("g", 0);
             double b = point.asDouble("b", 0);
             int step = point.asInt("step");
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("    {} {} {} {}", step, alpha, rho, x);
+            // Impedance/admittance deviation is required when tap changer is defined at side 2
+            // (In IIDM model the ideal ratio is always at side 1, left of impedance)
+            double dz = 0;
+            double dy = 0;
+            if (side != 1) {
+                double rho2 = rho * rho;
+                dz = (1 / rho2 - 1) * 100;
+                dy = (rho2 - 1) * 100;
             }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("    {} {} {} {} {} {} {} {} {}", step, alpha, rho, r, x, g, b, dz, dy);
+            }
+            // We have to merge previous explicit corrections defined for the tap
+            // with dz, dy that appear when moving ideal ratio to side 1
+            // R' = R * (1 + r/100) * (1 + dz/100) ==> r' = r + dz + r * dz / 100
             ptca.beginStep()
                     .setAlpha(alpha * (side == 1 ? 1 : -1))
-                    .setRho(rho)
-                    .setR(r)
-                    .setX(x)
-                    .setG(g)
-                    .setB(b)
+                    .setRho(side == 1 ? rho : 1 / rho)
+                    .setR(r + dz + r * dz / 100)
+                    .setX(x + dz + r * dz / 100)
+                    .setG(g + dy + g * dy / 100)
+                    .setB(b + dy + b * dy / 100)
                     .endStep();
         }
     }

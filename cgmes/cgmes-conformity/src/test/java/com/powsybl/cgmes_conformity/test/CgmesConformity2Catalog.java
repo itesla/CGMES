@@ -23,6 +23,19 @@ import com.powsybl.commons.datasource.CompressionFormat;
  */
 public class CgmesConformity2Catalog {
 
+    public TestGridModel entsoeExplicitLoadFlow() {
+        return new TestGridModel(
+                ENTSOE_CONFORMITY_2.resolve("ENTSOE_ExplicitLoadFlowCalculation"),
+                // The documentation and the solved case data do not take into account
+                // the attribute TapChangerTablePoint.x
+                // so we have set it to zero in the fixed test configuration
+                "fixed-ENTSOE_CGMES_V2.4_ExplicitLoadFlowCalculation",
+                CompressionFormat.ZIP,
+                null,
+                false,
+                true);
+    }
+
     public final TestGridModel microBaseCaseBE() {
         return new TestGridModel(
                 ENTSOE_CONFORMITY_2.resolve("MicroGrid/BaseCase_BC"),

@@ -34,6 +34,11 @@ public class CgmesConformity2LoadFlowTest {
     }
 
     @Test
+    public void entsoeExplicitLoadFlow() {
+        tester.testLoadFlow(catalog.entsoeExplicitLoadFlow());
+    }
+
+    @Test
     public void microBaseCaseBE() {
         TestGridModel tm = catalog.microBaseCaseBE();
         LoadFlowValidation validation = new LoadFlowValidation.Builder()

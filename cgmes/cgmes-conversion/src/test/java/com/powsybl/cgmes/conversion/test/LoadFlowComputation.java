@@ -61,7 +61,7 @@ public class LoadFlowComputation {
             ComputationManager computationManager = new LocalComputationManager(working);
             int priority = 1;
             LoadFlow loadFlow = loadFlowFactory.create(network, computationManager, priority);
-            LoadFlowResult loadFlowResult = loadFlow.run(loadFlowParameters);
+            LoadFlowResult loadFlowResult = loadFlow.run(targetStateId, loadFlowParameters).join();
             LOG.info("Loadflow isOk = {}", loadFlowResult.isOk());
         } catch (Exception x) {
             LOG.error("Can't compute LoadFlow {}", x);
