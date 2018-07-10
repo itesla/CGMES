@@ -14,11 +14,17 @@ package com.powsybl.cgmes.conversion.test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.config.ComponentDefaultConfig;
+import com.powsybl.commons.config.ModuleConfig;
+import com.powsybl.commons.config.PlatformConfig;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.network.Network;
@@ -32,12 +38,27 @@ import com.powsybl.loadflow.LoadFlowResult;
  */
 public class LoadFlowComputation {
 
-    public LoadFlowComputation(String loadFlowFactoryClassName) {
-        this.loadFlowFactory = loadFlowFactory(loadFlowFactoryClassName);
+    public enum LoadFlowEngine {
+        HADES(HADES_CLASS_NAME), HELM(HELM_CLASS_NAME), MOCK(MOCK_CLASS_NAME);
+
+        private LoadFlowEngine(String className) {
+            this.className = className;
+        }
+
+        String className() {
+            return className;
+        }
+
+        private final String className;
     }
 
-    public static String defaultFactoryClassName() {
-        return MOCK_FACTORY_CLASS_NAME;
+    public LoadFlowComputation() {
+        this.loadFlowFactory = defaultFactory();
+    }
+
+    public LoadFlowComputation(LoadFlowEngine engine) {
+        Objects.requireNonNull(engine);
+        this.loadFlowFactory = loadFlowFactory(engine);
     }
 
     public boolean available() {
@@ -69,30 +90,55 @@ public class LoadFlowComputation {
         }
     }
 
-    private LoadFlowFactory loadFlowFactory(String loadFlowFactoryClassName) {
-        LOG.info("Known LoadFlow engines   : {}, {}, {}",
-                HELM_FLOW_FACTORY_CLASS_NAME,
-                HADES_FACTORY_CLASS_NAME,
-                MOCK_FACTORY_CLASS_NAME);
-        LOG.info("Selected LoadFlow engine : {}", loadFlowFactoryClassName);
+    private static LoadFlowFactory defaultFactory() {
+        return validationFactory().orElse(platformDefaultFactory());
+    }
+
+    private static Optional<LoadFlowFactory> validationFactory() {
+        PlatformConfig platformConfig = PlatformConfig.defaultConfig();
+        if (platformConfig.moduleExists("loadflow-validation")) {
+            ModuleConfig config = platformConfig.getModuleConfig("loadflow-validation");
+            if (config.hasProperty("load-flow-factory")) {
+                try {
+                    return Optional
+                            .of(config.getClassProperty("load-flow-factory", LoadFlowFactory.class)
+                                    .newInstance());
+                } catch (InstantiationException | IllegalAccessException e) {
+                    throw new PowsyblException("Could not instantiate load flow factory.", e);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static LoadFlowFactory platformDefaultFactory() {
+        return ComponentDefaultConfig.load().newFactoryImpl(LoadFlowFactory.class);
+    }
+
+    private static LoadFlowFactory loadFlowFactory(LoadFlowEngine engine) {
+        LOG.info("Explicitly available LoadFlow engines  : {}",
+                Arrays.toString(LoadFlowEngine.values()));
+        LOG.info("Selected LoadFlow engine               : {}", engine);
+        LOG.info("Selected LoadFlow engine factory class : {}", engine.className());
         try {
             Class<? extends LoadFlowFactory> loadFlowFactoryClass;
-            loadFlowFactoryClass = Class.forName(loadFlowFactoryClassName)
+            loadFlowFactoryClass = Class.forName(engine.className())
                     .asSubclass(LoadFlowFactory.class);
             LoadFlowFactory loadFlowFactory = loadFlowFactoryClass.newInstance();
             return loadFlowFactory;
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException x) {
-            LOG.error("Can not setup LoadFlowFactory {} {}", loadFlowFactoryClassName, x);
+            LOG.error("Can not setup LoadFlowFactory {} for engine {}, error {}",
+                    engine.className(), engine, x);
             return null;
         }
     }
 
     private final LoadFlowFactory loadFlowFactory;
 
-    private static final String   HADES_FACTORY_CLASS_NAME     = "com.rte_france.itesla.hades2.Hades2Factory";
-    private static final String   HELM_FLOW_FACTORY_CLASS_NAME = "com.elequant.helmflow.powsybl.HelmFlowFactory";
-    private static final String   MOCK_FACTORY_CLASS_NAME      = "com.powsybl.loadflow.mock.LoadFlowFactoryMock";
+    private static final String   HADES_CLASS_NAME = "com.rte_france.itesla.hades2.Hades2Factory";
+    private static final String   HELM_CLASS_NAME  = "com.elequant.helmflow.powsybl.HelmFlowFactory";
+    private static final String   MOCK_CLASS_NAME  = "com.powsybl.loadflow.mock.LoadFlowFactoryMock";
 
-    private static final Logger   LOG                          = LoggerFactory
+    private static final Logger   LOG              = LoggerFactory
             .getLogger(LoadFlowComputation.class);
 }

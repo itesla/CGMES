@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -60,6 +62,8 @@ import com.powsybl.loadflow.validation.ValidationType;
 import com.powsybl.loadflow.validation.ValidationUtils;
 import com.powsybl.loadflow.validation.io.ValidationWriter;
 
+import com.powsybl.cgmes.conversion.test.LoadFlowComputation.LoadFlowEngine;
+
 /**
  * @author Luma Zamarreño <zamarrenolm at aia.es>
  */
@@ -77,7 +81,7 @@ public final class LoadFlowValidation {
             int maxGeneratorsFailComputedState,
             int maxBusesFailInitialState,
             int maxBusesFailComputedState,
-            String loadFlowFactoryClassName,
+            Optional<LoadFlowEngine> loadFlowEngine,
             Path workingDirectory,
             boolean writeNetworksInputsResults,
             String label,
@@ -93,7 +97,9 @@ public final class LoadFlowValidation {
         this.maxBusesFailComputedState = maxBusesFailComputedState;
         this.workingDirectory = workingDirectory;
         this.writeNetworksInputsResults = writeNetworksInputsResults;
-        this.loadFlowComputation = new LoadFlowComputation(loadFlowFactoryClassName);
+        this.loadFlowComputation = loadFlowEngine.isPresent()
+                ? new LoadFlowComputation(loadFlowEngine.get())
+                : new LoadFlowComputation();
         this.label = label;
         this.loadFlowParameters = new LoadFlowParameters();
         this.tolerancesComparingWithInitialState = tolerancesComparingWithInitialState;
@@ -518,7 +524,7 @@ public final class LoadFlowValidation {
             maxBusesFailComputedState = 1; // Slack if no generator modeled at slack bus
             workingDirectory = Paths.get(System.getProperty("java.io.tmpdir"));
             writeNetworksInputsResults = false;
-            loadFlowFactoryClassName = LoadFlowComputation.defaultFactoryClassName();
+            loadFlowEngine = Optional.empty();
             label = "";
         }
 
@@ -602,8 +608,9 @@ public final class LoadFlowValidation {
             return this;
         }
 
-        public Builder loadFlowFactoryClassName(String name) {
-            this.loadFlowFactoryClassName = name;
+        public Builder loadFlowEngine(LoadFlowEngine engine) {
+            Objects.requireNonNull(engine);
+            this.loadFlowEngine = Optional.of(engine);
             return this;
         }
 
@@ -625,29 +632,29 @@ public final class LoadFlowValidation {
                     maxGeneratorsFailComputedState,
                     maxBusesFailInitialState,
                     maxBusesFailComputedState,
-                    loadFlowFactoryClassName,
+                    loadFlowEngine,
                     workingDirectory,
                     writeNetworksInputsResults,
                     label,
                     debugNetwork);
         }
 
-        private boolean           validateInitialState;
-        private boolean           changeSignForShuntReactivePowerFlowInitialState;
-        private double            threshold;
-        private boolean           specificCompatibility;
-        private boolean           compareWithInitialState;
-        private BusValues         tolerancesComparingWithInitialState;
-        private Set<String>       ignoreQBusesComparingWithInitialState;
-        private int               maxGeneratorsFailInitialState;
-        private int               maxGeneratorsFailComputedState;
-        private int               maxBusesFailInitialState;
-        private int               maxBusesFailComputedState;
-        private Path              workingDirectory;
-        private String            loadFlowFactoryClassName;
-        private boolean           writeNetworksInputsResults;
-        private String            label;
-        private Consumer<Network> debugNetwork;
+        private boolean                  validateInitialState;
+        private boolean                  changeSignForShuntReactivePowerFlowInitialState;
+        private double                   threshold;
+        private boolean                  specificCompatibility;
+        private boolean                  compareWithInitialState;
+        private BusValues                tolerancesComparingWithInitialState;
+        private Set<String>              ignoreQBusesComparingWithInitialState;
+        private int                      maxGeneratorsFailInitialState;
+        private int                      maxGeneratorsFailComputedState;
+        private int                      maxBusesFailInitialState;
+        private int                      maxBusesFailComputedState;
+        private Path                     workingDirectory;
+        private Optional<LoadFlowEngine> loadFlowEngine;
+        private boolean                  writeNetworksInputsResults;
+        private String                   label;
+        private Consumer<Network>        debugNetwork;
     }
 
     private final boolean             validateInitialState;

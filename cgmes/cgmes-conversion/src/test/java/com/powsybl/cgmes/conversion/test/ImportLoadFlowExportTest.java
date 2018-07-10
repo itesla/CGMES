@@ -70,8 +70,7 @@ public class ImportLoadFlowExportTest {
         Network n = i.importData(importDataSource, importParameters);
 
         // Run a LoadFlow
-        LoadFlowComputation lf = new LoadFlowComputation(
-                LoadFlowComputation.defaultFactoryClassName());
+        LoadFlowComputation lf = new LoadFlowComputation();
         if (lf.available()) {
             LoadFlowParameters loadFlowParameters = new LoadFlowParameters();
             String computedStateId = "computed";
