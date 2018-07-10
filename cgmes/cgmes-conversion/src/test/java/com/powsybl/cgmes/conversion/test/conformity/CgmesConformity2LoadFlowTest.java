@@ -39,6 +39,20 @@ public class CgmesConformity2LoadFlowTest {
     }
 
     @Test
+    public void transformerLineTest() {
+        TestGridModel tm = catalog.transformerLineTest();
+        LoadFlowValidation validation = new LoadFlowValidation.Builder()
+                .workingDirectory(tm.path())
+                .writeNetworksInputsResults(true)
+                // The case is not solved,
+                // relevant only for producing warnings about data?
+                .validateInitialState(false)
+                .compareWithInitialState(false)
+                .build();
+        tester.testLoadFlow(tm, validation);
+    }
+
+    @Test
     public void microBaseCaseBE() {
         TestGridModel tm = catalog.microBaseCaseBE();
         LoadFlowValidation validation = new LoadFlowValidation.Builder()

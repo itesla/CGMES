@@ -36,6 +36,16 @@ public class CgmesConformity2Catalog {
                 true);
     }
 
+    public TestGridModel transformerLineTest() {
+        return new TestGridModel(
+                ENTSOE_CONFORMITY_2.resolve("TransformerLineTest"),
+                "TransformerLineTest",
+                CompressionFormat.ZIP,
+                null,
+                false,
+                true);
+    }
+
     public final TestGridModel microBaseCaseBE() {
         return new TestGridModel(
                 ENTSOE_CONFORMITY_2.resolve("MicroGrid/BaseCase_BC"),
