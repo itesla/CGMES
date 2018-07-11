@@ -399,7 +399,7 @@
 				<version>${powsyblcore.version}</version>
 				<scope>test</scope>
 			</dependency>
-			<!-- LoadFlow engines --><!--
+			<!-- LoadFlow engine HADES2 --><!--
             <dependency>
                 <groupId>com.rte_france.powsybl</groupId>
                 <artifactId>powsybl-hades2-integration</artifactId>
@@ -415,6 +415,8 @@
                 <artifactId>powsybl-iidm-cvg-extensions</artifactId>
                 <version>${hades2.integration.version}</version>
             </dependency>
+			LoadFlow engine HADES2 -->
+			<!-- LoadFlow engine HELM --><!--
             <dependency>
                 <groupId>com.elequant.helmflow</groupId>
                 <artifactId>helmflow-api</artifactId>
@@ -435,7 +437,7 @@
                 <artifactId>helmflow-core</artifactId>
                 <version>${helmflow.core.version}</version>
             </dependency>
-			LoadFlow engines -->
+			LoadFlow engine HELM -->
 		</dependencies>
 	</dependencyManagement>
 </project>
