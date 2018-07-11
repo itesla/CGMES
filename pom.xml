@@ -48,7 +48,7 @@
 	<modules>
 		<module>triple-store</module>
 		<module>cgmes</module>
-		<!-- <module>distribution-core-cgmes</module> -->
+		<module>distribution-core-cgmes</module>
 	</modules>
 	
 	<properties>
