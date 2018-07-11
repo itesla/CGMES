@@ -114,8 +114,7 @@
             <artifactId>powsybl-loadflow-results-completion</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- LoadFlow engines -->
-        <!-- 
+		<!-- LoadFlow engines --><!--
         <dependency>
             <groupId>com.rte_france.powsybl</groupId>
             <artifactId>powsybl-hades2-integration</artifactId>
@@ -151,7 +150,7 @@
             <artifactId>helmflow-core</artifactId>
             <scope>test</scope>
         </dependency>
-        -->
+		LoadFlow engines -->
     </dependencies>
 	
 	<build>

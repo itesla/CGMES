@@ -48,7 +48,7 @@
 	<modules>
 		<module>triple-store</module>
 		<module>cgmes</module>
-		<module>distribution-core-cgmes</module>
+		<!-- <module>distribution-core-cgmes</module> -->
 	</modules>
 	
 	<properties>
@@ -399,8 +399,7 @@
 				<version>${powsyblcore.version}</version>
 				<scope>test</scope>
 			</dependency>
-			<!-- LoadFlow engines -->
-			<!-- 
+			<!-- LoadFlow engines --><!--
             <dependency>
                 <groupId>com.rte_france.powsybl</groupId>
                 <artifactId>powsybl-hades2-integration</artifactId>
@@ -436,7 +435,7 @@
                 <artifactId>helmflow-core</artifactId>
                 <version>${helmflow.core.version}</version>
             </dependency>
-            -->
+			LoadFlow engines -->
 		</dependencies>
 	</dependencyManagement>
 </project>
