@@ -45,6 +45,16 @@ To correctly use `slf4j` we must (see https://www.slf4j.org/legacy.html):
 			<version>1.7.25</version>
 		</dependency>
  
+
+# Set-up development environment for Eclipse (Photon)
+
+Steps for importing powsybl-core and CGMES maven projects are the same that in Eclipse Oxygen.
+
+There is no need to create Eclipse .project files running `mvn eclipse:eclipse`. After maven projects import all natures are automatically recognized and set (Java, Groovy).
+
+To fix the warnings about potential mismatch Groovy compiler version, it is enough to uncheck this option in Groovy Compiler settings in Eclipse.
+
+To create a Java formatter from Checkstyle, first create and configure a new Global Checkstyle Configuration that uses the file `checkstyle.xml` (use the option external configuration file) and set it as default. Then, select any project in the workspace, right-click and select Checkstyle - Create Formatter profile. Then configure Java Code Style - Formatter as workspace settings (or by use it as project-specific settings).
  
 # Set-up development environment for Eclipse (Oxygen)
 
