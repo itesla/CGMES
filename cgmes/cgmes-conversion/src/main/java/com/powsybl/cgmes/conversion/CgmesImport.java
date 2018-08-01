@@ -87,9 +87,9 @@ public class CgmesImport implements Importer {
 
     private String tripleStoreImpl(Properties p) {
         if (p == null) {
-            return TripleStoreFactory.DEFAULT_IMPLEMENTATION;
+            return TripleStoreFactory.defaultImplementation();
         }
-        return p.getProperty("powsyblTripleStore", TripleStoreFactory.DEFAULT_IMPLEMENTATION);
+        return p.getProperty("powsyblTripleStore", TripleStoreFactory.defaultImplementation());
     }
 
     private static final String FORMAT                 = "CGMES";

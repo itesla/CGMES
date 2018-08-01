@@ -40,7 +40,7 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
     public CgmesModelTripleStore(String cimNamespace, AbstractPowsyblTripleStore tripleStore) {
         this.cimNamespace = cimNamespace;
         this.tripleStore = tripleStore;
-        tripleStore.addQueryPrefix("prefix cim: <" + cimNamespace + "> ");
+        tripleStore.defineQueryPrefix("cim", cimNamespace);
         queryCatalog = queryCatalogFor(cimNamespace);
         Objects.requireNonNull(queryCatalog);
         queryCatalog.load();

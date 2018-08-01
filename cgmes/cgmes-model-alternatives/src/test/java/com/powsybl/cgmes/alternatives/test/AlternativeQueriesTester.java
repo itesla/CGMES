@@ -16,6 +16,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -30,8 +31,6 @@ import com.powsybl.commons.datasource.DataSourceUtil;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.triplestore.PropertyBags;
 import com.powsybl.triplestore.QueryCatalog;
-
-import cern.colt.Arrays;
 
 /**
  * @author Luma Zamarreño <zamarrenolm at aia.es>

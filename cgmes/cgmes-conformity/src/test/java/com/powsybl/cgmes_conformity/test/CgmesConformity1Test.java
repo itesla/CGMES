@@ -28,8 +28,8 @@ public class CgmesConformity1Test {
     }
 
     @Test
-    public void microBE() {
-        new CgmesModelTester(catalog.microBE()).test();
+    public void microGridBaseCaseBE() {
+        new CgmesModelTester(catalog.microGridBaseCaseBE()).test();
     }
 
     @Test

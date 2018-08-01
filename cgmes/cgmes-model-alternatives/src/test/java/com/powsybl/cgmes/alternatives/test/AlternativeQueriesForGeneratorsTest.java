@@ -50,20 +50,20 @@ public class AlternativeQueriesForGeneratorsTest {
                 doAssert,
                 consumer);
         tester.load();
-        testerAllowingNestedGraphClauses = new AlternativeQueriesTester(
-                TripleStoreFactory.implementationsAllowingNestedGraphClauses(),
+        testerWorkingWithNestedGraphClauses = new AlternativeQueriesTester(
+                TripleStoreFactory.implementationsWorkingWithNestedGraphClauses(),
                 new QueryCatalog("generators.sparql"),
                 model,
                 expected,
                 experiments,
                 doAssert,
                 consumer);
-        testerAllowingNestedGraphClauses.load();
+        testerWorkingWithNestedGraphClauses.load();
     }
 
     @Test
     public void usingGraphClauses() {
-        testerAllowingNestedGraphClauses.test("usingGraphClauses");
+        testerWorkingWithNestedGraphClauses.test("usingGraphClauses");
     }
 
     @Test
@@ -72,5 +72,5 @@ public class AlternativeQueriesForGeneratorsTest {
     }
 
     private static AlternativeQueriesTester tester;
-    private static AlternativeQueriesTester testerAllowingNestedGraphClauses;
+    private static AlternativeQueriesTester testerWorkingWithNestedGraphClauses;
 }

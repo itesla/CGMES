@@ -1,5 +1,7 @@
 package com.powsybl.cgmes.alternatives.test;
 
+import java.util.Arrays;
+
 /*
  * #%L
  * CGMES Model Alternatives
@@ -29,15 +31,13 @@ import com.powsybl.triplestore.PropertyBags;
 import com.powsybl.triplestore.QueryCatalog;
 import com.powsybl.triplestore.TripleStoreFactory;
 
-import cern.colt.Arrays;
-
 /**
  * @author Luma Zamarreño <zamarrenolm at aia.es>
  */
 public class AlternativeQueriesForVoltageLevels {
 
     @BeforeClass
-    public static void setUp()  {
+    public static void setUp() {
         TestGridModel model = new RteCasesCatalog().fr201707041430Cgmes();
         Expected expected = new Expected()
                 .resultSize(6221)
@@ -48,7 +48,7 @@ public class AlternativeQueriesForVoltageLevels {
         Consumer<PropertyBags> consumer = AlternativeQueriesForVoltageLevels::checkBaseVoltagesMissingNominalVoltage;
 
         tester = new AlternativeQueriesTester(
-                TripleStoreFactory.implementationsAllowingNestedGraphClauses(),
+                TripleStoreFactory.implementationsWorkingWithNestedGraphClauses(),
                 new QueryCatalog("voltageLevels.sparql"),
                 model,
                 expected,

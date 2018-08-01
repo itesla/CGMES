@@ -23,38 +23,47 @@ import com.powsybl.cgmes.test.TestGridModel;
  */
 public class CgmesConformity1Catalog {
 
-    public final TestGridModel microBE() {
-        return new TestGridModel(
-                ENTSOE_CONFORMITY_1.resolve("CGMES_v2.4.15_MicroGridTestConfiguration_BC_BE_v2"),
-                "",
-                expectedMicroBE(),
-                false,
-                true);
-    }
-
-    public TestGridModel microBeModifiedNotAllTapChangersHaveControl() {
-        return new TestGridModel(
-                ENTSOE_CONFORMITY_1.resolve(
-                        "not-all-tapchangers-have-control/CGMES_v2.4.15_MicroGridTestConfiguration_BC_BE_v2"),
-                "",
-                null,
-                false,
-                true);
-    }
-
-    public final TestGridModel microNL() {
-        return new TestGridModel(
-                ENTSOE_CONFORMITY_1.resolve("CGMES_v2.4.15_MicroGridTestConfiguration_BC_NL_v2"),
-                "",
-                null,
-                false,
-                true);
-    }
-
-    public final TestGridModel microAssembled() {
+    public final TestGridModel microGridBaseCaseBE() {
         return new TestGridModel(
                 ENTSOE_CONFORMITY_1
+                        .resolve("MicroGrid")
+                        .resolve("BaseCase")
+                        .resolve("CGMES_v2.4.15_MicroGridTestConfiguration_BC_BE_v2"),
+                "",
+                expectedMicroGridBaseCaseBE(),
+                false,
+                true);
+    }
+
+    public final TestGridModel microGridBaseCaseNL() {
+        return new TestGridModel(
+                ENTSOE_CONFORMITY_1
+                        .resolve("MicroGrid")
+                        .resolve("BaseCase")
+                        .resolve("CGMES_v2.4.15_MicroGridTestConfiguration_BC_NL_v2"),
+                "",
+                null,
+                false,
+                true);
+    }
+
+    public final TestGridModel microGridBaseCaseAssembled() {
+        return new TestGridModel(
+                ENTSOE_CONFORMITY_1
+                        .resolve("MicroGrid")
+                        .resolve("BaseCase")
                         .resolve("CGMES_v2.4.15_MicroGridTestConfiguration_BC_Assembled_v2"),
+                "",
+                null,
+                false,
+                true);
+    }
+
+    public TestGridModel microGridBaseCaseBEModifiedNotAllTapChangersHaveControl() {
+        return new TestGridModel(
+                ENTSOE_CONFORMITY_1
+                        .resolve("not-all-tapchangers-have-control")
+                        .resolve("CGMES_v2.4.15_MicroGridTestConfiguration_BC_BE_v2"),
                 "",
                 null,
                 false,
@@ -110,7 +119,7 @@ public class CgmesConformity1Catalog {
                 true);
     }
 
-    public CgmesModel expectedMicroBE() {
+    public CgmesModel expectedMicroGridBaseCaseBE() {
         return new CgmesModel.Fake()
                 .modelId("MicroBaseCaseBE")
                 .version("unknown")
@@ -805,5 +814,6 @@ public class CgmesConformity1Catalog {
                         "_f184d87b-5565-45ee-89b4-29e8a42d3ad1");
     }
 
-    private static final Path ENTSOE_CONFORMITY_1 = Paths.get("../../data/conformity/cas-1.1.3-data-4.0.3");
+    private static final Path ENTSOE_CONFORMITY_1 = Paths
+            .get("../../data/conformity/cas-1.1.3-data-4.0.3");
 }

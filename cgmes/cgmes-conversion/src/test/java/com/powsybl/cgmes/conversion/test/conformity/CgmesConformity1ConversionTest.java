@@ -35,43 +35,8 @@ public class CgmesConformity1ConversionTest {
     }
 
     @Test
-    public void microBE() {
-        tester.testConversion(expecteds.microBE(), actuals.microBE());
-    }
-
-    @Test
-    public void microNL() {
-        tester.testConversion(expecteds.microNL(), actuals.microNL());
-    }
-
-    @Test
-    public void microAssembled() {
-        tester.testConversion(expecteds.microAssembled(), actuals.microAssembled());
-    }
-
-    @Test
-    public void miniBusBranch() {
-        tester.testConversion(expecteds.miniBusBranch(), actuals.miniBusBranch());
-    }
-
-    @Test
-    public void miniNodeBreaker() {
-        tester.testConversion(expecteds.miniNodeBreaker(), actuals.miniNodeBreaker());
-    }
-
-    @Test
-    public void smallBusBranch() {
-        tester.testConversion(expecteds.smallBusBranch(), actuals.smallBusBranch());
-    }
-
-    @Test
-    public void smallNodeBreaker() {
-        tester.testConversion(expecteds.smallNodeBreaker(), actuals.smallNodeBreaker());
-    }
-
-    @Test
-    public void real() {
-        tester.testConversion(expecteds.real(), actuals.real());
+    public void microGridBaseCaseBE() {
+        tester.testConversion(expecteds.microBE(), actuals.microGridBaseCaseBE());
     }
 
     private static CgmesConformity1Catalog        actuals;

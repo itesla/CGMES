@@ -61,7 +61,7 @@ public class ConversionTester {
         Properties params = new Properties();
         params.put("storeCgmesModelAsNetworkProperty", "true");
         if (onlyDiagnostics) {
-            String impl = TripleStoreFactory.DEFAULT_IMPLEMENTATION;
+            String impl = TripleStoreFactory.defaultImplementation();
             CgmesImport i = new CgmesImport();
             params.put("powsyblTripleStore", impl);
             ReadOnlyDataSource ds = DataSourceUtil.createDataSource(

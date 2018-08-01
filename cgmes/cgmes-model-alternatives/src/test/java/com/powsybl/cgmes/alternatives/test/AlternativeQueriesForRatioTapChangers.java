@@ -34,7 +34,7 @@ public class AlternativeQueriesForRatioTapChangers {
     @BeforeClass
     public static void setUp() {
         TestGridModel model = new CgmesConformity1Catalog()
-                .microBeModifiedNotAllTapChangersHaveControl();
+                .microGridBaseCaseBEModifiedNotAllTapChangersHaveControl();
         Expected expected = new Expected()
                 .resultSize(3)
                 .propertyCount("regulatingControlTargetValue", 2);
@@ -62,15 +62,15 @@ public class AlternativeQueriesForRatioTapChangers {
                 doAssert,
                 consumer);
         tester.load();
-        testerAllowNestedGraph = new AlternativeQueriesTester(
-                TripleStoreFactory.implementationsAllowingNestedGraphClauses(),
+        testerNestedGraph = new AlternativeQueriesTester(
+                TripleStoreFactory.implementationsWorkingWithNestedGraphClauses(),
                 new QueryCatalog("ratioTapChangers.sparql"),
                 model,
                 expected,
                 experiments,
                 doAssert,
                 consumer);
-        testerAllowNestedGraph.load();
+        testerNestedGraph.load();
     }
 
     @Test
@@ -90,7 +90,7 @@ public class AlternativeQueriesForRatioTapChangers {
 
     @Test
     public void nestedGraph() {
-        testerAllowNestedGraph.test("nestedGraph");
+        testerNestedGraph.test("nestedGraph");
     }
 
     @Test
@@ -104,7 +104,7 @@ public class AlternativeQueriesForRatioTapChangers {
     }
 
     private static AlternativeQueriesTester tester;
-    private static AlternativeQueriesTester testerAllowNestedGraph;
+    private static AlternativeQueriesTester testerNestedGraph;
 
     private static final Logger             LOG = LoggerFactory
             .getLogger(AlternativeQueriesForRatioTapChangers.class);

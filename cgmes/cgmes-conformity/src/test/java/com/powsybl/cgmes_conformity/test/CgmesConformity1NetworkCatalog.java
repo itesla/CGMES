@@ -514,40 +514,5 @@ public class CgmesConformity1NetworkCatalog {
         return expected;
     }
 
-    public Network microNL() {
-        // Not yet
-        return null;
-    }
-
-    public Network microAssembled() {
-        // Not yet
-        return null;
-    }
-
-    public Network miniBusBranch() {
-        // Not yet
-        return null;
-    }
-
-    public Network miniNodeBreaker() {
-        // Not yet
-        return null;
-    }
-
-    public Network smallBusBranch() {
-        // Not yet
-        return null;
-    }
-
-    public Network smallNodeBreaker() {
-        // Not yet
-        return null;
-    }
-
-    public Network real() {
-        // Not yet
-        return null;
-    }
-
     private static final Logger LOG = LoggerFactory.getLogger(CgmesConformity1NetworkCatalog.class);
 }
