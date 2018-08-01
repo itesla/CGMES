@@ -29,7 +29,8 @@ import com.powsybl.commons.datasource.DataSource;
 /**
  * @author Luma Zamarreño <zamarrenolm at aia.es>
  */
-public abstract class AbstractPowsyblTripleStore {
+public abstract class AbstractPowsyblTripleStore implements TripleStore {
+
     public AbstractPowsyblTripleStore() {
         queryPrefixes = new HashMap<>();
         defineQueryPrefix("rdf", RDF_NAMESPACE);
@@ -39,13 +40,6 @@ public abstract class AbstractPowsyblTripleStore {
         queryPrefixes.put(prefix, cimNamespace);
         cacheQueryPrefixes();
     }
-
-    // XXX LUMA temporal
-    public abstract AbstractPowsyblTripleStore create();
-
-    public abstract String getName();
-
-    public abstract boolean worksWithNestedGraphClauses();
 
     public abstract void read(String base, String name, InputStream is);
 
@@ -64,7 +58,8 @@ public abstract class AbstractPowsyblTripleStore {
     public abstract void add(String graph, String type, PropertyBags objects);
 
     // fileFromContext and contextFromFile should be at this level ...
-    // But some triple stores use named graphs and other use implementation specific Resources
+    // But some triple stores use named graphs and other use implementation specific
+    // Resources
     protected String namespaceForContexts() {
         return NAMESPACE_FOR_CONTEXTS;
     }
@@ -74,8 +69,7 @@ public abstract class AbstractPowsyblTripleStore {
             boolean append = false;
             return ds.newOutputStream(fileNameFromContextName(cname), append);
         } catch (IOException x) {
-            throw new TripleStoreException(
-                    String.format("New output stream %s in data source %s", cname, ds), x);
+            throw new TripleStoreException(String.format("New output stream %s in data source %s", cname, ds), x);
         }
     }
 
@@ -97,8 +91,7 @@ public abstract class AbstractPowsyblTripleStore {
 
     protected void cacheQueryPrefixes() {
         cachedQueryPrefixes = queryPrefixes.entrySet().stream()
-                .map(e -> String.format("prefix %s: <%s>", e.getKey(), e.getValue()))
-                .collect(Collectors.joining(" "));
+                .map(e -> String.format("prefix %s: <%s>", e.getKey(), e.getValue())).collect(Collectors.joining(" "));
     }
 
     static class LinesOutputStream extends OutputStream {
@@ -137,14 +130,12 @@ public abstract class AbstractPowsyblTripleStore {
         }
 
         private final Consumer<String> liner;
-        private String                 line = "";
+        private String line = "";
     }
 
     private Map<String, String> queryPrefixes;
-    private String              cachedQueryPrefixes;
+    private String cachedQueryPrefixes;
 
-    private static final String RDF_NAMESPACE          = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     private static final String NAMESPACE_FOR_CONTEXTS = "files:";
-    private static final Logger LOG                    = LoggerFactory
-            .getLogger(AbstractPowsyblTripleStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractPowsyblTripleStore.class);
 }

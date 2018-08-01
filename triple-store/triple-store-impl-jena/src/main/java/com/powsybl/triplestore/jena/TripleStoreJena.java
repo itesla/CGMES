@@ -27,7 +27,6 @@ import org.apache.jena.shared.PropertyNotFoundException;
 import org.apache.jena.shared.uuid.JenaUUID;
 import org.apache.jena.vocabulary.RDF;
 
-import com.google.auto.service.AutoService;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.triplestore.AbstractPowsyblTripleStore;
 import com.powsybl.triplestore.PropertyBag;
@@ -37,8 +36,8 @@ import com.powsybl.triplestore.TripleStoreException;
 /**
  * @author Luma Zamarreño <zamarrenolm at aia.es>
  */
-@AutoService(AbstractPowsyblTripleStore.class)
 public class TripleStoreJena extends AbstractPowsyblTripleStore {
+
     public TripleStoreJena() {
         // creates an in-memory Jena model that is able to contain multiple graphs
         dataset = DatasetFactory.createMem();
@@ -50,24 +49,10 @@ public class TripleStoreJena extends AbstractPowsyblTripleStore {
         writer.setProperty("relativeURIs", "same-document,relative");
 
         // We create a model that will be the union of all loaded graphs,
-        // to be able to make queries over all data without the need for specifying a graph
+        // to be able to make queries over all data without the need for specifying a
+        // graph
         // https://stackoverflow.com/questions/6981467/jena-arq-difference-between-model-graph-and-dataset
         union = ModelFactory.createDefaultModel();
-    }
-
-    @Override
-    public AbstractPowsyblTripleStore create() {
-        return new TripleStoreJena();
-    }
-
-    @Override
-    public String getName() {
-        return "jena";
-    }
-
-    @Override
-    public boolean worksWithNestedGraphClauses() {
-        return true;
     }
 
     @Override
@@ -127,8 +112,10 @@ public class TripleStoreJena extends AbstractPowsyblTripleStore {
     public PropertyBags query(String query) {
         String query1 = adjustedQuery(query);
         PropertyBags results = new PropertyBags();
-        // Because Jena in-memory does not support default graph as union of named graphs
-        // We use the dataset for maintaining separate graphs, but query in general against union
+        // Because Jena in-memory does not support default graph as union of named
+        // graphs
+        // We use the dataset for maintaining separate graphs, but query in general
+        // against union
         // Only query against dataset if we found a GRAPH clause in the query text
         try (QueryExecution q = queryExecutionFromQueryText(query1)) {
             // Uncomment to analyze the algebra of the query
@@ -243,16 +230,14 @@ public class TripleStoreJena extends AbstractPowsyblTripleStore {
             if (r instanceof Statement) {
                 rslt = ((Statement) r).getStatementProperty(RDF.type);
                 if (rslt == null || (!rslt.getObject().equals(RDF.Statement))) {
-                    throw new TripleStoreException(
-                            String.format("Looking for RDF.type for statement %s", r));
+                    throw new TripleStoreException(String.format("Looking for RDF.type for statement %s", r));
                 }
             } else {
                 rslt = r.getRequiredProperty(RDF.type);
             }
         } catch (PropertyNotFoundException x) {
             if (r instanceof Statement) {
-                throw new TripleStoreException(
-                        String.format("Missing RDF.type for statement %s", r), x);
+                throw new TripleStoreException(String.format("Missing RDF.type for statement %s", r), x);
             }
             rslt = null;
         }
@@ -280,6 +265,6 @@ public class TripleStoreJena extends AbstractPowsyblTripleStore {
     }
 
     private final Dataset dataset;
-    private Model         union;
-    private RDFWriter     writer;
+    private Model union;
+    private RDFWriter writer;
 }

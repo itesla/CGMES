@@ -23,26 +23,20 @@ import com.powsybl.commons.util.ServiceLoaderCache;
  */
 public final class TripleStoreFactory {
 
-    // XXX LUMA define PowsyblTripleStore as an interface,
-    // then either let AbstractPowsyblTripleStore exist, or move methods to a utility class
-    private static final ServiceLoaderCache<AbstractPowsyblTripleStore> LOADER = new ServiceLoaderCache(
-            AbstractPowsyblTripleStore.class);
+    private static final ServiceLoaderCache<TripleStoreFactoryService> LOADER = new ServiceLoaderCache(
+            TripleStoreFactoryService.class);
 
     private TripleStoreFactory() {
     }
 
-    public static AbstractPowsyblTripleStore create() {
+    public static TripleStore create() {
         return create(DEFAULT_IMPLEMENTATION);
     }
 
-    public static AbstractPowsyblTripleStore create(String impl) {
+    public static TripleStore create(String impl) {
         Objects.requireNonNull(impl);
-        for (AbstractPowsyblTripleStore ts : LOADER.getServices()) {
-            if (ts.getName().equals(impl)) {
-                // XXX LUMA to maintain compatibility with existing code,
-                // triple store are in fact factories,
-                // we create a new instance
-                // The ServiceLoader should be applied to factories, not to tripleStore classes
+        for (TripleStoreFactoryService ts : LOADER.getServices()) {
+            if (ts.implementation().equals(impl)) {
                 return ts.create();
             }
         }
@@ -50,33 +44,29 @@ public final class TripleStoreFactory {
     }
 
     public static String[] allImplementations() {
-        // XXX LUMA use List<String> or List<AbstractPowsyblTripleStore> instead of String[]
-        List<String> impls = LOADER.getServices().stream()
-                .map(AbstractPowsyblTripleStore::getName)
+        // XXX LUMA use List<String> instead of String[]
+        List<String> impls = LOADER.getServices().stream().map(TripleStoreFactoryService::implementation)
                 .collect(Collectors.toList());
         return impls.toArray(new String[impls.size()]);
     }
 
     public static String[] implementationsWorkingWithNestedGraphClauses() {
-        // XXX LUMA use List<String> or List<AbstractPowsyblTripleStore> instead of String[]
+        // XXX LUMA use List<String> instead of String[]
         List<String> impls = LOADER.getServices().stream()
-                .filter(AbstractPowsyblTripleStore::worksWithNestedGraphClauses)
-                .map(AbstractPowsyblTripleStore::getName)
-                .collect(Collectors.toList());
+                .filter(TripleStoreFactoryService::worksWithNestedGraphClauses)
+                .map(TripleStoreFactoryService::implementation).collect(Collectors.toList());
         return impls.toArray(new String[impls.size()]);
     }
 
     public static String[] implementationsBadNestedGraphClauses() {
-        // XXX LUMA use List<String> or List<AbstractPowsyblTripleStore> instead of String[]
-        List<String> impls = LOADER.getServices().stream()
-                .filter(ts -> !ts.worksWithNestedGraphClauses())
-                .map(AbstractPowsyblTripleStore::getName)
-                .collect(Collectors.toList());
+        // XXX LUMA use List<String> instead of String[]
+        List<String> impls = LOADER.getServices().stream().filter(ts -> !ts.worksWithNestedGraphClauses())
+                .map(TripleStoreFactoryService::implementation).collect(Collectors.toList());
         return impls.toArray(new String[impls.size()]);
     }
 
     public static String[] onlyDefaultImplementation() {
-        // XXX LUMA use List<String> or List<AbstractPowsyblTripleStore> instead of String[]
+        // XXX LUMA use List<String> instead of String[]
         return ONLY_DEFAULT_IMPLEMENTATION;
     }
 
@@ -84,6 +74,6 @@ public final class TripleStoreFactory {
         return DEFAULT_IMPLEMENTATION;
     }
 
-    private static final String   DEFAULT_IMPLEMENTATION      = "rdf4j";
+    private static final String DEFAULT_IMPLEMENTATION = "rdf4j";
     private static final String[] ONLY_DEFAULT_IMPLEMENTATION = {DEFAULT_IMPLEMENTATION};
 }

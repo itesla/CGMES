@@ -26,10 +26,10 @@ import org.slf4j.LoggerFactory;
 import com.powsybl.cgmes.AbstractCgmesModel;
 import com.powsybl.cgmes.CgmesModelException;
 import com.powsybl.commons.datasource.DataSource;
-import com.powsybl.triplestore.AbstractPowsyblTripleStore;
 import com.powsybl.triplestore.PropertyBag;
 import com.powsybl.triplestore.PropertyBags;
 import com.powsybl.triplestore.QueryCatalog;
+import com.powsybl.triplestore.TripleStore;
 import com.powsybl.triplestore.TripleStoreException;
 
 /**
@@ -37,7 +37,7 @@ import com.powsybl.triplestore.TripleStoreException;
  */
 public class CgmesModelTripleStore extends AbstractCgmesModel {
 
-    public CgmesModelTripleStore(String cimNamespace, AbstractPowsyblTripleStore tripleStore) {
+    public CgmesModelTripleStore(String cimNamespace, TripleStore tripleStore) {
         this.cimNamespace = cimNamespace;
         this.tripleStore = tripleStore;
         tripleStore.defineQueryPrefix("cim", cimNamespace);
@@ -65,8 +65,7 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
         try {
             tripleStore.write(ds);
         } catch (TripleStoreException x) {
-            throw new CgmesModelException(
-                    String.format("Writing. Triple store problem %s", ds), x);
+            throw new CgmesModelException(String.format("Writing. Triple store problem %s", ds), x);
         }
     }
 
@@ -86,8 +85,7 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
                 String p = m.get("profile");
                 if (p != null && p.contains("/EquipmentOperation/")) {
                     if (LOG.isInfoEnabled()) {
-                        LOG.info("Model is considered node-breaker because {} has profile {}",
-                                m.get("FullModel"), p);
+                        LOG.info("Model is considered node-breaker because {} has profile {}", m.get("FullModel"), p);
                     }
                     return true;
                 }
@@ -103,9 +101,7 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
             PropertyBags r = namedQuery("modelIds");
             if (r != null && !r.isEmpty()) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Candidates to model identifier:{}{}",
-                            System.lineSeparator(),
-                            r.tabulateLocals());
+                    LOG.debug("Candidates to model identifier:{}{}", System.lineSeparator(), r.tabulateLocals());
                 }
                 String v = r.get(0).get("FullModel");
                 if (v != null) {
@@ -134,9 +130,7 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
             PropertyBags r = namedQuery("modelDates");
             if (r != null && !r.isEmpty()) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Candidates to modelDates:{}{}",
-                            System.lineSeparator(),
-                            r.tabulateLocals());
+                    LOG.debug("Candidates to modelDates:{}{}", System.lineSeparator(), r.tabulateLocals());
                 }
                 String s = r.get(0).get(propertyName);
                 if (s != null && !s.isEmpty()) {
@@ -332,7 +326,7 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
         return tripleStore.query(queryText);
     }
 
-    public AbstractPowsyblTripleStore tripleStore() {
+    public TripleStore tripleStore() {
         return tripleStore;
     }
 
@@ -405,10 +399,9 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
         return injected;
     }
 
-    private final String                     cimNamespace;
-    private final AbstractPowsyblTripleStore tripleStore;
-    private final QueryCatalog               queryCatalog;
+    private final String cimNamespace;
+    private final TripleStore tripleStore;
+    private final QueryCatalog queryCatalog;
 
-    private static final Logger              LOG = LoggerFactory
-            .getLogger(CgmesModelTripleStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CgmesModelTripleStore.class);
 }

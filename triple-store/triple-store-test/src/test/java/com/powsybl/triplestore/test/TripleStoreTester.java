@@ -29,8 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.powsybl.commons.datasource.FileDataSource;
-import com.powsybl.triplestore.AbstractPowsyblTripleStore;
 import com.powsybl.triplestore.PropertyBags;
+import com.powsybl.triplestore.TripleStore;
 import com.powsybl.triplestore.TripleStoreException;
 import com.powsybl.triplestore.TripleStoreFactory;
 
@@ -39,12 +39,7 @@ import com.powsybl.triplestore.TripleStoreFactory;
  */
 public class TripleStoreTester {
 
-    public TripleStoreTester(
-            boolean doAsserts,
-            String[] implementations,
-            String base,
-            Path workingDir,
-            Path... files) {
+    public TripleStoreTester(boolean doAsserts, String[] implementations, String base, Path workingDir, Path... files) {
         this.doAsserts = doAsserts;
         this.implementations = implementations;
         this.base = base;
@@ -56,13 +51,12 @@ public class TripleStoreTester {
     public void load() {
         // Load the model for every triple store implementation
         for (String impl : implementations) {
-            AbstractPowsyblTripleStore ts = TripleStoreFactory.create(impl);
+            TripleStore ts = TripleStoreFactory.create(impl);
             for (Path f : files) {
                 try (InputStream is = new BufferedInputStream(Files.newInputStream(f))) {
                     ts.read(base, f.getFileName().toString(), is);
                 } catch (IOException e) {
-                    throw new TripleStoreException(
-                            String.format("Reading %s %s", base, f.getFileName().toString()), e);
+                    throw new TripleStoreException(String.format("Reading %s %s", base, f.getFileName().toString()), e);
                 }
             }
             ts.dump(line -> LOG.info(line));
@@ -83,15 +77,11 @@ public class TripleStoreTester {
         try {
             Files.createDirectories(p);
         } catch (IOException x) {
-            throw new TripleStoreException(
-                    String.format("testWrite. Creating directories %s", p), x);
+            throw new TripleStoreException(String.format("testWrite. Creating directories %s", p), x);
         }
     }
 
-    public void testQuery(
-            String queryText,
-            Expected expected)
-            throws Exception {
+    public void testQuery(String queryText, Expected expected) throws Exception {
         for (String impl : implementations) {
             PropertyBags results = tripleStores.get(impl).query(queryText);
             logResults(impl, results, expected);
@@ -100,17 +90,12 @@ public class TripleStoreTester {
                 int size = expected.values().iterator().next().length;
                 assertEquals(size, results.size());
                 expected.keySet().stream()
-                        .forEach(property -> assertArrayEquals(
-                                expected.get(property),
-                                results.pluck(property)));
+                        .forEach(property -> assertArrayEquals(expected.get(property), results.pluck(property)));
             }
         }
     }
 
-    private void logResults(
-            String impl,
-            PropertyBags results,
-            Expected expected) {
+    private void logResults(String impl, PropertyBags results, Expected expected) {
         LOG.info("{} query result size     : {}", impl, results.size());
         if (results.size() == 0) {
             return;
@@ -123,14 +108,8 @@ public class TripleStoreTester {
         expected.keySet().stream().forEach(property -> {
             String[] expectedValues = expected.get(property);
             String[] actualValues = results.pluck(property);
-            LOG.info("{} expected values for property {} : {}",
-                    impl,
-                    property,
-                    Arrays.toString(expectedValues));
-            LOG.info("{} actual values for property {}   : {}",
-                    impl,
-                    property,
-                    Arrays.toString(actualValues));
+            LOG.info("{} expected values for property {} : {}", impl, property, Arrays.toString(expectedValues));
+            LOG.info("{} actual values for property {}   : {}", impl, property, Arrays.toString(actualValues));
         });
     }
 
@@ -141,13 +120,12 @@ public class TripleStoreTester {
         }
     }
 
-    private final boolean                                 doAsserts;
-    private final String[]                                implementations;
-    private final String                                  base;
-    private final Path                                    workingDir;
-    private final Path[]                                  files;
-    private final Map<String, AbstractPowsyblTripleStore> tripleStores;
+    private final boolean doAsserts;
+    private final String[] implementations;
+    private final String base;
+    private final Path workingDir;
+    private final Path[] files;
+    private final Map<String, TripleStore> tripleStores;
 
-    private static final Logger                           LOG = LoggerFactory
-            .getLogger(TripleStoreTester.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TripleStoreTester.class);
 }

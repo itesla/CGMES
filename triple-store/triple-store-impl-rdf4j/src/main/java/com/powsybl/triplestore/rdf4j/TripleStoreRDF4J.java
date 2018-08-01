@@ -42,7 +42,6 @@ import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.auto.service.AutoService;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.triplestore.AbstractPowsyblTripleStore;
 import com.powsybl.triplestore.PropertyBag;
@@ -52,26 +51,11 @@ import com.powsybl.triplestore.TripleStoreException;
 /**
  * @author Luma Zamarreño <zamarrenolm at aia.es>
  */
-@AutoService(AbstractPowsyblTripleStore.class)
 public class TripleStoreRDF4J extends AbstractPowsyblTripleStore {
+
     public TripleStoreRDF4J() {
         repo = new SailRepository(new MemoryStore());
         repo.initialize();
-    }
-
-    @Override
-    public AbstractPowsyblTripleStore create() {
-        return new TripleStoreRDF4J();
-    }
-
-    @Override
-    public String getName() {
-        return "rdf4j";
-    }
-
-    @Override
-    public boolean worksWithNestedGraphClauses() {
-        return true;
     }
 
     @Override
@@ -145,7 +129,8 @@ public class TripleStoreRDF4J extends AbstractPowsyblTripleStore {
             // Default language is SPARQL
             TupleQuery q = conn.prepareTupleQuery(query1);
             // Duplicated triplets are returned in queries
-            // when an object is defined in a file and referrenced in another (rdf:ID and rdf:about)
+            // when an object is defined in a file and referrenced in another (rdf:ID and
+            // rdf:about)
             // and data has been added to repository with contexts
             // and we query without using explicit GRAPH clauses
             // This means that we have to filter distinct results
@@ -191,15 +176,13 @@ public class TripleStoreRDF4J extends AbstractPowsyblTripleStore {
         }
     }
 
-    private void createStatements(RepositoryConnection cnx, String objType, PropertyBag statement,
-            Resource context) {
+    private void createStatements(RepositoryConnection cnx, String objType, PropertyBag statement, Resource context) {
 
         UUID uuid = new UUID();
         IRI resource = uuid.evaluate(cnx.getValueFactory());
         IRI parentPredicate = RDF.TYPE;
         IRI parentObject = cnx.getValueFactory().createIRI(objType);
-        Statement parentSt = cnx.getValueFactory().createStatement(resource, parentPredicate,
-                parentObject);
+        Statement parentSt = cnx.getValueFactory().createStatement(resource, parentPredicate, parentObject);
         cnx.add(parentSt, context);
 
         List<String> names = statement.propertyNames();
@@ -252,7 +235,7 @@ public class TripleStoreRDF4J extends AbstractPowsyblTripleStore {
         return conn.getValueFactory().createIRI(namespaceForContexts(), filename);
     }
 
-    private final Repository    repo;
+    private final Repository repo;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TripleStoreRDF4J.class);
 }

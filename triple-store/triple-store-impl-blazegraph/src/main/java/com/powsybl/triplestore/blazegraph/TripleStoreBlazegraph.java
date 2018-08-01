@@ -51,7 +51,6 @@ import com.bigdata.journal.Options;
 import com.bigdata.rdf.sail.BigdataSail;
 import com.bigdata.rdf.sail.BigdataSailRepository;
 import com.bigdata.rdf.store.AbstractTripleStore;
-import com.google.auto.service.AutoService;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.triplestore.AbstractPowsyblTripleStore;
 import com.powsybl.triplestore.PropertyBag;
@@ -61,7 +60,6 @@ import com.powsybl.triplestore.TripleStoreException;
 /**
  * @author Luma Zamarreño <zamarrenolm at aia.es>
  */
-@AutoService(AbstractPowsyblTripleStore.class)
 public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
 
     public TripleStoreBlazegraph() {
@@ -85,21 +83,6 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
     }
 
     @Override
-    public AbstractPowsyblTripleStore create() {
-        return new TripleStoreBlazegraph();
-    }
-
-    @Override
-    public String getName() {
-        return "blazegraph";
-    }
-
-    @Override
-    public boolean worksWithNestedGraphClauses() {
-        return false;
-    }
-
-    @Override
     public void read(String base, String name, InputStream is) {
         RepositoryConnection cnx = null;
         try {
@@ -110,9 +93,7 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
             cnx.commit();
             setNamespaces(cnx, base);
         } catch (RepositoryException x) {
-            throw new TripleStoreException(
-                    String.format("Reading. Repo problem %s %s", name, base),
-                    x);
+            throw new TripleStoreException(String.format("Reading. Repo problem %s %s", name, base), x);
         } finally {
             if (cnx != null) {
                 try {
@@ -124,8 +105,7 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
         }
     }
 
-    private void read(String base, String name, InputStream is, RepositoryConnection cnx,
-            Resource context)
+    private void read(String base, String name, InputStream is, RepositoryConnection cnx, Resource context)
             throws RepositoryException {
         try {
             cnx.add(is, base, formatFromName(name), context);
@@ -155,8 +135,7 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
                 Resource context = contexts.next();
                 LOG.info("Writing context {}", context);
 
-                RepositoryResult<Statement> statements = conn.getStatements(null, null, null,
-                        true, context);
+                RepositoryResult<Statement> statements = conn.getStatements(null, null, null, true, context);
                 Model model = new LinkedHashModel();
                 QueryResults.addAll(statements, model);
                 setNamespaces(model, conn);
@@ -190,12 +169,11 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
                     int size = statementsCount(conn, ctx);
                     out.println("DUMP    " + ctx + " : " + size);
                     if (DUMP_ALL_STATEMENTS) {
-                        RepositoryResult<Statement> statements = conn.getStatements(null, null,
-                                null, true, ctx);
+                        RepositoryResult<Statement> statements = conn.getStatements(null, null, null, true, ctx);
                         while (statements.hasNext()) {
                             Statement statement = statements.next();
-                            out.println("DUMP        " + statement.getSubject() + " "
-                                    + statement.getPredicate() + " " + statement.getObject());
+                            out.println("DUMP        " + statement.getSubject() + " " + statement.getPredicate() + " "
+                                    + statement.getObject());
                         }
                     }
                 }
@@ -255,23 +233,20 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
             addStatements(cnx, graph, objType, statements);
 
         } catch (RepositoryException x) {
-            throw new TripleStoreException(
-                    String.format("Adding statements for graph %s", graph),
-                    x);
+            throw new TripleStoreException(String.format("Adding statements for graph %s", graph), x);
         } finally {
             if (cnx != null) {
                 try {
                     cnx.close();
                 } catch (RepositoryException x) {
-                    LOG.error("Adding statements for graph {}. Closing repository connection",
-                            graph);
+                    LOG.error("Adding statements for graph {}. Closing repository connection", graph);
                 }
             }
         }
     }
 
-    private void addStatements(RepositoryConnection cnx, String graph, String objType,
-            PropertyBags statements) throws RepositoryException {
+    private void addStatements(RepositoryConnection cnx, String graph, String objType, PropertyBags statements)
+            throws RepositoryException {
 
         cnx.begin();
 
@@ -295,16 +270,14 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
         cnx.commit();
     }
 
-    private void createStatements(RepositoryConnection cnx, String objType, PropertyBag statement,
-            Resource context) {
+    private void createStatements(RepositoryConnection cnx, String objType, PropertyBag statement, Resource context) {
 
         try {
             UUID uuid = new UUID();
             URI resource = uuid.evaluate(cnx.getValueFactory());
             URI parentPredicate = RDF.TYPE;
             Literal parentObject = cnx.getValueFactory().createLiteral(objType);
-            Statement parentSt = cnx.getValueFactory().createStatement(resource, parentPredicate,
-                    parentObject);
+            Statement parentSt = cnx.getValueFactory().createStatement(resource, parentPredicate, parentObject);
             cnx.add(parentSt, context);
 
             List<String> names = statement.propertyNames();
@@ -324,8 +297,7 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
                 cnx.add(st, context);
             }
         } catch (Exception x) {
-            throw new TripleStoreException(
-                    String.format("Creating statements for object type %s", objType), x);
+            throw new TripleStoreException(String.format("Creating statements for object type %s", objType), x);
         }
     }
 
@@ -362,8 +334,7 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
     private int statementsCount(RepositoryConnection conn, Resource ctx) {
         int counter = 0;
         try {
-            RepositoryResult<Statement> statements = conn.getStatements(null, null, null, true,
-                    ctx);
+            RepositoryResult<Statement> statements = conn.getStatements(null, null, null, true, ctx);
             while (statements.hasNext()) {
                 counter++;
                 statements.next();
@@ -399,11 +370,10 @@ public class TripleStoreBlazegraph extends AbstractPowsyblTripleStore {
         return conn.getValueFactory().createURI(namespaceForContexts(), filename);
     }
 
-    private final Repository     repo;
-    private final BigdataSail    sail;
+    private final Repository repo;
+    private final BigdataSail sail;
 
-    private static final Logger  LOG                 = LoggerFactory
-            .getLogger(TripleStoreBlazegraph.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TripleStoreBlazegraph.class);
 
     private static final boolean DUMP_ALL_STATEMENTS = false;
 }

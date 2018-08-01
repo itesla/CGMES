@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.powsybl.cgmes.triplestore.CgmesModelTripleStore;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
-import com.powsybl.triplestore.AbstractPowsyblTripleStore;
+import com.powsybl.triplestore.TripleStore;
 import com.powsybl.triplestore.TripleStoreException;
 import com.powsybl.triplestore.TripleStoreFactory;
 
@@ -19,7 +19,7 @@ public final class CgmesModelFactory {
 
     public static CgmesModelTripleStore create(ReadOnlyDataSource ds, String tripleStoreImpl) {
         CgmesOnDataSource cds = new CgmesOnDataSource(ds);
-        AbstractPowsyblTripleStore tripleStore = TripleStoreFactory.create(tripleStoreImpl);
+        TripleStore tripleStore = TripleStoreFactory.create(tripleStoreImpl);
         CgmesModelTripleStore cgmes = new CgmesModelTripleStore(cds.cimNamespace(), tripleStore);
         read(cgmes, cds);
         return cgmes;
