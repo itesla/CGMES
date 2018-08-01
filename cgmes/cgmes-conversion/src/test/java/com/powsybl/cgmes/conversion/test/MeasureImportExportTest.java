@@ -17,6 +17,7 @@ import java.nio.file.Files;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.BeforeClass;
@@ -52,22 +53,18 @@ public class MeasureImportExportTest {
     @Test
     public void smallcase1() {
         Path output = Paths.get(System.getProperty("java.io.tmpdir")).resolve("cgmes");
-        measureImportExportForTripleStoreImplementations(
-                TripleStoreFactory.allImplementations(),
-                catalog.small1(),
+        measureImportExportForTripleStoreImplementations(TripleStoreFactory.allImplementations(), catalog.small1(),
                 output);
     }
 
-    private void measureImportExportForTripleStoreImplementations(
-            String[] implementations,
-            TestGridModel gm,
+    private void measureImportExportForTripleStoreImplementations(List<String> implementations, TestGridModel gm,
             Path output) {
-        int size = implementations.length;
+        int size = implementations.size();
         long[] startTimes = new long[size];
         long[] endTimes = new long[size];
         Path input = gm.path();
         for (int k = 0; k < size; k++) {
-            String impl = implementations[k];
+            String impl = implementations.get(k);
             LOG.info("measureImportExport TS implementation {}, model {}", impl, gm.id());
             startTimes[k] = System.currentTimeMillis();
 
@@ -77,19 +74,15 @@ public class MeasureImportExportTest {
             endTimes[k] = System.currentTimeMillis();
         }
         for (int k = 0; k < size; k++) {
-            String impl = implementations[k];
-            LOG.info("testImportExport " + impl + " took " + (endTimes[k] - startTimes[k])
-                    + " milliseconds");
+            String impl = implementations.get(k);
+            LOG.info("testImportExport " + impl + " took " + (endTimes[k] - startTimes[k]) + " milliseconds");
         }
     }
 
     private void importExport(String ts, TestGridModel gm, Path input, Path output) {
         CgmesImport i = new CgmesImport();
-        ReadOnlyDataSource importDataSource = DataSourceUtil.createDataSource(
-                input,
-                gm.basename(),
-                gm.getCompressionExtension(),
-                null);
+        ReadOnlyDataSource importDataSource = DataSourceUtil.createDataSource(input, gm.basename(),
+                gm.getCompressionExtension(), null);
         Properties importParameters = new Properties();
         importParameters.put("powsyblTripleStore", ts);
         importParameters.put("storeCgmesModelAsNetworkProperty", "true");
@@ -108,13 +101,11 @@ public class MeasureImportExportTest {
         try {
             Files.createDirectories(p);
         } catch (IOException x) {
-            throw new PowsyblException(
-                    String.format("Creating directories %s", p), x);
+            throw new PowsyblException(String.format("Creating directories %s", p), x);
         }
     }
 
     private static Cim14SmallCasesCatalog catalog;
 
-    private static final Logger           LOG = LoggerFactory
-            .getLogger(MeasureImportExportTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MeasureImportExportTest.class);
 }

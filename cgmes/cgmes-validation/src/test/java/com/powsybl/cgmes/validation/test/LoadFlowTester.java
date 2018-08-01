@@ -17,6 +17,7 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -36,13 +37,11 @@ import com.powsybl.iidm.network.Network;
  */
 public class LoadFlowTester {
 
-    public LoadFlowTester(String[] tripleStoreImplementations) {
+    public LoadFlowTester(List<String> tripleStoreImplementations) {
         this(tripleStoreImplementations, null);
     }
 
-    public LoadFlowTester(
-            String[] tripleStoreImplementations,
-            LoadFlowValidation loadFlowValidation) {
+    public LoadFlowTester(List<String> tripleStoreImplementations, LoadFlowValidation loadFlowValidation) {
         this.tripleStoreImplementations = tripleStoreImplementations;
         this.loadFlowValidation = loadFlowValidation;
         this.validateTopology = true;
@@ -64,13 +63,13 @@ public class LoadFlowTester {
             basename = "";
         }
         CgmesImport i = new CgmesImport();
-        ReadOnlyDataSource dataSource = DataSourceUtil.createDataSource(gm.path(), gm.basename(), gm.getCompressionExtension(), null);
+        ReadOnlyDataSource dataSource = DataSourceUtil.createDataSource(gm.path(), gm.basename(),
+                gm.getCompressionExtension(), null);
         LoadFlowValidation loadFlowValidation = loadFlowValidation0;
         if (loadFlowValidation == null) {
             loadFlowValidation = loadFlowValidationFor(gm);
         }
-        if (!loadFlowValidation.computationAvailable()
-                && !loadFlowValidation.validateInitialState()) {
+        if (!loadFlowValidation.computationAvailable() && !loadFlowValidation.validateInitialState()) {
             LOG.error("LoadFlowValidation not avaialable");
             return;
         }
@@ -83,13 +82,11 @@ public class LoadFlowTester {
                 parameters.put("storeCgmesModelAsNetworkProperty", "true");
                 // Ensure properties are stored as strings
                 // (getProperty returns null if the property exists but is not a string)
-                String sb = Boolean.toString(
-                        loadFlowValidation.changeSignForShuntReactivePowerFlowInitialState());
+                String sb = Boolean.toString(loadFlowValidation.changeSignForShuntReactivePowerFlowInitialState());
                 parameters.put("changeSignForShuntReactivePowerFlowInitialState", sb);
                 Network network = i.importData(dataSource, parameters);
                 if (validateTopology) {
-                    CgmesModel cgmes = (CgmesModel) network.getProperties()
-                            .get(CgmesImport.NETWORK_PS_CGMES_MODEL);
+                    CgmesModel cgmes = (CgmesModel) network.getProperties().get(CgmesImport.NETWORK_PS_CGMES_MODEL);
                     if (!new TopologyTester(cgmes, network).test(strictTopologyTest)) {
                         fail("Topology test failed");
                     }
@@ -107,8 +104,7 @@ public class LoadFlowTester {
     }
 
     public static LoadFlowValidation loadFlowValidationFor(TestGridModel gm) {
-        LoadFlowValidation.Builder b = new LoadFlowValidation.Builder()
-                .workingDirectory(gm.path())
+        LoadFlowValidation.Builder b = new LoadFlowValidation.Builder().workingDirectory(gm.path())
                 .writeNetworksInputsResults(true);
         if (!gm.solved()) {
             b.validateInitialState(false).compareWithInitialState(false);
@@ -116,10 +112,10 @@ public class LoadFlowTester {
         return b.build();
     }
 
-    private final String[]           tripleStoreImplementations;
+    private final List<String> tripleStoreImplementations;
     private final LoadFlowValidation loadFlowValidation;
-    private final boolean            validateTopology;
-    private final boolean            strictTopologyTest;
+    private final boolean validateTopology;
+    private final boolean strictTopologyTest;
 
-    private static final Logger      LOG = LoggerFactory.getLogger(LoadFlowTester.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoadFlowTester.class);
 }

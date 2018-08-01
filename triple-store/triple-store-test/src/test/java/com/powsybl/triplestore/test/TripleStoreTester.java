@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -39,13 +40,14 @@ import com.powsybl.triplestore.TripleStoreFactory;
  */
 public class TripleStoreTester {
 
-    public TripleStoreTester(boolean doAsserts, String[] implementations, String base, Path workingDir, Path... files) {
+    public TripleStoreTester(boolean doAsserts, List<String> implementations, String base, Path workingDir,
+            Path... files) {
         this.doAsserts = doAsserts;
         this.implementations = implementations;
         this.base = base;
         this.workingDir = workingDir;
         this.files = files;
-        this.tripleStores = new HashMap<>(implementations.length);
+        this.tripleStores = new HashMap<>(implementations.size());
     }
 
     public void load() {
@@ -121,7 +123,7 @@ public class TripleStoreTester {
     }
 
     private final boolean doAsserts;
-    private final String[] implementations;
+    private final List<String> implementations;
     private final String base;
     private final Path workingDir;
     private final Path[] files;

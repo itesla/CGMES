@@ -16,6 +16,7 @@ import static org.junit.Assert.fail;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -39,9 +40,7 @@ import com.powsybl.triplestore.TripleStoreFactory;
  */
 public class ConversionTester {
 
-    public ConversionTester(
-            String[] tripleStoreImplementations,
-            ComparisonConfig networkComparison) {
+    public ConversionTester(List<String> tripleStoreImplementations, ComparisonConfig networkComparison) {
         this.tripleStoreImplementations = tripleStoreImplementations;
         this.networkComparison = networkComparison;
         this.onlyDiagnostics = false;
@@ -64,16 +63,12 @@ public class ConversionTester {
             String impl = TripleStoreFactory.defaultImplementation();
             CgmesImport i = new CgmesImport();
             params.put("powsyblTripleStore", impl);
-            ReadOnlyDataSource ds = DataSourceUtil.createDataSource(
-                    gm.path(),
-                    gm.basename(),
-                    gm.getCompressionExtension(),
-                    null);
+            ReadOnlyDataSource ds = DataSourceUtil.createDataSource(gm.path(), gm.basename(),
+                    gm.getCompressionExtension(), null);
             try {
                 LOG.info("Importer.exists() == {}", i.exists(ds));
                 Network n = i.importData(ds, params);
-                CgmesModel m = (CgmesModel) n.getProperties()
-                        .get(CgmesImport.NETWORK_PS_CGMES_MODEL);
+                CgmesModel m = (CgmesModel) n.getProperties().get(CgmesImport.NETWORK_PS_CGMES_MODEL);
                 new Conversion(m).diagnose();
             } catch (Exception x) {
                 LOG.error(x.getMessage());
@@ -92,8 +87,7 @@ public class ConversionTester {
                     if (network.getSubstationCount() == 0) {
                         fail("Model is empty");
                     }
-                    CgmesModel cgmes = (CgmesModel) network.getProperties()
-                            .get(CgmesImport.NETWORK_PS_CGMES_MODEL);
+                    CgmesModel cgmes = (CgmesModel) network.getProperties().get(CgmesImport.NETWORK_PS_CGMES_MODEL);
                     if (!new TopologyTester(cgmes, network).test(strictTopologyTest)) {
                         fail("Topology test failed");
                     }
@@ -123,10 +117,10 @@ public class ConversionTester {
         }
     }
 
-    private final String[]         tripleStoreImplementations;
+    private final List<String> tripleStoreImplementations;
     private final ComparisonConfig networkComparison;
-    private final boolean          onlyDiagnostics;
-    private final boolean          strictTopologyTest;
+    private final boolean onlyDiagnostics;
+    private final boolean strictTopologyTest;
 
-    private static final Logger    LOG = LoggerFactory.getLogger(ConversionTester.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConversionTester.class);
 }

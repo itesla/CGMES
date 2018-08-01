@@ -18,6 +18,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -37,27 +38,13 @@ import com.powsybl.triplestore.QueryCatalog;
  */
 public class AlternativeQueriesTester {
 
-    public AlternativeQueriesTester(
-            String[] tripleStoreImplementations,
-            QueryCatalog queries,
-            TestGridModel gridModel,
-            Expected expected) {
-        this(tripleStoreImplementations,
-                queries,
-                gridModel,
-                expected,
-                5,
-                true,
-                null);
+    public AlternativeQueriesTester(List<String> tripleStoreImplementations, QueryCatalog queries,
+            TestGridModel gridModel, Expected expected) {
+        this(tripleStoreImplementations, queries, gridModel, expected, 5, true, null);
     }
 
-    public AlternativeQueriesTester(
-            String[] tripleStoreImplementations,
-            QueryCatalog queries,
-            TestGridModel gridModel,
-            Expected expected,
-            int experiments,
-            boolean doAssert,
+    public AlternativeQueriesTester(List<String> tripleStoreImplementations, QueryCatalog queries,
+            TestGridModel gridModel, Expected expected, int experiments, boolean doAssert,
             Consumer<PropertyBags> consumer) {
         this.implementations = tripleStoreImplementations;
         this.queries = queries;
@@ -66,7 +53,7 @@ public class AlternativeQueriesTester {
         this.experiments = experiments;
         this.doAssert = doAssert;
         this.consumer = consumer;
-        models = new HashMap<>(implementations.length);
+        models = new HashMap<>(implementations.size());
     }
 
     public Expected expected() {
@@ -95,7 +82,8 @@ public class AlternativeQueriesTester {
     }
 
     public void test(String alternative) {
-        // If no explicit expected result, use the default expected result for the tester
+        // If no explicit expected result, use the default expected result for the
+        // tester
         test(alternative, this.expected);
     }
 
@@ -123,15 +111,11 @@ public class AlternativeQueriesTester {
             return this;
         }
 
-        private long                    resultSize;
+        private long resultSize;
         private final Map<String, Long> propertyCount;
     }
 
-    private void testWithExperiments(
-            String alternative,
-            String impl,
-            String queryText,
-            Expected expected,
+    private void testWithExperiments(String alternative, String impl, String queryText, Expected expected,
             Consumer<PropertyBags> consumer) {
 
         // Initial run to compare against potential "caching" considerations
@@ -158,12 +142,7 @@ public class AlternativeQueriesTester {
 
             test(alternative, impl, result, expected);
         }
-        LOG.info("{} {} dt avg {} ms {} experiments, dts: {} {}",
-                alternative,
-                impl,
-                dt / experiments,
-                experiments,
-                dt0,
+        LOG.info("{} {} dt avg {} ms {} experiments, dts: {} {}", alternative, impl, dt / experiments, experiments, dt0,
                 Arrays.toString(dts));
     }
 
@@ -171,41 +150,29 @@ public class AlternativeQueriesTester {
         if (doAssert) {
             assertEquals(expected.resultSize, result.size());
         } else {
-            LOG.info("{} {} results {} {} {}",
-                    alternative,
-                    impl,
-                    expected,
-                    result.size(),
+            LOG.info("{} {} results {} {} {}", alternative, impl, expected, result.size(),
                     expected.resultSize == result.size() ? "OK" : "FAIL");
         }
         for (String p : expected.propertyCount.keySet()) {
             long expectedPropertyCount = expected.propertyCount.get(p).longValue();
-            long actualPropertyCount = result.stream()
-                    .filter(r -> r.containsKey(p))
-                    .count();
+            long actualPropertyCount = result.stream().filter(r -> r.containsKey(p)).count();
             if (doAssert) {
                 assertEquals(expectedPropertyCount, actualPropertyCount);
             } else {
-                LOG.info("{} {} {} {} {} {}",
-                        alternative,
-                        impl,
-                        p,
-                        expectedPropertyCount,
-                        actualPropertyCount,
+                LOG.info("{} {} {} {} {} {}", alternative, impl, p, expectedPropertyCount, actualPropertyCount,
                         expectedPropertyCount == actualPropertyCount ? "OK" : "FAIL");
             }
         }
     }
 
-    private final String[]                           implementations;
+    private final List<String> implementations;
     private final Map<String, CgmesModelTripleStore> models;
-    private final QueryCatalog                       queries;
-    private final TestGridModel                      gridModel;
-    private final Expected                           expected;
-    private final int                                experiments;
-    private final boolean                            doAssert;
-    private final Consumer<PropertyBags>             consumer;
+    private final QueryCatalog queries;
+    private final TestGridModel gridModel;
+    private final Expected expected;
+    private final int experiments;
+    private final boolean doAssert;
+    private final Consumer<PropertyBags> consumer;
 
-    private static final Logger                      LOG = LoggerFactory
-            .getLogger(AlternativeQueriesTester.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AlternativeQueriesTester.class);
 }

@@ -1,5 +1,6 @@
 package com.powsybl.triplestore;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -43,31 +44,23 @@ public final class TripleStoreFactory {
         return null;
     }
 
-    public static String[] allImplementations() {
-        // XXX LUMA use List<String> instead of String[]
-        List<String> impls = LOADER.getServices().stream().map(TripleStoreFactoryService::implementation)
+    public static List<String> allImplementations() {
+        return LOADER.getServices().stream().map(TripleStoreFactoryService::implementation)
                 .collect(Collectors.toList());
-        return impls.toArray(new String[impls.size()]);
     }
 
-    public static String[] implementationsWorkingWithNestedGraphClauses() {
-        // XXX LUMA use List<String> instead of String[]
-        List<String> impls = LOADER.getServices().stream()
-                .filter(TripleStoreFactoryService::worksWithNestedGraphClauses)
+    public static List<String> implementationsWorkingWithNestedGraphClauses() {
+        return LOADER.getServices().stream().filter(TripleStoreFactoryService::worksWithNestedGraphClauses)
                 .map(TripleStoreFactoryService::implementation).collect(Collectors.toList());
-        return impls.toArray(new String[impls.size()]);
     }
 
-    public static String[] implementationsBadNestedGraphClauses() {
-        // XXX LUMA use List<String> instead of String[]
-        List<String> impls = LOADER.getServices().stream().filter(ts -> !ts.worksWithNestedGraphClauses())
+    public static List<String> implementationsBadNestedGraphClauses() {
+        return LOADER.getServices().stream().filter(ts -> !ts.worksWithNestedGraphClauses())
                 .map(TripleStoreFactoryService::implementation).collect(Collectors.toList());
-        return impls.toArray(new String[impls.size()]);
     }
 
-    public static String[] onlyDefaultImplementation() {
-        // XXX LUMA use List<String> instead of String[]
-        return ONLY_DEFAULT_IMPLEMENTATION;
+    public static List<String> onlyDefaultImplementation() {
+        return Arrays.asList(DEFAULT_IMPLEMENTATION);
     }
 
     public static String defaultImplementation() {
@@ -75,5 +68,4 @@ public final class TripleStoreFactory {
     }
 
     private static final String DEFAULT_IMPLEMENTATION = "rdf4j";
-    private static final String[] ONLY_DEFAULT_IMPLEMENTATION = {DEFAULT_IMPLEMENTATION};
 }
