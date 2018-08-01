@@ -43,16 +43,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-		
-		<!-- XXX LUMA Check if the following are required by Blazegraph or other -->
-		
-        <!-- explicit dependency of RDF/XML reader writer is required for 
-            Jenkins while we subclass RDFXMLWriter to debug pretty writer -->
-        <dependency>
-            <groupId>org.openrdf.sesame</groupId>
-            <artifactId>sesame-rio-rdfxml</artifactId>
-            <version>${sesame.version}</version>
-        </dependency>
         <!-- Bridge legacy log4j to sl4j -->
         <dependency>
             <groupId>org.slf4j</groupId>

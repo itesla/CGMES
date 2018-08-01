@@ -44,6 +44,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- Bridge legacy log4j to sl4j -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>1.7.25</version>
+        </dependency>
+        
         <!-- explicit dependency of apache commons is required by Jena queries -->
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -51,22 +58,6 @@
             <version>${commons-lang3.version}</version>
         </dependency>
 		
-		<!-- XXX LUMA check dependencies -->
-		
-        <!-- explicit dependency of RDF/XML reader writer is required for 
-            Jenkins while we subclass RDFXMLWriter to debug pretty writer -->
-        <dependency>
-            <groupId>org.openrdf.sesame</groupId>
-            <artifactId>sesame-rio-rdfxml</artifactId>
-            <version>${sesame.version}</version>
-        </dependency>
-        <!-- Bridge legacy log4j to sl4j -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-            <version>1.7.25</version>
-        </dependency>
-
         <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>

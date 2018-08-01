@@ -33,27 +33,12 @@
             <artifactId>rdf4j-runtime</artifactId>
             <version>${rdf4j.version}</version>
         </dependency>
-        <!-- explicit dependency of RDF/XML reader writer is required for 
-            Jenkins while we subclass RDFXMLWriter to debug pretty writer -->
+        
+        <!-- explicit dependency of RDF/XML reader writer is required if we subclass RDFXMLWriter -->
         <dependency>
             <groupId>org.eclipse.rdf4j</groupId>
             <artifactId>rdf4j-rio-rdfxml</artifactId>
             <version>${rdf4j.version}</version>
-        </dependency>
-
-		<!-- XXX LUMA review dependencies -->
-        <!-- explicit dependency of RDF/XML reader writer is required for 
-            Jenkins while we subclass RDFXMLWriter to debug pretty writer -->
-        <dependency>
-            <groupId>org.openrdf.sesame</groupId>
-            <artifactId>sesame-rio-rdfxml</artifactId>
-            <version>${sesame.version}</version>
-        </dependency>
-        <!-- Bridge legacy log4j to sl4j -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-            <version>1.7.25</version>
         </dependency>
 
         <!-- Test dependencies -->
