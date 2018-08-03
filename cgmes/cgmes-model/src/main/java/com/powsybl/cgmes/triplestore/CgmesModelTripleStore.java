@@ -43,7 +43,6 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
         tripleStore.defineQueryPrefix("cim", cimNamespace);
         queryCatalog = queryCatalogFor(cimNamespace);
         Objects.requireNonNull(queryCatalog);
-        queryCatalog.load();
     }
 
     public void read(String base, String name, InputStream is) {
@@ -152,6 +151,11 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
             }
         }
         return version;
+    }
+
+    @Override
+    public PropertyBags numObjectsByType() {
+        return namedQuery("numObjectsByType");
     }
 
     @Override
@@ -382,10 +386,16 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
     private QueryCatalog queryCatalogFor(String cimNamespace) {
         QueryCatalog qc = null;
         String version = cimNamespace.substring(cimNamespace.lastIndexOf("cim"));
+        String resourceName = null;
         if (version.equals("cim14#")) {
-            qc = new QueryCatalog("CIM14.sparql");
+            resourceName = "CIM14.sparql";
         } else if (version.equals("cim16#")) {
-            qc = new QueryCatalog("CIM16.sparql");
+            resourceName = "CIM16.sparql";
+        }
+        if (resourceName != null) {
+            InputStream i = this.getClass().getClassLoader().getResourceAsStream(resourceName);
+            qc = new QueryCatalog(resourceName);
+            qc.load(i);
         }
         return qc;
     }

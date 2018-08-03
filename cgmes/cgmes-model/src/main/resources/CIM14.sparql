@@ -4,6 +4,13 @@ SELECT ?version
     ?versionId cim:IEC61970CIMVersion.version ?version
 }}
 
+# query: numObjectsByType
+SELECT ?Type (COUNT (DISTINCT ?object) AS ?numObjects)
+{ GRAPH ?graph {
+	?object a ?Type ;
+}}
+GROUP BY ?Type
+
 # query: substations
 SELECT ?Substation ?name ?SubRegion ?subRegionName ?Region ?regionName
 { GRAPH ?graph {

@@ -44,6 +44,8 @@ public interface CgmesModel {
 
     CgmesTerminal terminal(String terminalId);
 
+    PropertyBags numObjectsByType();
+
     PropertyBags boundaryNodes();
 
     PropertyBags baseVoltages();
@@ -122,16 +124,16 @@ public interface CgmesModel {
     void write(DataSource ds);
 
     public static class CgmesTerminal {
-        private final String    id;
-        private final String    conductingEquipment;
-        private final String    conductingEquipmentType;
-        private final boolean   connected;
+        private final String id;
+        private final String conductingEquipment;
+        private final String conductingEquipmentType;
+        private final boolean connected;
         private final PowerFlow flow;
 
-        private String          connectivityNode;
-        private String          topologicalNode;
-        private String          voltageLevel;
-        private String          substation;
+        private String connectivityNode;
+        private String topologicalNode;
+        private String voltageLevel;
+        private String substation;
 
         public CgmesTerminal(
                 String id,
@@ -213,35 +215,36 @@ public interface CgmesModel {
 
     static final class Fake implements CgmesModel {
         private final Properties properties;
-        private String           modelId;
-        private String           version;
-        private boolean          isNodeBreaker;
-        private DateTime         created;
-        private DateTime         scenarioTime;
-        private PropertyBags     substations;
-        private PropertyBags     voltageLevels;
-        private PropertyBags     terminals;
-        private PropertyBags     terminalLimits;
-        private PropertyBags     connectivityNodes;
-        private PropertyBags     topologicalNodes;
-        private PropertyBags     switches;
-        private PropertyBags     acLineSegments;
-        private PropertyBags     equivalentBranches;
-        private PropertyBags     transformers;
-        private PropertyBags     transformerEnds;
-        private PropertyBags     ratioTapChangers;
-        private PropertyBags     phaseTapChangers;
-        private PropertyBags     energyConsumers;
-        private PropertyBags     energySources;
-        private PropertyBags     shuntCompensators;
-        private PropertyBags     staticVarCompensators;
-        private PropertyBags     synchronousMachines;
-        private PropertyBags     equivalentInjections;
-        private PropertyBags     externalNetworkInjections;
-        private PropertyBags     asynchronousMachines;
-        private PropertyBags     acDcConverters;
-        private PropertyBags     dcLineSegments;
-        private PropertyBags     dcTerminals;
+        private String modelId;
+        private String version;
+        private boolean isNodeBreaker;
+        private DateTime created;
+        private DateTime scenarioTime;
+        private PropertyBags substations;
+        private PropertyBags voltageLevels;
+        private PropertyBags terminals;
+        private PropertyBags terminalLimits;
+        private PropertyBags connectivityNodes;
+        private PropertyBags topologicalNodes;
+        private PropertyBags switches;
+        private PropertyBags acLineSegments;
+        private PropertyBags equivalentBranches;
+        private PropertyBags transformers;
+        private PropertyBags transformerEnds;
+        private PropertyBags ratioTapChangers;
+        private PropertyBags phaseTapChangers;
+        private PropertyBags energyConsumers;
+        private PropertyBags energySources;
+        private PropertyBags shuntCompensators;
+        private PropertyBags staticVarCompensators;
+        private PropertyBags synchronousMachines;
+        private PropertyBags equivalentInjections;
+        private PropertyBags externalNetworkInjections;
+        private PropertyBags asynchronousMachines;
+        private PropertyBags acDcConverters;
+        private PropertyBags dcLineSegments;
+        private PropertyBags dcTerminals;
+        private PropertyBags numObjectsByType;
 
         public Fake() {
             properties = new Properties();
@@ -274,6 +277,7 @@ public interface CgmesModel {
             acDcConverters = new PropertyBags();
             dcLineSegments = new PropertyBags();
             dcTerminals = new PropertyBags();
+            numObjectsByType = new PropertyBags();
         }
 
         public Fake modelId(String modelId) {
@@ -405,6 +409,10 @@ public interface CgmesModel {
                 p.put(propertyNameId, id);
                 objects.add(p);
             }
+            PropertyBag p = new PropertyBag(Arrays.asList("Type", "numObjects"));
+            p.put("Type", propertyNameId);
+            p.put("numObjects", "" + ids.length);
+            numObjectsByType.add(p);
         }
 
         @Override
@@ -437,6 +445,11 @@ public interface CgmesModel {
         public PropertyBags baseVoltages() {
             // No need to support base voltages in Fake model
             return null;
+        }
+
+        @Override
+        public PropertyBags numObjectsByType() {
+            return numObjectsByType;
         }
 
         @Override

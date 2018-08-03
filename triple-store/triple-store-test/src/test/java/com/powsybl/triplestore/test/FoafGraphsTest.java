@@ -59,7 +59,7 @@ public class FoafGraphsTest {
         testerOnlyImplAllowingNestedGraphs.load();
         testerOnlyImplBadNestedGraphs.load();
         queries = new QueryCatalog("foaf-graphs.sparql");
-        queries.load();
+        queries.load(ClassLoader.getSystemResourceAsStream(queries.resource()));
     }
 
     @Test

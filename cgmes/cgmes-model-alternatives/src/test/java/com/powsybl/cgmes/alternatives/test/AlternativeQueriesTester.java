@@ -61,7 +61,7 @@ public class AlternativeQueriesTester {
     }
 
     public void load() {
-        queries.load();
+        queries.load(this.getClass().getClassLoader().getResourceAsStream(queries.resource()));
 
         // Load the model for every triple store implementation
         for (String impl : implementations) {

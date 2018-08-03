@@ -57,6 +57,9 @@ public class CgmesModelTester {
     }
 
     private void test(CgmesModel expected, CgmesModel actual) {
+        PropertyBags ots = actual.numObjectsByType();
+        LOG.info(ots.tabulateLocals());
+
         assertEquals(gridModel.expected().version(), actual.version());
         assertEquals(gridModel.expected().isNodeBreaker(), actual.isNodeBreaker());
         // Model id is not checked

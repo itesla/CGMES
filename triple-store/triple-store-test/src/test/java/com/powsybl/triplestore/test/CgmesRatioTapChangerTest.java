@@ -44,7 +44,7 @@ public class CgmesRatioTapChangerTest {
                 input1, input2);
         tester.load();
         queries = new QueryCatalog("cgmes-rtcs.sparql");
-        queries.load();
+        queries.load(ClassLoader.getSystemResourceAsStream(queries.resource()));
     }
 
     @Test

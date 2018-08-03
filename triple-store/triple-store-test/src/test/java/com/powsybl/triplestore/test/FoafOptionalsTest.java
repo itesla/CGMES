@@ -43,7 +43,7 @@ public class FoafOptionalsTest {
                 input);
         tester.load();
         queries = new QueryCatalog("foaf-optionals.sparql");
-        queries.load();
+        queries.load(ClassLoader.getSystemResourceAsStream(queries.resource()));
     }
 
     @Test

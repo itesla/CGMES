@@ -13,6 +13,7 @@ package com.powsybl.triplestore;
  */
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Objects;
@@ -30,10 +31,14 @@ public class QueryCatalog extends HashMap<String, String> {
         this.resource = resource;
     }
 
-    public void load() {
+    public String resource() {
+        return resource;
+    }
+
+    public void load(InputStream ir) {
         ParsingContext context = new ParsingContext();
         try (Stream<String> stream = new BufferedReader(
-                new InputStreamReader(ClassLoader.getSystemResourceAsStream(resource))).lines()) {
+                new InputStreamReader(ir)).lines()) {
             stream.forEach(line -> parse(line, context));
         }
         context.close();
@@ -110,13 +115,13 @@ public class QueryCatalog extends HashMap<String, String> {
         }
 
         private final StringBuilder queryText;
-        private String              queryName;
+        private String queryName;
     }
 
-    private final String        resource;
+    private final String resource;
 
     private static final String QUERY_DEFINITION = "query:";
-    private static final String LINE_SEPARATOR   = System.getProperty("line.separator");
-    private static final Logger LOG              = LoggerFactory
+    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+    private static final Logger LOG = LoggerFactory
             .getLogger(QueryCatalog.class);
 }
