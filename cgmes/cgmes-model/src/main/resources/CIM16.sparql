@@ -43,6 +43,13 @@ SELECT ?version
     ?versionId cim:IEC61970CIMVersion.version ?version
 }}
 
+# query: numObjectsByType
+SELECT ?Type (COUNT (DISTINCT ?object) AS ?numObjects)
+{ GRAPH ?graph {
+	?object a ?Type ;
+}}
+GROUP BY ?Type
+
 # query: boundaryNodes
 # All topological nodes belonging to a graph that has a modelProfile that contains the string "TopologyBoundary"
 # Union all connectivity nodes belonging to a graph that has profile EquipmentBoundaryOperation
