@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2017, RTE (http://www.rte-france.com)
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.powsybl</groupId>
+        <artifactId>powsybl-core-cgmes</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>powsybl-tools-from-cgmes</artifactId>
+
+    <name>Tools for CGMES validation</name>
+    <description>Tools for CGMES validation</description>
+
+    <dependencies>
+        <!-- Compilation dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>powsybl-cgmes-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>powsybl-cgmes-conversion</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-iidm-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-iidm-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-iidm-xml-converter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.gdata</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+		
+        <!-- Consider all known triple store engines -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-triple-store-impl-blazegraph</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-triple-store-impl-jena</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-triple-store-impl-rdf4j</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+		
+        <!-- To be able to import CIM14 files for comparison -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-cim1-converter</artifactId>
+        </dependency>
+		
+        <!-- To be able to perform LoadFlow computations -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-loadflow-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-loadflow-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-computation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-computation-local</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-loadflow-results-completion</artifactId>
+        </dependency>
+		<!-- LoadFlow engine HADES2 --><!--
+        <dependency>
+            <groupId>com.rte_france.powsybl</groupId>
+            <artifactId>powsybl-hades2-integration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.rte_france.powsybl</groupId>
+            <artifactId>powsybl-adn-export</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.rte_france.powsybl</groupId>
+            <artifactId>powsybl-iidm-cvg-extensions</artifactId>
+        </dependency>
+		LoadFlow engine HADES2 -->
+		<!-- LoadFlow engine HELM --><!--
+        <dependency>
+            <groupId>com.elequant.helmflow</groupId>
+            <artifactId>helmflow-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.elequant.helmflow</groupId>
+            <artifactId>helmflow-api-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.elequant.helmflow</groupId>
+            <artifactId>helmflow-powsybl-integration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.elequant.helmflow</groupId>
+            <artifactId>helmflow-core</artifactId>
+        </dependency>
+		LoadFlow engine HELM -->
+		
+		<dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>powsybl-cgmes-model</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>compile</scope>
+		</dependency>
+    </dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<configuration>
+					<licenseResolver>${project.baseUri}../src/license</licenseResolver>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
