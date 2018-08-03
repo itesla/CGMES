@@ -27,6 +27,7 @@
         <module>cgmes-model</module>
         <module>cgmes-model-alternatives</module>
         <module>cgmes-validation</module>
+        <module>cgmes-csi</module>
     </modules>
 
 </project>
