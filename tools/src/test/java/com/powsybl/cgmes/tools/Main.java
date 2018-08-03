@@ -38,9 +38,9 @@ public final class Main {
             }
         }
         Objects.requireNonNull(path, "path");
-        Objects.requireNonNull(basename, "basename");
         Objects.requireNonNull(tripleStoreImplementation, "tripleStoreImplementation");
         Objects.requireNonNull(action, "action");
+        basename = basename == null ? "" : basename;
 
         ReadOnlyDataSource ds = DataSourceUtil.createDataSource(path, basename, compressionExtension, null);
         CgmesModel cgmes = CgmesModelFactory.create(ds, tripleStoreImplementation);
