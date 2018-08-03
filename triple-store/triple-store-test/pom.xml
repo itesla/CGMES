@@ -16,7 +16,7 @@
 
     <artifactId>powsybl-triple-store-test</artifactId>
 
-    <name>Triple store ipmlementations test</name>
+    <name>Triple store implementations test</name>
     <description>Test for triple store implementations</description>
 
     <dependencies>
