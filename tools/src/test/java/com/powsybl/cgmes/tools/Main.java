@@ -29,18 +29,24 @@ public final class Main {
                 path = Paths.get(args[k + 1]);
             } else if (args[k].equals("--basename")) {
                 basename = args[k + 1];
-            } else if (args[k].equals("--compressionExtension")) {
-                compressionExtension = CompressionFormat.valueOf(args[k + 1]);
-            } else if (args[k].equals("--tripleStoreImplementation")) {
+            } else if (args[k].equals("--compression")) {
+                compressionExtension = CompressionFormat.valueOf(args[k + 1].toUpperCase());
+            } else if (args[k].equals("--tripleStore")) {
                 tripleStoreImplementation = args[k + 1];
             } else if (args[k].equals("--action")) {
                 action = args[k + 1];
             }
         }
         Objects.requireNonNull(path, "path");
-        Objects.requireNonNull(tripleStoreImplementation, "tripleStoreImplementation");
+        Objects.requireNonNull(tripleStoreImplementation, "tripleStore");
         Objects.requireNonNull(action, "action");
         basename = basename == null ? "" : basename;
+        output("Parameters");
+        outputParameter("path", path.toAbsolutePath());
+        outputParameter("basename", basename);
+        outputParameter("compression", compressionExtension);
+        outputParameter("tripleStore", tripleStoreImplementation);
+        outputParameter("action", action);
 
         ReadOnlyDataSource ds = DataSourceUtil.createDataSource(path, basename, compressionExtension, null);
         CgmesModel cgmes = CgmesModelFactory.create(ds, tripleStoreImplementation);
@@ -57,5 +63,9 @@ public final class Main {
 
     private static void output(String s) {
         System.out.println(s);
+    }
+
+    private static void outputParameter(String param, Object value) {
+        System.out.printf("    %-15s = %s%n", param, value);
     }
 }
