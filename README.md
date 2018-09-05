@@ -3,6 +3,36 @@
 
 https://github.com/itesla/CGMES.git
 
+# Testing
+
+The project contains a module `tools` that can be used to test import/export of CGMES data and conversion to IIDM.
+
+## Test tool
+
+There is a convenience bash script, `runcgmes`, that calls the test tool using the following command:
+
+	mvn test-compile exec:java --projects tools -Dexec.mainClass=com.powsybl.cgmes.tools.Main -Dexec.args="$*" -Ditools.config.dir=~/.itools -Dexec.classpathScope=test
+
+The test tool accepts the following parameters:
+
+`--path`, `--basename`, `--compression` are used to provide the network/case to import use. The input data may be a set of XML files in a folder, a single archive file (ZIP) ...
+
+`--tripleStore` to indicate the implementation for the CGMES data store. The available options are `rdf4j`, `jena` and `blazegraph`.
+
+`--action` the testing action to perform:<br>
+
+`numObjectsByType` outputs a table with the number of objects of each class that can be compared with CGMES conformity documentation.
+
+## Examples
+
+Some example calls:
+
+	runcgmes --path data/cim14/ieee14 --tripleStore rdf4j --action numObjectsByType
+	
+	runcgmes --path data/conformity/cas-1.1.3-data-4.0.3/MicroGrid/BaseCase/CGMES_v2.4.15_MicroGridTestConfiguration_BC_BE_v2 --tripleStore rdf4j --action numObjectsByType
+	
+	runcgmes --path data/conformity/cas-2.0/MicroGrid/BaseCase_BC --basename CGMES_v2.4.15_MicroGridTestConfiguration_BC_NL_v2 --compression zip --tripleStore rdf4j --action numObjectsByType
+	
 # Build
 
 This project depends on `powsybl-core`. It can be obtained and built using:
