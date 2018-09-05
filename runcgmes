@@ -9,7 +9,7 @@ MAIN_CLASS="com.powsybl.cgmes.tools.Main"
 ITOOLS_CONFIG_DIR="~/.itools"
 
 function exec_tool {
-	mvn test-compile exec:java --projects tools -Dexec.mainClass=${MAIN_CLASS} -Dexec.args="$*" -Ditools.config.dir=${ITOOLS_CONFIG_DIR} -Dexec.classpathScope=test
+	mvn -q test-compile exec:java --projects tools -Dexec.mainClass=${MAIN_CLASS} -Dexec.args="$*" -Ditools.config.dir=${ITOOLS_CONFIG_DIR} -Dexec.classpathScope=test
 }
 
 exec_tool "$*"
