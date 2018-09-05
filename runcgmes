@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# example:
+# runcgmes --path data/cim14/ieee14 --basename ieee14bus --tripleStore rdf4j --action numObjectsByType
+
+# Optimize start JIT compilation in Java virtual machine for short run 
+export MAVEN_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+MAIN_CLASS="com.powsybl.cgmes.tools.Main"
+ITOOLS_CONFIG_DIR="~/.itools"
+
+function exec_tool {
+	mvn test-compile exec:java --projects tools -Dexec.mainClass=${MAIN_CLASS} -Dexec.args="$*" -Ditools.config.dir=${ITOOLS_CONFIG_DIR} -Dexec.classpathScope=test
+}
+
+exec_tool "$*"
+
