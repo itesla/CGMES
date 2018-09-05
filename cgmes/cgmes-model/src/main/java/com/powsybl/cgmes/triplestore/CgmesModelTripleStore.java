@@ -155,7 +155,7 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
 
     @Override
     public PropertyBags numObjectsByType() {
-        return namedQuery("numObjectsByType");
+        return namedQuery("numObjectsByType", cimNamespace);
     }
 
     @Override
