@@ -12,11 +12,9 @@ package com.powsybl.cgmes.test;
  * #L%
  */
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -90,9 +88,9 @@ public class CgmesModelTester {
             if (expecteds.size() > 0) {
                 if (LOG.isDebugEnabled()) {
                     String debugPropertyName = expecteds.get(0).propertyNames().get(0);
-                    String[] debugValues = actuals.pluck(debugPropertyName);
+                    List<String> debugValues = actuals.pluckLocals(debugPropertyName);
                     LOG.debug("Actuals:");
-                    LOG.debug(Arrays.toString(debugValues));
+                    LOG.debug(String.join(",", debugValues));
                 }
             } else {
                 String names = String.join(",", actuals.get(0).propertyNames());
@@ -100,7 +98,8 @@ public class CgmesModelTester {
             }
         }
 
-        // Check that all property values in expected are present in actuals and have the same value
+        // Check that all property values in expected are present in actuals and have
+        // the same value
         assertNotNull(actuals);
         assertEquals(expecteds.size(), actuals.size());
         if (expecteds.size() == 0) {
@@ -108,7 +107,7 @@ public class CgmesModelTester {
         }
         List<String> expectedPropertyNames = expecteds.get(0).propertyNames();
         expectedPropertyNames.stream().forEach(p -> {
-            assertArrayEquals(expecteds.pluck(p), actuals.pluck(p));
+            assertEquals(expecteds.pluckLocals(p), actuals.pluckLocals(p));
         });
     }
 

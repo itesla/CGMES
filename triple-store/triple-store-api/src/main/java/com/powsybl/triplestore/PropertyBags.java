@@ -15,7 +15,9 @@ package com.powsybl.triplestore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -32,12 +34,42 @@ public class PropertyBags extends ArrayList<PropertyBag> {
         super(ps);
     }
 
-    public String[] pluck(String property) {
+    public List<String> pluck(String property) {
+        return stream()
+                .map(r -> r.get(property))
+                .sorted(Comparator.nullsLast(String::compareTo))
+                .collect(Collectors.toList());
+    }
+
+    public List<String> pluckLocals(String property) {
         return stream()
                 .map(r -> r.getLocal(property))
                 .sorted(Comparator.nullsLast(String::compareTo))
-                .collect(Collectors.toList())
-                .toArray(new String[0]);
+                .collect(Collectors.toList());
+    }
+
+    public PropertyBags pivot(
+            String idProperty,
+            String keyProperty,
+            List<String> pivotPropertyNames,
+            String valueProperty) {
+        int estimatedNumObjects = size() / pivotPropertyNames.size();
+        Map<String, PropertyBag> objects = new HashMap<>(estimatedNumObjects);
+        List<String> propertyNames = new ArrayList<>(pivotPropertyNames.size() + 1);
+        propertyNames.add(idProperty);
+        propertyNames.addAll(pivotPropertyNames);
+        stream().forEach(b -> {
+            String id = b.getId(idProperty);
+            PropertyBag object = objects.computeIfAbsent(id, id1 -> {
+                PropertyBag o1 = new PropertyBag(propertyNames);
+                o1.put(idProperty, id1);
+                return o1;
+            });
+            String property = b.get(keyProperty);
+            String value = b.get(valueProperty);
+            object.put(property, value);
+        });
+        return new PropertyBags(objects.values());
     }
 
     public String tabulateLocals() {

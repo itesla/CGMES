@@ -12,7 +12,6 @@ package com.powsybl.triplestore.test;
  * #L%
  */
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -44,10 +43,10 @@ public class PropertyBagsTest {
 
     @Test
     public void testPluck() {
-        String[] expectedKeys0 = {"key0-value0", "key0-value1"};
-        String[] expectedKeys1 = {"key1-value0", "key1-value1"};
-        assertArrayEquals(expectedKeys0, bags.pluck("key0"));
-        assertArrayEquals(expectedKeys1, bags.pluck("key1"));
+        List<String> expectedKeys0 = Arrays.asList("key0-value0", "key0-value1");
+        List<String> expectedKeys1 = Arrays.asList("key1-value0", "key1-value1");
+        assertEquals(expectedKeys0, bags.pluckLocals("key0"));
+        assertEquals(expectedKeys1, bags.pluckLocals("key1"));
     }
 
     @Test
@@ -72,6 +71,42 @@ public class PropertyBagsTest {
         s.append("http://example.com/#key0-value1 \t http://example.com/#key1-value1");
         String expected = s.toString();
         assertEquals(expected, bags.tabulate());
+    }
+
+    @Test
+    public void testPivot() {
+        PropertyBags bs = new PropertyBags();
+        List<String> properties = Arrays.asList("id", "key", "value");
+        String propertyp = "http://example.com/#p";
+        String propertyq = "http://example.com/#q";
+
+        PropertyBag b0p = new PropertyBag(properties);
+        PropertyBag b0q = new PropertyBag(properties);
+        b0p.put("id", "http://example.com/#id0");
+        b0p.put("key", propertyp);
+        b0p.put("value", "http://example.com/#id0-p-value");
+        b0q.put("id", "http://example.com/#id0");
+        b0q.put("key", propertyq);
+        b0q.put("value", "http://example.com/#id0-q-value");
+        bs.add(b0p);
+        bs.add(b0q);
+
+        PropertyBag b1p = new PropertyBag(properties);
+        PropertyBag b1q = new PropertyBag(properties);
+        b1p.put("id", "http://example.com/#id1");
+        b1p.put("key", propertyp);
+        b1p.put("value", "http://example.com/#id1-p-value");
+        b1q.put("id", "http://example.com/#id1");
+        b1q.put("key", propertyq);
+        b1q.put("value", "http://example.com/#id1-q-value");
+        bs.add(b1p);
+        bs.add(b1q);
+
+        PropertyBags bs1 = bs.pivot("id", "key", Arrays.asList(propertyp, propertyq), "value");
+        List<String> expectedIds = Arrays.asList("id0", "id1");
+        List<String> expectedps = Arrays.asList("id0-p-value", "id1-p-value");
+        assertEquals(expectedIds, bs1.pluckLocals("id"));
+        assertEquals(expectedps, bs1.pluckLocals(propertyp));
     }
 
     private static PropertyBags bags;

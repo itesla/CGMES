@@ -46,6 +46,8 @@ public interface CgmesModel {
 
     PropertyBags numObjectsByType();
 
+    PropertyBags allObjectsOfType(String type);
+
     PropertyBags boundaryNodes();
 
     PropertyBags baseVoltages();
@@ -450,6 +452,11 @@ public interface CgmesModel {
         @Override
         public PropertyBags numObjectsByType() {
             return numObjectsByType;
+        }
+
+        @Override
+        public PropertyBags allObjectsOfType(String type) {
+            return null;
         }
 
         @Override

@@ -1,5 +1,7 @@
 package com.powsybl.cgmes.conversion.test;
 
+import java.util.List;
+
 /*
  * #%L
  * CGMES conversion
@@ -30,11 +32,10 @@ public class FakeSubstationsConversionTest {
         CgmesModel cgmes = new CgmesModel.Fake()
                 .substations("Sub1", "Sub2", "Sub3");
         Network n = new Conversion(cgmes).convertedNetwork();
-        String[] actuals = n.getSubstationStream()
+        List<String> actuals = n.getSubstationStream()
                 .map(s -> s.getId())
-                .collect(Collectors.toList())
-                .toArray(new String[0]);
-        String[] expecteds = cgmes.substations().pluck("Substation");
-        Assert.assertArrayEquals(expecteds, actuals);
+                .collect(Collectors.toList());
+        List<String> expecteds = cgmes.substations().pluckLocals("Substation");
+        Assert.assertEquals(expecteds, actuals);
     }
 }

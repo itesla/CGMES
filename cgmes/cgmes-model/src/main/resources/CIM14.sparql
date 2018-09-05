@@ -5,13 +5,20 @@ SELECT ?version
 }}
 
 # query: numObjectsByType
+# Only types in a namespace given as parameter
 SELECT ?Type (COUNT (DISTINCT ?object) AS ?numObjects)
 { GRAPH ?graph {
-	?object a ?Type ;
-}
-FILTER (STRSTARTS(STR(?Type), "{0}"))
-}
+	?object a ?Type .
+    FILTER (STRSTARTS(STR(?Type), "{0}"))
+}}
 GROUP BY ?Type
+
+# query: allObjectsOfType
+SELECT * 
+{ GRAPH ?graph {
+	?object a cim:{0} ;
+	    ?attribute ?value .
+}}
 
 # query: substations
 SELECT ?Substation ?name ?SubRegion ?subRegionName ?Region ?regionName

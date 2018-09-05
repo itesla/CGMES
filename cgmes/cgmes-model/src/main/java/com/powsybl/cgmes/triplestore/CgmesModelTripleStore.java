@@ -155,7 +155,14 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
 
     @Override
     public PropertyBags numObjectsByType() {
+        Objects.requireNonNull(cimNamespace);
         return namedQuery("numObjectsByType", cimNamespace);
+    }
+
+    @Override
+    public PropertyBags allObjectsOfType(String type) {
+        Objects.requireNonNull(type);
+        return namedQuery("allObjectsOfType", type);
     }
 
     @Override
@@ -285,6 +292,7 @@ public class CgmesModelTripleStore extends AbstractCgmesModel {
 
     @Override
     public PropertyBags phaseTapChangerTable(String tableId) {
+        Objects.requireNonNull(tableId);
         return namedQuery("phaseTapChangerTable", tableId);
     }
 

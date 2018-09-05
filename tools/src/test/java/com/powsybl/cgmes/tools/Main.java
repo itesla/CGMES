@@ -2,7 +2,10 @@ package com.powsybl.cgmes.tools;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.powsybl.cgmes.CgmesModel;
 import com.powsybl.cgmes.CgmesModelFactory;
@@ -24,6 +27,7 @@ public final class Main {
         CompressionFormat compressionExtension = null;
         String tripleStoreImplementation = null;
         String action = null;
+        String actionParam = null;
         for (int k = 0; k < args.length; k++) {
             if (args[k].equals("--path")) {
                 path = Paths.get(args[k + 1]);
@@ -35,6 +39,9 @@ public final class Main {
                 tripleStoreImplementation = args[k + 1];
             } else if (args[k].equals("--action")) {
                 action = args[k + 1];
+                if (k + 2 < args.length) {
+                    actionParam = args[k + 2];
+                }
             }
         }
         Objects.requireNonNull(path, "path");
@@ -47,17 +54,39 @@ public final class Main {
         outputParameter("compression", compressionExtension);
         outputParameter("tripleStore", tripleStoreImplementation);
         outputParameter("action", action);
+        outputParameter("actionParam", actionParam);
 
         ReadOnlyDataSource ds = DataSourceUtil.createDataSource(path, basename, compressionExtension, null);
         CgmesModel cgmes = CgmesModelFactory.create(ds, tripleStoreImplementation);
 
-        doSomething(cgmes, action);
+        doSomething(cgmes, action, actionParam);
     }
 
-    private static void doSomething(CgmesModel cgmes, String action) {
+    private static void doSomething(CgmesModel cgmes, String action, String actionParam) {
         if (action.equals("numObjectsByType")) {
             PropertyBags ot = cgmes.numObjectsByType();
             output(ot.tabulateLocals());
+        } else if (action.equals("allObjectsOfType")) {
+            String type = actionParam;
+            Objects.requireNonNull(type);
+            PropertyBags ot = cgmes.allObjectsOfType(type);
+            if (ot.size() > 0) {
+                output(ot.tabulate());
+
+                String idProperty = "object";
+                String keyProperty = "attribute";
+                String valueProperty = "value";
+                // Pivot all properties except ...
+                List<String> notPivotable = Arrays.asList("graph", "type", idProperty, keyProperty, valueProperty);
+                List<String> pivotPropertyNames = ot.pluck("attribute").stream()
+                        .filter(p -> !notPivotable.contains(p))
+                        .collect(Collectors.toSet())
+                        .stream().collect(Collectors.toList());
+                PropertyBags ot1 = ot.pivot(idProperty, keyProperty, pivotPropertyNames, valueProperty);
+                output(ot1.tabulateLocals());
+            }
+        } else {
+            output(String.format("Unknown action %s", action));
         }
     }
 

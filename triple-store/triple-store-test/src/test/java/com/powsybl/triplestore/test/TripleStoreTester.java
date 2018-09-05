@@ -12,7 +12,6 @@ package com.powsybl.triplestore.test;
  * #L%
  */
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -89,10 +88,10 @@ public class TripleStoreTester {
             logResults(impl, results, expected);
             if (doAsserts) {
                 assertTrue(results.size() > 0);
-                int size = expected.values().iterator().next().length;
+                int size = expected.values().iterator().next().size();
                 assertEquals(size, results.size());
                 expected.keySet().stream()
-                        .forEach(property -> assertArrayEquals(expected.get(property), results.pluck(property)));
+                        .forEach(property -> assertEquals(expected.get(property), results.pluckLocals(property)));
             }
         }
     }
@@ -108,16 +107,16 @@ public class TripleStoreTester {
         LOG.info("{} tabulated results as localValues", impl);
         LOG.info(results.tabulateLocals());
         expected.keySet().stream().forEach(property -> {
-            String[] expectedValues = expected.get(property);
-            String[] actualValues = results.pluck(property);
-            LOG.info("{} expected values for property {} : {}", impl, property, Arrays.toString(expectedValues));
-            LOG.info("{} actual values for property {}   : {}", impl, property, Arrays.toString(actualValues));
+            List<String> expectedValues = expected.get(property);
+            List<String> actualValues = results.pluckLocals(property);
+            LOG.info("{} expected values for property {} : {}", impl, property, String.join(",", expectedValues));
+            LOG.info("{} actual values for property {}   : {}", impl, property, String.join(",", actualValues));
         });
     }
 
-    public static class Expected extends HashMap<String, String[]> {
+    public static class Expected extends HashMap<String, List<String>> {
         public Expected expect(String property, String... values) {
-            put(property, values);
+            put(property, Arrays.asList(values));
             return this;
         }
     }
