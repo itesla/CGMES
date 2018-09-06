@@ -105,8 +105,15 @@ public class PropertyBagsTest {
         PropertyBags bs1 = bs.pivot("id", "key", Arrays.asList(propertyp, propertyq), "value");
         List<String> expectedIds = Arrays.asList("id0", "id1");
         List<String> expectedps = Arrays.asList("id0-p-value", "id1-p-value");
+        List<String> expectedqs = Arrays.asList("id0-q-value", "id1-q-value");
         assertEquals(expectedIds, bs1.pluckLocals("id"));
         assertEquals(expectedps, bs1.pluckLocals(propertyp));
+        assertEquals(expectedqs, bs1.pluckLocals(propertyq));
+
+        PropertyBags bs2 = bs.pivotLocalNames("id", "key", Arrays.asList("p", "q"), "value");
+        assertEquals(expectedIds, bs2.pluckLocals("id"));
+        assertEquals(expectedps, bs2.pluckLocals("p"));
+        assertEquals(expectedqs, bs2.pluckLocals("q"));
     }
 
     private static PropertyBags bags;

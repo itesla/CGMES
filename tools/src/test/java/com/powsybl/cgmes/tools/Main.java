@@ -78,11 +78,11 @@ public final class Main {
                 String valueProperty = "value";
                 // Pivot all properties except ...
                 List<String> notPivotable = Arrays.asList("graph", "type", idProperty, keyProperty, valueProperty);
-                List<String> pivotPropertyNames = ot.pluck("attribute").stream()
+                List<String> pivotPropertyNames = ot.pluckLocals("attribute").stream()
                         .filter(p -> !notPivotable.contains(p))
                         .collect(Collectors.toSet())
                         .stream().collect(Collectors.toList());
-                PropertyBags ot1 = ot.pivot(idProperty, keyProperty, pivotPropertyNames, valueProperty);
+                PropertyBags ot1 = ot.pivotLocalNames(idProperty, keyProperty, pivotPropertyNames, valueProperty);
                 output(ot1.tabulateLocals());
             }
         } else {

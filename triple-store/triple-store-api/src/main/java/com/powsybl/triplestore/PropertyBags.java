@@ -72,6 +72,30 @@ public class PropertyBags extends ArrayList<PropertyBag> {
         return new PropertyBags(objects.values());
     }
 
+    public PropertyBags pivotLocalNames(
+            String idProperty,
+            String keyProperty,
+            List<String> pivotPropertyLocalNames,
+            String valueProperty) {
+        int estimatedNumObjects = size() / pivotPropertyLocalNames.size();
+        Map<String, PropertyBag> objects = new HashMap<>(estimatedNumObjects);
+        List<String> propertyNames = new ArrayList<>(pivotPropertyLocalNames.size() + 1);
+        propertyNames.add(idProperty);
+        propertyNames.addAll(pivotPropertyLocalNames);
+        stream().forEach(b -> {
+            String id = b.getId(idProperty);
+            PropertyBag object = objects.computeIfAbsent(id, id1 -> {
+                PropertyBag o1 = new PropertyBag(propertyNames);
+                o1.put(idProperty, id1);
+                return o1;
+            });
+            String property = b.getLocal(keyProperty);
+            String value = b.get(valueProperty);
+            object.put(property, value);
+        });
+        return new PropertyBags(objects.values());
+    }
+
     public String tabulateLocals() {
         return tabulate((bag, property) -> bag.getLocal(property));
     }
