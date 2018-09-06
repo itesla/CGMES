@@ -23,6 +23,8 @@ The test tool accepts the following parameters:
 
 `numObjectsByType` outputs a table with the number of objects of each class that can be compared with CGMES conformity documentation.
 
+`allObjectsOfType <typeName>` outputs a table with a row for every object of the given type and columns for all possible attributes.
+
 ## Examples
 
 Some example calls:
@@ -32,6 +34,8 @@ Some example calls:
 	runcgmes --path data/conformity/cas-1.1.3-data-4.0.3/MicroGrid/BaseCase/CGMES_v2.4.15_MicroGridTestConfiguration_BC_BE_v2 --tripleStore rdf4j --action numObjectsByType
 	
 	runcgmes --path data/conformity/cas-2.0/MicroGrid/BaseCase_BC --basename CGMES_v2.4.15_MicroGridTestConfiguration_BC_NL_v2 --compression zip --tripleStore rdf4j --action numObjectsByType
+	
+	runcgmes --path data/conformity/cas-1.1.3-data-4.0.3/MicroGrid/BaseCase/CGMES_v2.4.15_MicroGridTestConfiguration_BC_BE_v2 --tripleStore rdf4j --action allObjectsOfType ACLineSegment
 	
 # Build
 
