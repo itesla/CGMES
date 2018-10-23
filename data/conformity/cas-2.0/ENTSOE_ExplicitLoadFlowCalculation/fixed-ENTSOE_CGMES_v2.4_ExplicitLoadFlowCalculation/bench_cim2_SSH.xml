@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"	xmlns:cim="http://iec.ch/TC57/2013/CIM-schema-cim16#" xmlns:entsoe="http://entsoe.eu/CIM/SchemaExtension/3/1#"  xmlns:md="http://iec.ch/TC57/61970-552/ModelDescription/1#" >
+<md:FullModel rdf:about="urn:uuid:bench_ucte_SSH">
+<md:Model.scenarioTime></md:Model.scenarioTime>
+<md:Model.created></md:Model.created>
+<md:Model.description></md:Model.description>
+<md:Model.version></md:Model.version>
+<md:Model.profile>http://entsoe.eu/CIM/SteadyStateHypothesis/1/1</md:Model.profile>
+<md:Model.DependentOn rdf:resource="urn:uuid:bench_ucte_EQ" />
+<md:Model.DependentOn rdf:resource="urn:uuid:bench_ucte_TP" />
+<md:Model.modelingAuthoritySet>http://rte-france.fr/Planning/CGMES/2.4.15</md:Model.modelingAuthoritySet>
+</md:FullModel>
+<cim:HydroGeneratingUnit rdf:about="#FNOD0211_G_HGU">
+	<cim:GeneratingUnit.normalPF>0.04</cim:GeneratingUnit.normalPF>
+</cim:HydroGeneratingUnit>
+<cim:SynchronousMachine rdf:about="#FNOD0211_G_HGU_SM">
+	<cim:SynchronousMachine.operatingMode rdf:resource="http://iec.ch/TC57/2013/CIM-schema-cim16#SynchronousMachineOperatingMode.generator"/>
+	<cim:SynchronousMachine.referencePriority>1</cim:SynchronousMachine.referencePriority>
+	<cim:RotatingMachine.p>-341.54</cim:RotatingMachine.p>
+	<cim:RotatingMachine.q>49.0468</cim:RotatingMachine.q>
+	<cim:RegulatingCondEq.controlEnabled>true</cim:RegulatingCondEq.controlEnabled>
+</cim:SynchronousMachine>
+<cim:RegulatingControl rdf:about="#FNOD0211_G_HGU_SM_RC">
+	<cim:RegulatingControl.discrete>false</cim:RegulatingControl.discrete>
+	<cim:RegulatingControl.enabled>true</cim:RegulatingControl.enabled>
+	<cim:RegulatingControl.targetDeadband>0</cim:RegulatingControl.targetDeadband>
+	<cim:RegulatingControl.targetValue>397.1</cim:RegulatingControl.targetValue>
+	<cim:RegulatingControl.targetValueUnitMultiplier rdf:resource="http://iec.ch/TC57/2013/CIM-schema-cim16#UnitMultiplier.k"/>
+</cim:RegulatingControl>
+<cim:Terminal rdf:about="#FNOD0211_G_HGU_SM_T0">
+	<cim:ACDCTerminal.connected>true</cim:ACDCTerminal.connected>
+</cim:Terminal>
+<cim:EnergyConsumer rdf:about="#FNOD0211_L_EC">
+	<cim:EnergyConsumer.p>0</cim:EnergyConsumer.p>
+	<cim:EnergyConsumer.q>0</cim:EnergyConsumer.q>
+</cim:EnergyConsumer>
+<cim:Terminal rdf:about="#FNOD0211_L_EC_T0">
+	<cim:ACDCTerminal.connected>true</cim:ACDCTerminal.connected>
+</cim:Terminal>
+<cim:EnergyConsumer rdf:about="#FNOD0411_L_EC">
+	<cim:EnergyConsumer.p>332</cim:EnergyConsumer.p>
+	<cim:EnergyConsumer.q>-78</cim:EnergyConsumer.q>
+</cim:EnergyConsumer>
+<cim:Terminal rdf:about="#FNOD0411_L_EC_T0">
+	<cim:ACDCTerminal.connected>true</cim:ACDCTerminal.connected>
+</cim:Terminal>
+<cim:PhaseTapChangerTabular rdf:about="#FNOD041__FNOD021__1_PT_PTC">
+	<cim:TapChanger.controlEnabled>true</cim:TapChanger.controlEnabled>
+	<cim:TapChanger.step>15</cim:TapChanger.step>
+</cim:PhaseTapChangerTabular>
+<cim:TapChangerControl rdf:about="#FNOD041__FNOD021__1_PT_PTC_RC">
+	<cim:RegulatingControl.discrete>true</cim:RegulatingControl.discrete>
+	<cim:RegulatingControl.enabled>false</cim:RegulatingControl.enabled>
+	<cim:RegulatingControl.targetDeadband>999.9</cim:RegulatingControl.targetDeadband>
+	<cim:RegulatingControl.targetValue>-9999</cim:RegulatingControl.targetValue>
+	<cim:RegulatingControl.targetValueUnitMultiplier rdf:resource="http://iec.ch/TC57/2013/CIM-schema-cim16#UnitMultiplier.M"/>
+</cim:TapChangerControl>
+<cim:Terminal rdf:about="#FNOD041__FNOD021__1_PT_T0">
+	<cim:ACDCTerminal.connected>true</cim:ACDCTerminal.connected>
+</cim:Terminal>
+<cim:Terminal rdf:about="#FNOD041__FNOD021__1_PT_T1">
+	<cim:ACDCTerminal.connected>true</cim:ACDCTerminal.connected>
+</cim:Terminal>
+<cim:Terminal rdf:about="#FNOD0L41__FNO_T0">
+	<cim:ACDCTerminal.connected>true</cim:ACDCTerminal.connected>
+</cim:Terminal>
+<cim:Terminal rdf:about="#FNOD0L41__FNO_T1">
+	<cim:ACDCTerminal.connected>true</cim:ACDCTerminal.connected>
+</cim:Terminal>
+<cim:ControlArea rdf:about="#FRANCE_CA">
+	<cim:ControlArea.netInterchange>0</cim:ControlArea.netInterchange>
+	<cim:ControlArea.pTolerance>0</cim:ControlArea.pTolerance>
+</cim:ControlArea>
+</rdf:RDF>

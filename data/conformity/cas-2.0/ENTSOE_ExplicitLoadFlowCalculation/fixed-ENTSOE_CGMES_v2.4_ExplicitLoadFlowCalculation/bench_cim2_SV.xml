@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"	xmlns:cim="http://iec.ch/TC57/2013/CIM-schema-cim16#" xmlns:entsoe="http://entsoe.eu/CIM/SchemaExtension/3/1#"  xmlns:md="http://iec.ch/TC57/61970-552/ModelDescription/1#" >
+<md:FullModel rdf:about="urn:uuid:bench_ucte_SV">
+<md:Model.scenarioTime></md:Model.scenarioTime>
+<md:Model.created></md:Model.created>
+<md:Model.description></md:Model.description>
+<md:Model.version></md:Model.version>
+<md:Model.profile>http://entsoe.eu/CIM/StateVariables/4/1</md:Model.profile>
+<md:Model.DependentOn rdf:resource="urn:uuid:bench_ucte_TP" />
+<md:Model.modelingAuthoritySet>http://rte-france.fr/Planning/CGMES/2.4.15</md:Model.modelingAuthoritySet>
+</md:FullModel>
+<cim:SvPowerFlow rdf:ID="FNOD0211_G_HGU_SM_T0_SV_PF">
+	<cim:SvPowerFlow.p>-341.54</cim:SvPowerFlow.p>
+	<cim:SvPowerFlow.q>49.0468</cim:SvPowerFlow.q>
+	<cim:SvPowerFlow.Terminal rdf:resource="#FNOD0211_G_HGU_SM_T0"/>
+</cim:SvPowerFlow>
+<cim:SvPowerFlow rdf:ID="FNOD0211_L_EC_T0_SV_PF">
+	<cim:SvPowerFlow.p>0</cim:SvPowerFlow.p>
+	<cim:SvPowerFlow.q>0</cim:SvPowerFlow.q>
+	<cim:SvPowerFlow.Terminal rdf:resource="#FNOD0211_L_EC_T0"/>
+</cim:SvPowerFlow>
+<cim:SvVoltage rdf:ID="FNOD021_S_VL7_TN1_SV_V">
+	<cim:SvVoltage.angle>0</cim:SvVoltage.angle>
+	<cim:SvVoltage.v>397.1</cim:SvVoltage.v>
+	<cim:SvVoltage.TopologicalNode rdf:resource="#FNOD021_S_VL7_TN1"/>
+</cim:SvVoltage>
+<cim:SvPowerFlow rdf:ID="FNOD0411_L_EC_T0_SV_PF">
+	<cim:SvPowerFlow.p>332</cim:SvPowerFlow.p>
+	<cim:SvPowerFlow.q>-78</cim:SvPowerFlow.q>
+	<cim:SvPowerFlow.Terminal rdf:resource="#FNOD0411_L_EC_T0"/>
+</cim:SvPowerFlow>
+<cim:SvVoltage rdf:ID="FNOD041_S_VL7_TN1_SV_V">
+	<cim:SvVoltage.angle>-2.71712</cim:SvVoltage.angle>
+	<cim:SvVoltage.v>395.907</cim:SvVoltage.v>
+	<cim:SvVoltage.TopologicalNode rdf:resource="#FNOD041_S_VL7_TN1"/>
+</cim:SvVoltage>
+<cim:SvTapStep rdf:ID="FNOD041__FNOD021__1_PT_PTC_SV_TS">
+	<cim:SvTapStep.position>15</cim:SvTapStep.position>
+	<cim:SvTapStep.TapChanger rdf:resource="#FNOD041__FNOD021__1_PT_PTC"/>
+</cim:SvTapStep>
+<cim:TopologicalIsland rdf:ID="_TI1">
+	<cim:TopologicalIsland.TopologicalNodes rdf:resource="#FNOD021_S_VL7_TN1"/>
+	<cim:TopologicalIsland.TopologicalNodes rdf:resource="#FNOD041_S_VL7_TN1"/>
+	<cim:TopologicalIsland.AngleRefTopologicalNode rdf:resource="#FNOD021_S_VL7_TN1"/>
+	<cim:IdentifiedObject.name>_TI1</cim:IdentifiedObject.name>
+</cim:TopologicalIsland>
+</rdf:RDF>

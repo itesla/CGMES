@@ -9,12 +9,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<groupId>com.powsybl</groupId>
-	<artifactId>powsybl-core-cgmes</artifactId>
+	<artifactId>powsybl-cgmes-extra</artifactId>
 	<version>0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	
-	<name>powsybl-cgmes-for-core</name>
-	<description>CGMES Importer/Exporter for PowSyBl framework</description>
+	<name>CGMES extra</name>
+	<description>CGMES supplemental functions</description>
 	<url>http://www.powsybl.com/</url>
 	
 	<organization>
@@ -46,10 +46,9 @@
 	</developers>
 	
 	<modules>
-		<module>triple-store</module>
-		<module>cgmes</module>
-		<module>distribution-core-cgmes</module>
-		<module>tools</module>
+		<module>cgmes-validation</module>
+		<!--><module>distribution-core-cgmes</module><!-->
+		<module>cgmes-tools</module>
 	</modules>
 	
 	<properties>
@@ -92,7 +91,7 @@
 		<slf4j.version>1.7.22</slf4j.version>
 		<logback.version>1.2.3</logback.version>
 		
-		<powsyblcore.version>2.1.0-SNAPSHOT</powsyblcore.version>
+		<powsyblcore.version>2.2.0-SNAPSHOT</powsyblcore.version>
 		<hades2.integration.version>1.0</hades2.integration.version>
 		<helmflow.integration.version>1.0-SNAPSHOT</helmflow.integration.version>
 		<helmflow.core.version>3.0.2</helmflow.core.version>
@@ -300,6 +299,21 @@
 			</dependency>
 			<dependency>
 				<groupId>com.powsybl</groupId>
+				<artifactId>powsybl-cgmes-conformity</artifactId>
+				<version>${powsyblcore.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.powsybl</groupId>
+				<artifactId>powsybl-cgmes-conversion</artifactId>
+				<version>${powsyblcore.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.powsybl</groupId>
+				<artifactId>powsybl-cgmes-model</artifactId>
+				<version>${powsyblcore.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.powsybl</groupId>
 				<artifactId>powsybl-commons</artifactId>
 				<version>${powsyblcore.version}</version>
 			</dependency>
@@ -400,6 +414,24 @@
 				<version>${powsyblcore.version}</version>
 				<scope>test</scope>
 			</dependency>
+	        <dependency>
+	            <groupId>com.powsybl</groupId>
+	            <artifactId>powsybl-triple-store-impl-blazegraph</artifactId>
+	            <version>${powsyblcore.version}</version>
+	            <scope>test</scope>
+	        </dependency>
+	        <dependency>
+	            <groupId>com.powsybl</groupId>
+	            <artifactId>powsybl-triple-store-impl-jena</artifactId>
+	            <version>${powsyblcore.version}</version>
+	            <scope>test</scope>
+	        </dependency>
+	        <dependency>
+	            <groupId>com.powsybl</groupId>
+	            <artifactId>powsybl-triple-store-impl-rdf4j</artifactId>
+	            <version>${powsyblcore.version}</version>
+	            <scope>test</scope>
+	        </dependency>
 			<!-- LoadFlow engine HADES2 --><!--
             <dependency>
                 <groupId>com.rte_france.powsybl</groupId>
