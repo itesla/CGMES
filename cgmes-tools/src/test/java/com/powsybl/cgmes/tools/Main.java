@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.powsybl.cgmes.CgmesModel;
-import com.powsybl.cgmes.CgmesModelFactory;
+import com.powsybl.cgmes.model.CgmesModel;
+import com.powsybl.cgmes.model.CgmesModelFactory;
 import com.powsybl.commons.datasource.CompressionFormat;
 import com.powsybl.commons.datasource.DataSourceUtil;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
-import com.powsybl.triplestore.PropertyBags;
+import com.powsybl.triplestore.api.PropertyBags;
 
 public final class Main {
 
