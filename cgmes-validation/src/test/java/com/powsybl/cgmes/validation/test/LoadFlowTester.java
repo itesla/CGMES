@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.cgmes.conversion.CgmesImport;
+import com.powsybl.cgmes.conversion.CgmesModelExtension;
 import com.powsybl.cgmes.conversion.test.TopologyTester;
 import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.cgmes.model.test.TestGridModel;
@@ -45,7 +46,15 @@ public class LoadFlowTester {
         this.tripleStoreImplementations = tripleStoreImplementations;
         this.loadFlowValidation = loadFlowValidation;
         this.validateTopology = true;
-        this.strictTopologyTest = false;
+        this.strictTopologyTest = true;
+    }
+
+    public void setValidateTopology(boolean validateTopology) {
+        this.validateTopology = validateTopology;
+    }
+
+    public void setStrictTopologyTest(boolean strictTopologyTest) {
+        this.strictTopologyTest = strictTopologyTest;
     }
 
     public void testLoadFlow(TestGridModel gm) throws IOException {
@@ -68,11 +77,14 @@ public class LoadFlowTester {
         // TODO receive import parameters for the test
         Properties importParams = null;
         Properties iparams = importParams == null ? new Properties() : importParams;
-        iparams.put("storeCgmesModelAsNetworkProperty", "true");
+        iparams.put("storeCgmesModelAsNetworkExtension", "true");
         // Ensure properties are stored as strings
         // (getProperty returns null if the property exists but is not a string)
         String sb = Boolean.toString(loadFlowValidation.changeSignForShuntReactivePowerFlowInitialState());
         iparams.put("changeSignForShuntReactivePowerFlowInitialState", sb);
+        // FIXME This is to be able to easily compare the topology computed by powsybl
+        // against the topology present in the CGMES model
+        iparams.put("createBusbarSectionForEveryConnectivityNode", "true");
         for (String impl : tripleStoreImplementations) {
             LOG.info("testLoadFlow {} {}", gm.name(), impl);
             iparams.put("powsyblTripleStore", impl);
@@ -90,7 +102,9 @@ public class LoadFlowTester {
                 fail("Model is empty");
             }
             if (validateTopology) {
-                CgmesModel cgmes = (CgmesModel) network.getProperties().get(CgmesImport.NETWORK_PS_CGMES_MODEL);
+                CgmesModel cgmes = network.getExtension(CgmesModelExtension.class).getCgmesModel();
+                // CgmesModel cgmes =
+                // (CgmesModel)network.getProperties().get(CgmesImport.NETWORK_PS_CGMES_MODEL);
                 if (!new TopologyTester(cgmes, network).test(strictTopologyTest)) {
                     fail("Topology test failed");
                 }
@@ -109,15 +123,15 @@ public class LoadFlowTester {
                 .workingDirectory(working)
                 .writeNetworksInputsResults(true)
                 // Assume all test cases are solved
-                .validateInitialState(false)
-                .compareWithInitialState(false)
+                .validateInitialState(true)
+                .compareWithInitialState(true)
                 .build();
     }
 
     private final List<String> tripleStoreImplementations;
     private final LoadFlowValidation loadFlowValidation;
-    private final boolean validateTopology;
-    private final boolean strictTopologyTest;
+    private boolean validateTopology;
+    private boolean strictTopologyTest;
 
     private static final Logger LOG = LoggerFactory.getLogger(LoadFlowTester.class);
 }

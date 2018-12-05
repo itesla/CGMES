@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.cgmes.validation.test.LoadFlowComputation.LoadFlowEngine;
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.config.InMemoryPlatformConfig;
 import com.powsybl.commons.config.MapModuleConfig;
 import com.powsybl.commons.datasource.FileDataSource;
@@ -46,8 +47,10 @@ import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.Substation;
 import com.powsybl.iidm.network.Terminal;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
+import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.xml.XMLExporter;
 import com.powsybl.iidm.xml.XMLImporter;
 import com.powsybl.loadflow.LoadFlowParameters;
@@ -61,6 +64,9 @@ import com.powsybl.loadflow.validation.ValidationConfig;
 import com.powsybl.loadflow.validation.ValidationType;
 import com.powsybl.loadflow.validation.ValidationUtils;
 import com.powsybl.loadflow.validation.io.ValidationWriter;
+
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 /**
  * @author Luma Zamarreño <zamarrenolm at aia.es>
@@ -133,6 +139,17 @@ public final class LoadFlowValidation {
         String computedLabel = computedStateId;
 
         write(network, initialLabel);
+        for (Substation s : network.getSubstations()) {
+            for (VoltageLevel vl : s.getVoltageLevels()) {
+                String fname = String.format("%s-%s.dot", s.getName(), vl.getName()).replaceAll("\\/", "-");
+                String f = workingDirectory.resolve(String.format("cgmes-initial-topo-%s", fname)).toString();
+                try {
+                    vl.exportTopology(f);
+                } catch (IOException e) {
+                    throw new PowsyblException("debug-topo", e);
+                }
+            }
+        }
         if (validateInitialState) {
             computeMissingFlows(network);
             write(network, initialCompletedLabel);
@@ -158,6 +175,29 @@ public final class LoadFlowValidation {
 
             // validate the state from the written file
             Network network1 = read(fds);
+            write(network, "computed-reread");
+            // FIXME debug topology of all voltage levels
+            boolean recover = false;
+            for (Substation s : network.getSubstations()) {
+                for (VoltageLevel vl : s.getVoltageLevels()) {
+                    VoltageLevel vl1 = network1.getVoltageLevel(vl.getId());
+                    debugRecoverInternalConnections(recover, vl, vl1);
+                }
+            }
+            for (Substation s : network1.getSubstations()) {
+                for (VoltageLevel vl : s.getVoltageLevels()) {
+                    String f = workingDirectory.resolve(
+                            String.format("cgmes-reread-topo-%s-%s.dot",
+                                    s.getName(),
+                                    vl.getName()))
+                            .toString();
+                    try {
+                        vl.exportTopology(f);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
             validateStateValues(network1,
                     computedLabel + "-reread",
                     maxGeneratorsFailComputedState,
@@ -175,6 +215,40 @@ public final class LoadFlowValidation {
             }
             // After validation, leave load flow results as current state of network
             network.getStateManager().setWorkingState(computedStateId);
+        }
+    }
+
+    public static void debugRecoverInternalConnections(boolean recover, VoltageLevel vl, VoltageLevel vl1) {
+        VoltageLevel.NodeBreakerView topo = vl.getNodeBreakerView();
+
+        int[] nodes;
+        try {
+            nodes = topo.getNodes();
+        } catch (PowsyblException x) {
+            return;
+        }
+        final TIntSet encountered = new TIntHashSet();
+        for (int n : nodes) {
+            if (encountered.contains(n) || topo.getTerminal(n) == null) {
+                continue;
+            }
+            encountered.add(n);
+            topo.traverse(n, (n1, sw, n2) -> {
+                encountered.add(n2);
+                if (sw == null) {
+                    System.out.printf("%s internal connection %s %s%n", recover ? "recover" : "debug", n1, n2);
+                    // XXX if we recover after completing xml.read,
+                    // the voltages have been set on a disconnected graph
+                    if (recover) {
+                        vl1.getNodeBreakerView()
+                                .newInternalConnection()
+                                .setNode1(n1)
+                                .setNode2(n2)
+                                .add();
+                    }
+                }
+                return topo.getTerminal(n2) == null;
+            });
         }
     }
 
@@ -215,6 +289,8 @@ public final class LoadFlowValidation {
     private void compareBusValues(Map<String, BusValues> expected, Map<String, BusValues> actual)
             throws IOException {
         Path p = workingDirectory.resolve("temp-comparison.csv");
+        expected.keySet().forEach(e -> LOG.info("expected " + e));
+        actual.keySet().forEach(a -> LOG.info("actual " + a));
         try (Writer w = Files.newBufferedWriter(p, StandardCharsets.UTF_8)) {
             w.write(String.format(
                     "%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n",
@@ -305,7 +381,7 @@ public final class LoadFlowValidation {
             // Some values could be missing
             // TODO powsybl results completion LoadFlow does not compute flows in dangling
             // lines
-            config.setOkMissingValues(true);
+            config.setOkMissingValues(false);
             // config.setEpsilonX(0.02);
             // config.setApplyReactanceCorrection(true);
 

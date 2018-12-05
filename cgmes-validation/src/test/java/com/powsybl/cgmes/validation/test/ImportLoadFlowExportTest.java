@@ -44,7 +44,7 @@ public class ImportLoadFlowExportTest {
         String impl = TripleStoreFactory.defaultImplementation();
         Properties importParameters = new Properties();
         importParameters.put("powsyblTripleStore", impl);
-        importParameters.put("storeCgmesModelAsNetworkProperty", "true");
+        importParameters.put("storeCgmesModelAsNetworkExtension", "true");
 
         String name1 = gm.name().replace('/', '-');
         Path working = Files.createTempDirectory("temp-loadflow-" + name1 + "-");
