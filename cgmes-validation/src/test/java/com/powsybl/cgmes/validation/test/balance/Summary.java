@@ -2,14 +2,14 @@ package com.powsybl.cgmes.validation.test.balance;
 
 import java.util.Objects;
 
-class BalanceCollectorSummary extends AbstractBalanceCollector {
+class Summary implements BalanceCollector<Summary> {
 
     @Override
     public boolean equals(Object other0) {
-        if (!(other0 instanceof BalanceCollectorSummary)) {
+        if (!(other0 instanceof Summary)) {
             return false;
         }
-        BalanceCollectorSummary other = (BalanceCollectorSummary) other0;
+        Summary other = (Summary) other0;
         return num == other.num
                 && sum == other.sum
                 && worst.error() == other.worst.error()
@@ -22,20 +22,19 @@ class BalanceCollectorSummary extends AbstractBalanceCollector {
     }
 
     @Override
-    AbstractBalanceCollector create() {
-        return new BalanceCollectorSummary();
+    public Summary create() {
+        return new Summary();
     }
 
     @Override
-    public void accept(Balance b) {
+    public void accumulate(Balance b) {
         num++;
         sum += b.error();
         worst = b.error() > worst.error() ? b : worst;
     }
 
     @Override
-    public void combine(AbstractBalanceCollector b0) {
-        BalanceCollectorSummary b = (BalanceCollectorSummary) b0;
+    public void combine(Summary b) {
         num = num + b.num;
         sum += b.sum;
         worst = b.worst.error() > worst.error() ? b.worst : worst;
@@ -51,6 +50,10 @@ class BalanceCollectorSummary extends AbstractBalanceCollector {
                     worst.bus().getId());
             output.value("SUM   error", sum);
         }
+    }
+
+    public String toString() {
+        return String.format("{num: %d, worst: %s, sum: %f}", num, worst, sum);
     }
 
     int num = 0;

@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.powsybl.cgmes.model.test.TestGridModel;
-import com.powsybl.cgmes.model.test.TestGridModelPath;
+import com.powsybl.cgmes.validation.test.TestGridModelPath;
 import com.powsybl.commons.datasource.CompressionFormat;
 
 public class CgmesConformity2Catalog {

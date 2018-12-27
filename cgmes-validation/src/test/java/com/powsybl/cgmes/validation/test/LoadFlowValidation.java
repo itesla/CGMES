@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -132,7 +133,7 @@ public final class LoadFlowValidation {
     public void validate(Network network) throws IOException {
         Files.createDirectories(this.workingDirectory);
 
-        String initialStateId = network.getStateManager().getWorkingStateId();
+        String initialStateId = network.getVariantManager().getWorkingVariantId();
         String initialLabel = "initial";
         String initialCompletedLabel = "initial-completed";
         String computedStateId = "computed";
@@ -207,14 +208,14 @@ public final class LoadFlowValidation {
 
             if (compareWithInitialState) {
                 Map<String, BusValues> computedStateBusValues = collectBusValues(network);
-                network.getStateManager().setWorkingState(initialStateId);
+                network.getVariantManager().setWorkingVariant(initialStateId);
                 Map<String, BusValues> expectedBusValues = collectBusValues(network);
                 compareBusValues(expectedBusValues, computedStateBusValues);
             } else {
                 LOG.info("Bus values from LoadFlow results are not compared with initial values");
             }
             // After validation, leave load flow results as current state of network
-            network.getStateManager().setWorkingState(computedStateId);
+            network.getVariantManager().setWorkingVariant(computedStateId);
         }
     }
 
@@ -381,7 +382,7 @@ public final class LoadFlowValidation {
             // Some values could be missing
             // TODO powsybl results completion LoadFlow does not compute flows in dangling
             // lines
-            config.setOkMissingValues(false);
+            config.setOkMissingValues(true);
             // config.setEpsilonX(0.02);
             // config.setApplyReactanceCorrection(true);
 
@@ -447,11 +448,9 @@ public final class LoadFlowValidation {
             Writer writer = Files.newBufferedWriter(
                     working.resolve("check-generators-bad.csv"),
                     StandardCharsets.UTF_8);
-            ValidationWriter generatorsWriter = ValidationUtils.createValidationWriter(
-                    network.getId(), config, writer, ValidationType.GENERATORS);
             int count = 0;
             for (Generator g : network.getGenerators()) {
-                if (!GeneratorsValidation.checkGenerators(g, config, generatorsWriter)) {
+                if (!GeneratorsValidation.checkGenerators(g, config, writer)) {
                     count++;
                 }
             }
@@ -535,8 +534,10 @@ public final class LoadFlowValidation {
             String filename = "temp-" + clabel;
 
             XMLExporter xmlExporter = new XMLExporter();
+            Properties params = new Properties();
+            params.put(XMLExporter.THROW_EXCEPTION_IF_EXTENSION_NOT_FOUND, "false");
             FileDataSource fds = new FileDataSource(workingDirectory, filename);
-            xmlExporter.export(network, null, fds);
+            xmlExporter.export(network, params, fds);
             return fds;
         }
         return null;

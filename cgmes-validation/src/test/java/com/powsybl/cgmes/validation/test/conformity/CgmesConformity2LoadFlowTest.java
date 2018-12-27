@@ -20,10 +20,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.powsybl.cgmes.conversion.test.DebugPhaseTapChanger;
+import com.powsybl.cgmes.model.CgmesModelException;
 import com.powsybl.cgmes.model.PowerFlow;
 import com.powsybl.cgmes.model.test.TestGridModel;
 import com.powsybl.cgmes.validation.test.LoadFlowTester;
 import com.powsybl.cgmes.validation.test.LoadFlowValidation;
+import com.powsybl.cgmes.validation.test.TestGridModelPath;
+import com.powsybl.cgmes.validation.test.balance.ReportBusBalances;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
 /**
@@ -54,6 +57,22 @@ public class CgmesConformity2LoadFlowTest {
                 .compareWithInitialState(false)
                 .build();
         tester.testLoadFlow(t, validation);
+    }
+
+    @Test
+    public void reportMicroBaseCaseBE() throws IOException {
+        TestGridModel t = catalog.microBaseCaseBE();
+        try {
+            new ReportBusBalances("microBaseCaseBE", t)
+                    .setStrict(false)
+                    .setConsiderPhaseAngleClock(false)
+                    .setIgnoreBusesWithPhaseTapChanges(true)
+                    .setConsiderRatioTapChangersFor3wTxAtNetworkSide(true)
+                    .setLowImpedanceLine(0.0, 0.0)
+                    .report();
+        } catch (CgmesModelException x) {
+            System.err.println(x);
+        }
     }
 
     @Test

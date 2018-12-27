@@ -50,8 +50,9 @@ class OutputLogger implements Output {
     @Override
     public void q(String equipmentType, Identifiable<?> equipment, Terminal t) {
         if (log.isInfoEnabled()) {
-            log.info(String.format("    %-5s  --          %10.4f  %s  %s",
+            log.info(String.format("    %-5s  %10s  %10.4f  %s  %s",
                     equipmentType,
+                    "---",
                     t.getQ(),
                     equipment.getName(),
                     equipment.getId()));

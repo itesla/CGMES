@@ -30,13 +30,19 @@ public final class Terminals {
 
     static Terminal get(ThreeWindingsTransformer tlt, Bus bus) {
         if (tlt.getLeg1().getTerminal().isConnected()
+                && tlt.getLeg1().getTerminal().getBusView().getBus() != null
                 && bus.getId().equals(tlt.getLeg1().getTerminal().getBusView().getBus().getId())) {
             return tlt.getLeg1().getTerminal();
         } else if (tlt.getLeg2().getTerminal().isConnected()
+                && tlt.getLeg2().getTerminal().getBusView().getBus() != null
                 && bus.getId().equals(tlt.getLeg2().getTerminal().getBusView().getBus().getId())) {
             return tlt.getLeg2().getTerminal();
-        } else {
+        } else if (tlt.getLeg3().getTerminal().isConnected()
+                && tlt.getLeg3().getTerminal().getBusView().getBus() != null
+                && bus.getId().equals(tlt.getLeg3().getTerminal().getBusView().getBus().getId())) {
             return tlt.getLeg3().getTerminal();
+        } else {
+            return null;
         }
     }
 }

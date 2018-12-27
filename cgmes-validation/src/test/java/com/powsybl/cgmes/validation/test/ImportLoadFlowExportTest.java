@@ -1,7 +1,6 @@
 package com.powsybl.cgmes.validation.test;
 
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
@@ -9,7 +8,6 @@ import java.util.Properties;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.jimfs.Jimfs;
 import com.powsybl.cgmes.conversion.CgmesExport;
 import com.powsybl.cgmes.conversion.CgmesImport;
 import com.powsybl.cgmes.model.test.TestGridModel;
@@ -51,29 +49,27 @@ public class ImportLoadFlowExportTest {
         Path output = working.resolve("cgmes-output");
 
         CgmesImport i = new CgmesImport();
-        try (FileSystem fs = Jimfs.newFileSystem()) {
-            ReadOnlyDataSource ds = gm.dataSourceBasedOn(fs);
-            Network n = i.importData(ds, importParameters);
+        ReadOnlyDataSource ds = gm.dataSource();
+        Network n = i.importData(ds, importParameters);
 
-            // Run a LoadFlow
-            LoadFlowComputation lf = new LoadFlowComputation();
-            if (lf.available()) {
-                LoadFlowParameters loadFlowParameters = new LoadFlowParameters();
-                String computedStateId = "computed";
-                lf.compute(n, loadFlowParameters, computedStateId, working);
+        // Run a LoadFlow
+        LoadFlowComputation lf = new LoadFlowComputation();
+        if (lf.available()) {
+            LoadFlowParameters loadFlowParameters = new LoadFlowParameters();
+            String computedStateId = "computed";
+            lf.compute(n, loadFlowParameters, computedStateId, working);
 
-                // Leave load flow results as current state of network
-                n.getStateManager().setWorkingState(computedStateId);
-            }
-
-            // Export the whole (updated) CgmesModel
-            // By default, SV data in CgmesModel is replaced by current state of network
-            CgmesExport e = new CgmesExport();
-            Files.createDirectories(output);
-            String basename = "";
-            DataSource exportDataSource = new FileDataSource(output, basename);
-            e.export(n, new Properties(), exportDataSource);
+            // Leave load flow results as current state of network
+            n.getStateManager().setWorkingState(computedStateId);
         }
+
+        // Export the whole (updated) CgmesModel
+        // By default, SV data in CgmesModel is replaced by current state of network
+        CgmesExport e = new CgmesExport();
+        Files.createDirectories(output);
+        String basename = "";
+        DataSource exportDataSource = new FileDataSource(output, basename);
+        e.export(n, new Properties(), exportDataSource);
     }
 
     private static Cim14SmallCasesCatalog catalog;

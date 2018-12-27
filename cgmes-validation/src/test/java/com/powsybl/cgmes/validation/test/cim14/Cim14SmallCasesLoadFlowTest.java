@@ -20,10 +20,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.powsybl.cgmes.model.test.TestGridModel;
-import com.powsybl.cgmes.model.test.TestGridModelPath;
 import com.powsybl.cgmes.model.test.cim14.Cim14SmallCasesCatalog;
 import com.powsybl.cgmes.validation.test.LoadFlowTester;
 import com.powsybl.cgmes.validation.test.LoadFlowValidation;
+import com.powsybl.cgmes.validation.test.TestGridModelPath;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
 /**
