@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.balance;
 
 import java.util.Objects;
@@ -56,7 +63,7 @@ class Summary implements BalanceCollector<Summary> {
         return String.format("{num: %d, worst: %s, sum: %f}", num, worst, sum);
     }
 
-    int num = 0;
-    double sum = 0;
-    Balance worst = Balance.PERFECT;
+    private int num = 0;
+    private double sum = 0;
+    private Balance worst = Balance.PERFECT;
 }

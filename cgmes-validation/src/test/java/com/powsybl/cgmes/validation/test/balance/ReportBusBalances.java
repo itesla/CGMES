@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.balance;
 
 import static org.junit.Assert.assertEquals;
@@ -84,7 +91,7 @@ public class ReportBusBalances {
         report(network);
     }
 
-    void report(Network network) throws IOException {
+    private void report(Network network) throws IOException {
         if (analyzeShuntCompensators) {
             network.getShuntCompensators().forEach(sc -> {
                 Bus bus = sc.getTerminal().getBusView().getBus();
@@ -347,16 +354,14 @@ public class ReportBusBalances {
                     "hasRho3w2", "rho3w2",
                     "hasRho3w3", "rho3w3",
                     "bus");
-            balances.stream().forEach(b -> {
-                p.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s%n",
-                        b.error(),
-                        b.hasPhaseTapChange(), b.alpha(),
-                        b.elementPhaseTapChanger() != null ? b.elementPhaseTapChanger().getId() : "-",
-                        b.hasRho2w(), b.rho2w(),
-                        b.hasRho3w2(), b.rho3w2(),
-                        b.hasRho3w3(), b.rho3w3(),
-                        b.bus().getId());
-            });
+            balances.forEach(b -> p.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s%n",
+                    b.error(),
+                    b.hasPhaseTapChange(), b.alpha(),
+                    b.elementPhaseTapChanger() != null ? b.elementPhaseTapChanger().getId() : "-",
+                    b.hasRho2w(), b.rho2w(),
+                    b.hasRho3w2(), b.rho3w2(),
+                    b.hasRho3w3(), b.rho3w3(),
+                    b.bus().getId()));
         } catch (FileNotFoundException e) {
             LOG.error("file not found");
         }
@@ -374,14 +379,14 @@ public class ReportBusBalances {
         if (!powsybl.equals(extra)) {
             // If results from powsybl and extra are not equal, let's review in detail
             Balance.configureCalc3wtxFlows(false);
-            Set<Balance> powsyblDetailed = ((WorstErrors) new WorstErrors()
-                    .collect(network, outnull))
-                            .balances();
+            Set<Balance> powsyblDetailed = new WorstErrors()
+                    .collect(network, outnull)
+                    .balances();
             Balance.configureCalc3wtxFlows(true);
-            Set<Balance> extraDetailed = ((WorstErrors) new WorstErrors()
-                    .collect(network, outnull))
-                            .balances();
-            Set<Bus> powsyblBuses = powsyblDetailed.stream().map(b -> b.bus()).collect(Collectors.toSet());
+            Set<Balance> extraDetailed = new WorstErrors()
+                    .collect(network, outnull)
+                    .balances();
+            Set<Bus> powsyblBuses = powsyblDetailed.stream().map(Balance::bus).collect(Collectors.toSet());
             LOG.info("cgmes-extra buses not reviewed by powsybl:");
             extraDetailed.stream()
                     .filter(b -> !powsyblBuses.contains(b.bus()))

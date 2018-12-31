@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.balance;
 
 import org.apache.commons.math3.complex.Complex;
@@ -16,7 +23,7 @@ import com.powsybl.iidm.network.ThreeWindingsTransformer.LegBase;
 import com.powsybl.iidm.network.ThreeWindingsTransformer.Side;
 import com.powsybl.iidm.network.util.BranchData;
 
-public final class ThreeWindingsTransformerFlows {
+final class ThreeWindingsTransformerFlows {
 
     ThreeWindingsTransformerFlows(ThreeWindingsTransformer tx) {
         this.tx = tx;

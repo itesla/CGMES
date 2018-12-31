@@ -1,20 +1,15 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.conformity;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-/*
- * #%L
- * CGMES conversion
- * %%
- * Copyright (C) 2017 - 2018 RTE (http://rte-france.com)
- * %%
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- * #L%
- */
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,7 +20,6 @@ import com.powsybl.cgmes.model.PowerFlow;
 import com.powsybl.cgmes.model.test.TestGridModel;
 import com.powsybl.cgmes.validation.test.LoadFlowTester;
 import com.powsybl.cgmes.validation.test.LoadFlowValidation;
-import com.powsybl.cgmes.validation.test.TestGridModelPath;
 import com.powsybl.cgmes.validation.test.balance.ReportBusBalances;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
@@ -71,7 +65,7 @@ public class CgmesConformity2LoadFlowTest {
                     .setLowImpedanceLine(0.0, 0.0)
                     .report();
         } catch (CgmesModelException x) {
-            System.err.println(x);
+            x.printStackTrace(System.err);
         }
     }
 

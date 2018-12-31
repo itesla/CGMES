@@ -1,16 +1,11 @@
-package com.powsybl.cgmes.validation.test;
-
-/*
- * #%L
- * CGMES conversion
- * %%
- * Copyright (C) 2017 - 2018 RTE (http://rte-france.com)
- * %%
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- * #L%
  */
+
+package com.powsybl.cgmes.validation.test;
 
 import static org.junit.Assert.assertTrue;
 
@@ -26,10 +21,8 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -86,7 +79,7 @@ public final class LoadFlowValidation {
             int maxGeneratorsFailComputedState,
             int maxBusesFailInitialState,
             int maxBusesFailComputedState,
-            Optional<LoadFlowEngine> loadFlowEngine,
+            LoadFlowEngine loadFlowEngine,
             Path workingDirectory,
             boolean writeNetworksInputsResults,
             String label,
@@ -102,9 +95,7 @@ public final class LoadFlowValidation {
         this.maxBusesFailComputedState = maxBusesFailComputedState;
         this.workingDirectory = workingDirectory;
         this.writeNetworksInputsResults = writeNetworksInputsResults;
-        this.loadFlowComputation = loadFlowEngine.isPresent()
-                ? new LoadFlowComputation(loadFlowEngine.get())
-                : new LoadFlowComputation();
+        this.loadFlowComputation = new LoadFlowComputation(loadFlowEngine);
         this.label = label;
         this.loadFlowParameters = new LoadFlowParameters();
         this.tolerancesComparingWithInitialState = tolerancesComparingWithInitialState;
@@ -136,13 +127,13 @@ public final class LoadFlowValidation {
         String initialStateId = network.getVariantManager().getWorkingVariantId();
         String initialLabel = "initial";
         String initialCompletedLabel = "initial-completed";
-        String computedStateId = "computed";
-        String computedLabel = computedStateId;
+        String computedStateId = initialStateId + "-computed";
+        String computedLabel = "computed";
 
         write(network, initialLabel);
         for (Substation s : network.getSubstations()) {
             for (VoltageLevel vl : s.getVoltageLevels()) {
-                String fname = String.format("%s-%s.dot", s.getName(), vl.getName()).replaceAll("\\/", "-");
+                String fname = String.format("%s-%s.dot", s.getName(), vl.getName()).replaceAll("/", "-");
                 String f = workingDirectory.resolve(String.format("cgmes-initial-topo-%s", fname)).toString();
                 try {
                     vl.exportTopology(f);
@@ -219,7 +210,7 @@ public final class LoadFlowValidation {
         }
     }
 
-    public static void debugRecoverInternalConnections(boolean recover, VoltageLevel vl, VoltageLevel vl1) {
+    private static void debugRecoverInternalConnections(boolean recover, VoltageLevel vl, VoltageLevel vl1) {
         VoltageLevel.NodeBreakerView topo = vl.getNodeBreakerView();
 
         int[] nodes;
@@ -303,8 +294,7 @@ public final class LoadFlowValidation {
                     "comment"));
             boolean ok = true;
             int numBadP = 0;
-            for (Iterator<String> k = expected.keySet().iterator(); k.hasNext();) {
-                String b = k.next();
+            for (String b : expected.keySet()) {
                 BusValues e = expected.get(b);
                 BusValues a = actual.get(b);
 
@@ -415,7 +405,6 @@ public final class LoadFlowValidation {
                     network.getId(), config, writer, ValidationType.BUSES);
             long count = network.getBusView()
                     .getBusStream()
-                    .sorted(Comparator.comparing(Bus::getId))
                     .filter(bus -> !BusesValidation.checkBuses(bus, config, busesWriter))
                     .count();
             writer.close();
@@ -607,7 +596,7 @@ public final class LoadFlowValidation {
             maxBusesFailComputedState = 1; // Slack if no generator modeled at slack bus
             workingDirectory = Paths.get(System.getProperty("java.io.tmpdir"));
             writeNetworksInputsResults = false;
-            loadFlowEngine = Optional.empty();
+            loadFlowEngine = null;
             label = "";
         }
 
@@ -693,7 +682,7 @@ public final class LoadFlowValidation {
 
         public Builder loadFlowEngine(LoadFlowEngine engine) {
             Objects.requireNonNull(engine);
-            this.loadFlowEngine = Optional.of(engine);
+            this.loadFlowEngine = engine;
             return this;
         }
 
@@ -727,14 +716,14 @@ public final class LoadFlowValidation {
         private double threshold;
         private boolean specificCompatibility;
         private boolean compareWithInitialState;
-        private BusValues tolerancesComparingWithInitialState;
-        private Set<String> ignoreQBusesComparingWithInitialState;
+        private final BusValues tolerancesComparingWithInitialState;
+        private final Set<String> ignoreQBusesComparingWithInitialState;
         private int maxGeneratorsFailInitialState;
         private int maxGeneratorsFailComputedState;
         private int maxBusesFailInitialState;
         private int maxBusesFailComputedState;
         private Path workingDirectory;
-        private Optional<LoadFlowEngine> loadFlowEngine;
+        private LoadFlowEngine loadFlowEngine;
         private boolean writeNetworksInputsResults;
         private String label;
         private Consumer<Network> debugNetwork;
@@ -745,7 +734,7 @@ public final class LoadFlowValidation {
     private final double threshold;
     private final boolean compareWithInitialState;
     private final BusValues tolerancesComparingWithInitialState;
-    private Set<String> ignoreQBusesComparingWithInitialState;
+    private final Set<String> ignoreQBusesComparingWithInitialState;
     private final int maxGeneratorsFailInitialState;
     private final int maxGeneratorsFailComputedState;
     private final int maxBusesFailInitialState;

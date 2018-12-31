@@ -1,66 +1,92 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.balance;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.powsybl.iidm.network.*;
 import org.apache.commons.math3.complex.Complex;
-
-import com.powsybl.iidm.network.Bus;
-import com.powsybl.iidm.network.Identifiable;
-import com.powsybl.iidm.network.PhaseTapChanger;
-import com.powsybl.iidm.network.Terminal;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
 
 class Balance {
     static final Balance PERFECT = new Balance(Complex.ZERO);
 
     private Balance(Complex balance) {
+        bus = null;
+        output = null;
         this.balance = balance;
+        hasPhaseTapChange = false;
+        alpha = Double.NaN;
+        elementPhaseTapChanger = null;
+        hasRho2w = false;
+        rho2w = Double.NaN;
+        hasRho3w2 = false;
+        rho3w2 = Double.NaN;
+        hasRho3w3 = false;
+        rho3w3 = Double.NaN;
     }
 
     Balance(Bus bus, Output output) {
         this.bus = bus;
         this.output = output;
-        this.balance = calc();
-        this.alpha = Double.NaN;
-        this.hasPhaseTapChange = bus.getTwoWindingsTransformerStream()
-                .filter(tx -> hasPhaseTapChange(tx.getPhaseTapChanger()))
-                .findAny()
-                .map(tx -> {
-                    alpha = tx.getPhaseTapChanger().getCurrentStep().getAlpha();
-                    elementPhaseTapChanger = tx;
-                    return tx;
-                })
-                .isPresent();
-        this.hasRho2w = bus.getTwoWindingsTransformerStream()
+        balance = calc();
+
+        Optional<TwoWindingsTransformer> ptx = bus.getTwoWindingsTransformerStream()
+                .filter(t -> hasPhaseTapChange(t.getPhaseTapChanger()))
+                .findAny();
+        if (ptx.isPresent()) {
+            hasPhaseTapChange = true;
+            elementPhaseTapChanger = ptx.get();
+            alpha = ptx.get().getPhaseTapChanger().getCurrentStep().getAlpha();
+        } else {
+            hasPhaseTapChange = false;
+            elementPhaseTapChanger = null;
+            alpha = Double.NaN;
+        }
+
+        Optional<TwoWindingsTransformer> rtx = bus.getTwoWindingsTransformerStream()
                 .filter(tx -> tx.getRatioTapChanger() != null &&
                         tx.getRatioTapChanger().getCurrentStep() != null &&
                         tx.getRatioTapChanger().getCurrentStep().getRho() != 1)
-                .findAny()
-                .map(tx -> {
-                    rho2w = tx.getRatioTapChanger().getCurrentStep().getRho();
-                    return tx;
-                })
-                .isPresent();
-        this.hasRho3w2 = bus.getThreeWindingsTransformerStream()
+                .findAny();
+        if (rtx.isPresent()) {
+            hasRho2w = true;
+            rho2w = rtx.get().getRatioTapChanger().getCurrentStep().getRho();
+        } else {
+            hasRho2w = false;
+            rho2w = Double.NaN;
+        }
+
+        Optional<ThreeWindingsTransformer> r32tx = bus.getThreeWindingsTransformerStream()
                 .filter(tx -> tx.getLeg2().getRatioTapChanger() != null &&
                         tx.getLeg2().getRatioTapChanger().getCurrentStep() != null &&
                         tx.getLeg2().getRatioTapChanger().getCurrentStep().getRho() != 1)
-                .findAny()
-                .map(tx -> {
-                    rho3w2 = tx.getLeg2().getRatioTapChanger().getCurrentStep().getRho();
-                    return tx;
-                })
-                .isPresent();
-        this.hasRho3w3 = bus.getThreeWindingsTransformerStream()
-                .filter(tx -> tx.getLeg3().getRatioTapChanger() != null &&
-                        tx.getLeg3().getRatioTapChanger().getCurrentStep() != null &&
-                        tx.getLeg3().getRatioTapChanger().getCurrentStep().getRho() != 1)
-                .findAny()
-                .map(tx -> {
-                    rho3w3 = tx.getLeg3().getRatioTapChanger().getCurrentStep().getRho();
-                    return tx;
-                })
-                .isPresent();
+                .findAny();
+        if (r32tx.isPresent()) {
+            hasRho3w2 = true;
+            rho3w2 = r32tx.get().getLeg2().getRatioTapChanger().getCurrentStep().getRho();
+        } else {
+            hasRho3w2 = false;
+            rho3w2 = Double.NaN;
+
+        }
+        Optional<ThreeWindingsTransformer> r33tx = bus.getThreeWindingsTransformerStream()
+                .filter(tx -> tx.getLeg2().getRatioTapChanger() != null &&
+                        tx.getLeg2().getRatioTapChanger().getCurrentStep() != null &&
+                        tx.getLeg2().getRatioTapChanger().getCurrentStep().getRho() != 1)
+                .findAny();
+        if (r33tx.isPresent()) {
+            hasRho3w3 = true;
+            rho3w3 = r33tx.get().getLeg2().getRatioTapChanger().getCurrentStep().getRho();
+        } else {
+            hasRho3w3 = false;
+            rho3w3 = Double.NaN;
+        }
     }
 
     public String toString() {
@@ -120,7 +146,7 @@ class Balance {
         return rho3w3;
     }
 
-    Complex calc() {
+    private Complex calc() {
         output.bus(bus);
         Stream<Stream<Complex>> ss = Stream.of(
                 bus.getLoadStream()
@@ -186,19 +212,19 @@ class Balance {
                 ptc.getCurrentStep().getAlpha() != 0;
     }
 
-    private Bus bus;
-    private Output output;
-    private Complex balance;
+    private final Bus bus;
+    private final Output output;
+    private final Complex balance;
 
-    private boolean hasPhaseTapChange;
-    private double alpha;
-    private TwoWindingsTransformer elementPhaseTapChanger;
-    private boolean hasRho2w;
-    private double rho2w;
-    private boolean hasRho3w2;
-    private double rho3w2;
-    private boolean hasRho3w3;
-    private double rho3w3;
+    private final boolean hasPhaseTapChange;
+    private final double alpha;
+    private final TwoWindingsTransformer elementPhaseTapChanger;
+    private final boolean hasRho2w;
+    private final double rho2w;
+    private final boolean hasRho3w2;
+    private final double rho3w2;
+    private final boolean hasRho3w3;
+    private final double rho3w3;
 
     private static boolean calc3wtxFlows = true;
 }

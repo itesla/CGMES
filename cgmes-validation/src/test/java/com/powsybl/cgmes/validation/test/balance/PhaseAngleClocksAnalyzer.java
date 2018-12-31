@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.balance;
 
 import org.slf4j.Logger;
@@ -10,7 +17,7 @@ import com.powsybl.iidm.network.PhaseTapChangerStep;
 import com.powsybl.iidm.network.ThreeWindingsTransformer;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 
-public class PhaseAngleClocksAnalyzer {
+class PhaseAngleClocksAnalyzer {
 
     void analyze(Network network) {
         Results r = new Results();
@@ -56,11 +63,9 @@ public class PhaseAngleClocksAnalyzer {
     private int[] clocks(ThreeWindingsTransformer tx) {
         PhaseAngleClocksExtension clocks = tx.getExtension(PhaseAngleClocksExtension.class);
         if (clocks == null) {
-            int[] zeros = {0, 0, 0};
-            return zeros;
+            return new int[]{0, 0, 0};
         }
-        int[] clocksa = {clocks.clock1(), clocks.clock2(), clocks.clock3()};
-        return clocksa;
+        return new int[]{clocks.clock1(), clocks.clock2(), clocks.clock3()};
     }
 
     private int[] clocks(TwoWindingsTransformer tx) {
@@ -88,16 +93,13 @@ public class PhaseAngleClocksAnalyzer {
             return false;
         }
         double alpha = step.getAlpha();
-        if (alpha % 30 != 0) {
-            return false;
-        }
-        return true;
+        return alpha % 30 == 0;
     }
 
     private boolean validClocks(int[] clocks) {
         // At least one clock > 0 and != 6
-        for (int k = 0; k < clocks.length; k++) {
-            if (clocks[k] > 0 && clocks[k] != 6) {
+        for (int clock : clocks) {
+            if (clock > 0 && clock != 6) {
                 return true;
             }
         }
@@ -132,7 +134,7 @@ public class PhaseAngleClocksAnalyzer {
     }
 
     private void log(String label, double[] angles, double diff) {
-        StringBuffer s = new StringBuffer("PAC    ");
+        StringBuilder s = new StringBuilder("PAC    ");
         s.append(label);
         for (double angle : angles) {
             s.append(String.format("%10.4f  ", angle));
@@ -142,8 +144,8 @@ public class PhaseAngleClocksAnalyzer {
     }
 
     private void log(String label, int[] clocks) {
-        StringBuffer s = new StringBuffer("PAC    ");
-        s.append("clocks");
+        StringBuilder s = new StringBuilder("PAC    ");
+        s.append(label);
         for (int clock : clocks) {
             s.append(String.format("%10d  ", clock));
         }
@@ -154,7 +156,7 @@ public class PhaseAngleClocksAnalyzer {
         int betterIgnore;
         int betterAdd;
         int betterSub;
-        int[] seen = new int[12];
+        final int[] seen = new int[12];
 
         void seen(int[] clocks) {
             for (int k = 1; k < clocks.length; k++) {

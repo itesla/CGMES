@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.balance;
 
 import java.util.Comparator;
@@ -64,11 +71,11 @@ class WorstErrors implements BalanceCollector<WorstErrors> {
         return ignored;
     }
 
-    private Comparator<Balance> comparator = Comparator
+    private final Comparator<Balance> comparator = Comparator
             .comparing(Balance::error)
             .reversed()
             .thenComparing(b -> b.bus().getId());
-    private Set<Balance> balances = new TreeSet<>(comparator);
-    private Set<Balance> ignored = new TreeSet<>(comparator);
-    private boolean ignoreBusesWithPhaseTapChanges;
+    private final Set<Balance> balances = new TreeSet<>(comparator);
+    private final Set<Balance> ignored = new TreeSet<>(comparator);
+    private final boolean ignoreBusesWithPhaseTapChanges;
 }

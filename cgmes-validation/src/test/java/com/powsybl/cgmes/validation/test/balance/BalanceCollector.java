@@ -1,30 +1,31 @@
-package com.powsybl.cgmes.validation.test.balance;
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-import java.util.Comparator;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
+package com.powsybl.cgmes.validation.test.balance;
 
 import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.Network;
 
+import java.util.Comparator;
+
 interface BalanceCollector<T extends BalanceCollector<T>> {
-    abstract T create();
+    T create();
 
-    abstract void accumulate(Balance b);
+    void accumulate(Balance b);
 
-    abstract void combine(T b);
+    void combine(T b);
 
-    abstract void report(Output output);
+    void report(Output output);
 
     default T collect(Network network, Output output) {
-        Supplier<T> supplier = this::create;
-        BiConsumer<T, Balance> accumulator = (bs, b) -> bs.accumulate(b);
-        BiConsumer<T, T> combiner = (b1, b2) -> b1.combine(b2);
-        T b = network.getBusView()
+        return network.getBusView()
                 .getBusStream()
                 .sorted(Comparator.comparing(Bus::getId))
                 .map(bus -> new Balance(bus, output))
-                .collect(supplier, accumulator, combiner);
-        return b;
+                .collect(this::create, T::accumulate, T::combine);
     }
 }

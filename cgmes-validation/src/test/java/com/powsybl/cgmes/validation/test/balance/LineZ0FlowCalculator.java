@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.balance;
 
 import java.util.Collections;
@@ -23,7 +30,7 @@ import com.powsybl.iidm.network.ThreeWindingsTransformer;
 import com.powsybl.iidm.network.TopologyVisitor;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 
-class LineZ0FlowCalculator implements TopologyVisitor {
+final class LineZ0FlowCalculator implements TopologyVisitor {
 
     private final Line lineZ0;
     private final Bus bus;
@@ -38,11 +45,7 @@ class LineZ0FlowCalculator implements TopologyVisitor {
     private final boolean debug;
     private final String indent;
 
-    public LineZ0FlowCalculator(Line line, Bus bus, boolean considerPhaseTapChangesUnknown) {
-        this(line, bus, considerPhaseTapChangesUnknown, Collections.emptySet(), false);
-    }
-
-    public LineZ0FlowCalculator(
+    private LineZ0FlowCalculator(
             Line line,
             Bus bus,
             boolean considerPhaseTapChangesUnknown,
@@ -129,16 +132,8 @@ class LineZ0FlowCalculator implements TopologyVisitor {
         return false;
     }
 
-    public boolean flowsAreKnown() {
+    private boolean flowsAreKnown() {
         return known;
-    }
-
-    public double getNetP() {
-        return netP;
-    }
-
-    public double getNetQ() {
-        return netQ;
     }
 
     private void addFlow(Terminal t) {
@@ -161,7 +156,7 @@ class LineZ0FlowCalculator implements TopologyVisitor {
         }
     }
 
-    void setZ0Flows() {
+    private void setZ0Flows() {
         Terminal t = Terminals.get(lineZ0, bus);
         t.setP(-netP);
         t.setQ(-netQ);
