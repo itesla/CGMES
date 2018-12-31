@@ -7,20 +7,18 @@
 
 package com.powsybl.cgmes.tools;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.cgmes.model.CgmesModelFactory;
 import com.powsybl.commons.datasource.CompressionFormat;
 import com.powsybl.commons.datasource.DataSourceUtil;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.triplestore.api.PropertyBags;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 final class Main {
 
@@ -93,7 +91,7 @@ final class Main {
                 // Pivot all properties except ...
                 List<String> notPivotable = Arrays.asList("graph", "type", idProperty, keyProperty, valueProperty);
                 List<String> pivotPropertyNames = ot.pluckLocals("attribute");
-                pivotPropertyNames.removeIf(p -> notPivotable.contains(p));
+                pivotPropertyNames.removeIf(notPivotable::contains);
                 PropertyBags ot1 = ot.pivotLocalNames(idProperty, keyProperty, pivotPropertyNames, valueProperty);
                 output(ot1.tabulateLocals());
             }
