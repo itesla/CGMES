@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -47,6 +48,7 @@ import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.Substation;
 import com.powsybl.iidm.network.Terminal;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
@@ -75,6 +77,7 @@ public final class LoadFlowValidation {
 
     private LoadFlowValidation(
             boolean validateInitialState,
+            boolean changeSignForPhaseTapChange,
             boolean changeSignForShuntReactivePowerFlowInitialState,
             double threshold,
             boolean specificCompatibility,
@@ -91,6 +94,7 @@ public final class LoadFlowValidation {
             String label,
             Consumer<Network> debugNetwork) {
         this.validateInitialState = validateInitialState;
+        this.changeSignForPhaseTapChange = changeSignForPhaseTapChange;
         this.changeSignForShuntReactivePowerFlowInitialState = changeSignForShuntReactivePowerFlowInitialState;
         this.threshold = threshold;
         this.compareWithInitialState = compareWithInitialState;
@@ -132,7 +136,10 @@ public final class LoadFlowValidation {
     public void validate(Network network) throws IOException {
         Files.createDirectories(this.workingDirectory);
 
-        String initialStateId = network.getStateManager().getWorkingStateId();
+        // We are modifying the network
+        applySignChanges(network);
+
+        String initialStateId = network.getVariantManager().getWorkingVariantId();
         String initialLabel = "initial";
         String initialCompletedLabel = "initial-completed";
         String computedStateId = "computed";
@@ -167,11 +174,14 @@ public final class LoadFlowValidation {
                     computedStateId,
                     workingDirectory);
             FileDataSource fds = write(network, computedLabel);
-            validateStateValues(network,
-                    computedLabel,
-                    maxGeneratorsFailComputedState,
-                    maxBusesFailComputedState,
-                    threshold);
+            // Only validate state values if LoadFlow computation is not "Mock"
+            if (!loadFlowComputation.isMock()) {
+                validateStateValues(network,
+                        computedLabel,
+                        maxGeneratorsFailComputedState,
+                        maxBusesFailComputedState,
+                        threshold);
+            }
 
             // validate the state from the written file
             Network network1 = read(fds);
@@ -198,23 +208,25 @@ public final class LoadFlowValidation {
                     }
                 }
             }
-            validateStateValues(network1,
-                    computedLabel + "-reread",
-                    maxGeneratorsFailComputedState,
-                    maxBusesFailComputedState,
-                    threshold);
+            if (!loadFlowComputation.isMock()) {
+                validateStateValues(network1,
+                        computedLabel + "-reread",
+                        maxGeneratorsFailComputedState,
+                        maxBusesFailComputedState,
+                        threshold);
+            }
             writeSV(network, computedLabel);
 
             if (compareWithInitialState) {
                 Map<String, BusValues> computedStateBusValues = collectBusValues(network);
-                network.getStateManager().setWorkingState(initialStateId);
+                network.getVariantManager().setWorkingVariant(initialStateId);
                 Map<String, BusValues> expectedBusValues = collectBusValues(network);
                 compareBusValues(expectedBusValues, computedStateBusValues);
             } else {
                 LOG.info("Bus values from LoadFlow results are not compared with initial values");
             }
             // After validation, leave load flow results as current state of network
-            network.getStateManager().setWorkingState(computedStateId);
+            network.getVariantManager().setWorkingVariant(computedStateId);
         }
     }
 
@@ -249,6 +261,20 @@ public final class LoadFlowValidation {
                 }
                 return topo.getTerminal(n2) == null;
             });
+        }
+    }
+
+    private void applySignChanges(Network network) {
+        if (changeSignForPhaseTapChange) {
+            network.getTwoWindingsTransformerStream()
+                    .filter(tx -> tx.getPhaseTapChanger() != null)
+                    .forEach(tx -> {
+                        PhaseTapChanger tc = tx.getPhaseTapChanger();
+                        for (int step = tc.getLowTapPosition(); step <= tc.getHighTapPosition(); step++) {
+                            double alpha = tc.getStep(step).getAlpha();
+                            tc.getStep(step).setAlpha(-alpha);
+                        }
+                    });
         }
     }
 
@@ -447,11 +473,9 @@ public final class LoadFlowValidation {
             Writer writer = Files.newBufferedWriter(
                     working.resolve("check-generators-bad.csv"),
                     StandardCharsets.UTF_8);
-            ValidationWriter generatorsWriter = ValidationUtils.createValidationWriter(
-                    network.getId(), config, writer, ValidationType.GENERATORS);
             int count = 0;
             for (Generator g : network.getGenerators()) {
-                if (!GeneratorsValidation.checkGenerators(g, config, generatorsWriter)) {
+                if (!GeneratorsValidation.checkGenerators(g, config, writer)) {
                     count++;
                 }
             }
@@ -536,7 +560,9 @@ public final class LoadFlowValidation {
 
             XMLExporter xmlExporter = new XMLExporter();
             FileDataSource fds = new FileDataSource(workingDirectory, filename);
-            xmlExporter.export(network, null, fds);
+            Properties params = new Properties();
+            params.put(XMLExporter.THROW_EXCEPTION_IF_EXTENSION_NOT_FOUND, "false");
+            xmlExporter.export(network, params, fds);
             return fds;
         }
         return null;
@@ -617,6 +643,11 @@ public final class LoadFlowValidation {
 
         public Builder changeSignForShuntReactivePowerFlowInitialState(boolean b) {
             this.changeSignForShuntReactivePowerFlowInitialState = b;
+            return this;
+        }
+
+        public Builder changeSignForPhaseTapChange(boolean b) {
+            this.changeSignForPhaseTapChange = b;
             return this;
         }
 
@@ -704,6 +735,7 @@ public final class LoadFlowValidation {
         public LoadFlowValidation build() {
             return new LoadFlowValidation(
                     validateInitialState,
+                    changeSignForPhaseTapChange,
                     changeSignForShuntReactivePowerFlowInitialState,
                     threshold,
                     specificCompatibility,
@@ -723,6 +755,7 @@ public final class LoadFlowValidation {
 
         private boolean validateInitialState;
         private boolean changeSignForShuntReactivePowerFlowInitialState;
+        private boolean changeSignForPhaseTapChange;
         private double threshold;
         private boolean specificCompatibility;
         private boolean compareWithInitialState;
@@ -740,6 +773,7 @@ public final class LoadFlowValidation {
     }
 
     private final boolean validateInitialState;
+    private final boolean changeSignForPhaseTapChange;
     private final boolean changeSignForShuntReactivePowerFlowInitialState;
     private final double threshold;
     private final boolean compareWithInitialState;

@@ -58,6 +58,9 @@ public class CgmesConformity1LoadFlowTest {
                         2,
                         new PowerFlow(-55.2263, 221.8674))
                                 .debug())
+                .changeSignForPhaseTapChange(true)
+                // This is the required threshold after 3wtx flows calc has been added
+                .threshold(1.2)
                 // TODO _3a3b27be does not have reactive margins as synchronous machine
                 // properties
                 // But it has a reactive capability curve
@@ -94,7 +97,8 @@ public class CgmesConformity1LoadFlowTest {
                 .validateInitialState(true)
                 .specificCompatibility(true)
                 // Validation considerations from microNL and microBE apply here
-                .threshold(1.45)
+                .changeSignForPhaseTapChange(true)
+                .threshold(1.2)
                 .maxBusesFailInitialState(1)
                 .maxGeneratorsFailInitialState(3)
                 .compareWithInitialState(true)
