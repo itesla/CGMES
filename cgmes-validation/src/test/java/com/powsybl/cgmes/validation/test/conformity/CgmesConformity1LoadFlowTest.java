@@ -51,14 +51,14 @@ public class CgmesConformity1LoadFlowTest {
                 // If we use starting step for steady state (10) mismatch in P, Q are < 1.4 MVA
                 // The mismatch could also be related to interpretation of phase shift sign:
                 // angles for tap position 10 and 16 are the same, only sign changes
-                .maxBusesFailInitialState(1)
+                .maxBusesFailInitialState(0)
+                .changeSignForPhaseTapChange(true)
                 // Debug the phase tap changer that does not match expected flow
                 .debugNetwork(network -> new DebugPhaseTapChanger(
                         network.getTwoWindingsTransformer("_a708c3bc-465d-4fe7-b6ef-6fa6408a62b0"),
                         2,
                         new PowerFlow(-55.2263, 221.8674))
                                 .debug())
-                .changeSignForPhaseTapChange(true)
                 // This is the required threshold after 3wtx flows calc has been added
                 .threshold(1.2)
                 // TODO _3a3b27be does not have reactive margins as synchronous machine
