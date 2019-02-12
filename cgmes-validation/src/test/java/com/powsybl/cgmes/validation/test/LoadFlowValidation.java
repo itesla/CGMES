@@ -149,7 +149,7 @@ public final class LoadFlowValidation {
         for (Substation s : network.getSubstations()) {
             for (VoltageLevel vl : s.getVoltageLevels()) {
                 String fname = String.format("%s-%s.dot", s.getName(), vl.getName()).replaceAll("\\/", "-");
-                String f = workingDirectory.resolve(String.format("cgmes-initial-topo-%s", fname)).toString();
+                Path f = workingDirectory.resolve(String.format("cgmes-initial-topo-%s", fname));
                 try {
                     vl.exportTopology(f);
                 } catch (IOException e) {
@@ -162,6 +162,14 @@ public final class LoadFlowValidation {
             write(network, initialCompletedLabel);
             validateStateValues(network,
                     initialLabel,
+                    maxGeneratorsFailInitialState,
+                    maxBusesFailInitialState,
+                    threshold);
+
+            resetFlows(network);
+            computeMissingFlows(network);
+            validateStateValues(network,
+                    "initial-recomputed-flows",
                     maxGeneratorsFailInitialState,
                     maxBusesFailInitialState,
                     threshold);
@@ -185,29 +193,8 @@ public final class LoadFlowValidation {
 
             // validate the state from the written file
             Network network1 = read(fds);
-            write(network, "computed-reread");
-            // FIXME debug topology of all voltage levels
-            boolean recover = false;
-            for (Substation s : network.getSubstations()) {
-                for (VoltageLevel vl : s.getVoltageLevels()) {
-                    VoltageLevel vl1 = network1.getVoltageLevel(vl.getId());
-                    debugRecoverInternalConnections(recover, vl, vl1);
-                }
-            }
-            for (Substation s : network1.getSubstations()) {
-                for (VoltageLevel vl : s.getVoltageLevels()) {
-                    String f = workingDirectory.resolve(
-                            String.format("cgmes-reread-topo-%s-%s.dot",
-                                    s.getName(),
-                                    vl.getName()))
-                            .toString();
-                    try {
-                        vl.exportTopology(f);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+            write(network1, "computed-reread");
+            debugReread(network1, network);
             if (!loadFlowComputation.isMock()) {
                 validateStateValues(network1,
                         computedLabel + "-reread",
@@ -230,7 +217,43 @@ public final class LoadFlowValidation {
         }
     }
 
-    public static void debugRecoverInternalConnections(boolean recover, VoltageLevel vl, VoltageLevel vl1) {
+    private void debugReread(Network network1, Network network) {
+        // FIXME debug topology of all voltage levels
+        boolean recover = false;
+        for (Substation s : network.getSubstations()) {
+            for (VoltageLevel vl : s.getVoltageLevels()) {
+                VoltageLevel vl1 = network1.getVoltageLevel(vl.getId());
+                debugRecoverInternalConnections(recover, vl, vl1);
+            }
+        }
+        for (Substation s : network1.getSubstations()) {
+            for (VoltageLevel vl : s.getVoltageLevels()) {
+                Path f = workingDirectory.resolve(
+                        String.format("cgmes-reread-topo-%s-%s.dot",
+                                s.getName(),
+                                vl.getName()));
+                try {
+                    vl.exportTopology(f);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private static void resetFlows(Network network) {
+        network.getBranchStream().forEach(b -> {
+            b.getTerminal1().setP(Double.NaN);
+            b.getTerminal2().setP(Double.NaN);
+        });
+        network.getThreeWindingsTransformerStream().forEach(tx -> {
+            tx.getLeg1().getTerminal().setP(Double.NaN);
+            tx.getLeg2().getTerminal().setP(Double.NaN);
+            tx.getLeg3().getTerminal().setP(Double.NaN);
+        });
+    }
+
+    private static void debugRecoverInternalConnections(boolean recover, VoltageLevel vl, VoltageLevel vl1) {
         VoltageLevel.NodeBreakerView topo = vl.getNodeBreakerView();
 
         int[] nodes;
@@ -300,7 +323,7 @@ public final class LoadFlowValidation {
 
     private Map<String, BusValues> collectBusValues(Network network) {
         Map<String, BusValues> values = new HashMap<>();
-        network.getBusBreakerView().getBuses()
+        network.getBusView().getBuses()
                 .forEach(b -> {
                     BusValues bv = new BusValues();
                     bv.v = b.getV();
@@ -395,7 +418,7 @@ public final class LoadFlowValidation {
                     LoadFlowFactoryMock.class.getCanonicalName());
 
             ValidationConfig config = ValidationConfig.load(platformConfig);
-            config.setVerbose(true);
+            config.setVerbose(false);
             config.setLoadFlowParameters(loadFlowParameters);
             LOG.info("specificCompatibility is {}", loadFlowParameters.isSpecificCompatibility());
             Path working = workingDirectory.resolve("temp-lf-validation-" + stateLabel);
@@ -497,6 +520,11 @@ public final class LoadFlowValidation {
                 StandardCharsets.UTF_8);
         ValidationWriter flowsWriter = ValidationUtils.createValidationWriter(
                 network.getId(), config, writer, ValidationType.FLOWS);
+        writer = Files.newBufferedWriter(
+                working.resolve("check-flows-buses-bad.csv"),
+                StandardCharsets.UTF_8);
+        ValidationWriter busesWriter = ValidationUtils.createValidationWriter(
+                network.getId(), config, writer, ValidationType.BUSES);
 
         boolean linesValidated = network.getLineStream()
                 .sorted(Comparator.comparing(Line::getId))
@@ -511,6 +539,12 @@ public final class LoadFlowValidation {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("flow-line r {}, x {}, b1 {}, b2 {}, ok {}, id {}", l.getR(),
                                 l.getX(), l.getB1(), l.getB2(), r, l.getId());
+                    }
+                    if (!r) {
+                        config.setVerbose(true);
+                        BusesValidation.checkBuses(l.getTerminal1().getBusView().getBus(), config, busesWriter);
+                        BusesValidation.checkBuses(l.getTerminal2().getBusView().getBus(), config, busesWriter);
+                        config.setVerbose(false);
                     }
                     return r;
                 })
