@@ -1,5 +1,7 @@
 package com.powsybl.cgmes.validation.test.conformity;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,11 +22,17 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.powsybl.cgmes.conformity.test.CgmesConformity1Catalog;
+import com.powsybl.cgmes.conversion.CgmesModelExtension;
 import com.powsybl.cgmes.conversion.test.DebugPhaseTapChanger;
 import com.powsybl.cgmes.model.PowerFlow;
 import com.powsybl.cgmes.model.test.TestGridModel;
+import com.powsybl.cgmes.model.triplestore.CgmesModelTripleStore;
 import com.powsybl.cgmes.validation.test.LoadFlowTester;
 import com.powsybl.cgmes.validation.test.LoadFlowValidation;
+import com.powsybl.computation.local.LocalComputationManager;
+import com.powsybl.iidm.import_.Importers;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.triplestore.api.PropertyBags;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
 /**
@@ -170,6 +178,25 @@ public class CgmesConformity1LoadFlowTest {
                 .compareWithInitialState(true)
                 .build();
         tester.testLoadFlow(t, validation);
+    }
+
+    @Test
+    public void smallGridNodeBreakerDL() {
+        Network network = Importers.importData("CGMES",
+                catalog.smallNodeBreaker().dataSource(),
+                null,
+                LocalComputationManager.getDefault());
+        CgmesModelTripleStore cgmes = (CgmesModelTripleStore) network
+                .getExtension(CgmesModelExtension.class)
+                .getCgmesModel();
+        PropertyBags ds = cgmes.query(
+                "SELECT * WHERE { "
+                        + "?Diagram a cim:Diagram ; "
+                        + "cim:IdentifiedObject.name ?name ; "
+                        + "cim:Diagram.orientation ?orientation }");
+        assertEquals("_bcd073b6-227c-4a1d-923d-20a01b5ffe12", ds.get(0).getId("Diagram"));
+        assertEquals("Diagram1", ds.get(0).getLocal("name"));
+        assertEquals("OrientationKind.negative", ds.get(0).getLocal("orientation"));
     }
 
     private static CgmesConformity1Catalog catalog;
