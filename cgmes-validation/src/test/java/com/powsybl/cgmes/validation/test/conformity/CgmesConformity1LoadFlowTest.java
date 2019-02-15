@@ -1,5 +1,7 @@
 package com.powsybl.cgmes.validation.test.conformity;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,11 +22,17 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.powsybl.cgmes.conformity.test.CgmesConformity1Catalog;
+import com.powsybl.cgmes.conversion.CgmesModelExtension;
 import com.powsybl.cgmes.conversion.test.DebugPhaseTapChanger;
 import com.powsybl.cgmes.model.PowerFlow;
 import com.powsybl.cgmes.model.test.TestGridModel;
+import com.powsybl.cgmes.model.triplestore.CgmesModelTripleStore;
 import com.powsybl.cgmes.validation.test.LoadFlowTester;
 import com.powsybl.cgmes.validation.test.LoadFlowValidation;
+import com.powsybl.computation.local.LocalComputationManager;
+import com.powsybl.iidm.import_.Importers;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.triplestore.api.PropertyBags;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
 /**
@@ -51,13 +59,16 @@ public class CgmesConformity1LoadFlowTest {
                 // If we use starting step for steady state (10) mismatch in P, Q are < 1.4 MVA
                 // The mismatch could also be related to interpretation of phase shift sign:
                 // angles for tap position 10 and 16 are the same, only sign changes
-                .maxBusesFailInitialState(1)
+                .maxBusesFailInitialState(0)
+                .changeSignForPhaseTapChange(true)
                 // Debug the phase tap changer that does not match expected flow
                 .debugNetwork(network -> new DebugPhaseTapChanger(
                         network.getTwoWindingsTransformer("_a708c3bc-465d-4fe7-b6ef-6fa6408a62b0"),
                         2,
                         new PowerFlow(-55.2263, 221.8674))
                                 .debug())
+                // This is the required threshold after 3wtx flows calc has been added
+                .threshold(1.2)
                 // TODO _3a3b27be does not have reactive margins as synchronous machine
                 // properties
                 // But it has a reactive capability curve
@@ -94,7 +105,8 @@ public class CgmesConformity1LoadFlowTest {
                 .validateInitialState(true)
                 .specificCompatibility(true)
                 // Validation considerations from microNL and microBE apply here
-                .threshold(1.45)
+                .changeSignForPhaseTapChange(true)
+                .threshold(1.2)
                 .maxBusesFailInitialState(1)
                 .maxGeneratorsFailInitialState(3)
                 .compareWithInitialState(true)
@@ -166,6 +178,25 @@ public class CgmesConformity1LoadFlowTest {
                 .compareWithInitialState(true)
                 .build();
         tester.testLoadFlow(t, validation);
+    }
+
+    @Test
+    public void smallGridNodeBreakerDL() {
+        Network network = Importers.importData("CGMES",
+                catalog.smallNodeBreaker().dataSource(),
+                null,
+                LocalComputationManager.getDefault());
+        CgmesModelTripleStore cgmes = (CgmesModelTripleStore) network
+                .getExtension(CgmesModelExtension.class)
+                .getCgmesModel();
+        PropertyBags ds = cgmes.query(
+                "SELECT * WHERE { "
+                        + "?Diagram a cim:Diagram ; "
+                        + "cim:IdentifiedObject.name ?name ; "
+                        + "cim:Diagram.orientation ?orientation }");
+        assertEquals("_bcd073b6-227c-4a1d-923d-20a01b5ffe12", ds.get(0).getId("Diagram"));
+        assertEquals("Diagram1", ds.get(0).getLocal("name"));
+        assertEquals("OrientationKind.negative", ds.get(0).getLocal("orientation"));
     }
 
     private static CgmesConformity1Catalog catalog;

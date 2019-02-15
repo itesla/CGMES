@@ -15,7 +15,6 @@ package com.powsybl.cgmes.validation.test;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -24,7 +23,6 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.jimfs.Jimfs;
 import com.powsybl.cgmes.conversion.CgmesImport;
 import com.powsybl.cgmes.conversion.CgmesModelExtension;
 import com.powsybl.cgmes.conversion.test.TopologyTester;
@@ -62,8 +60,8 @@ public class LoadFlowTester {
     }
 
     public void testLoadFlow(TestGridModel gm, LoadFlowValidation loadFlowValidation0) throws IOException {
-        if (!gm.exists()) {
-            LOG.error("Test grid model does not exist {}", gm.name());
+        if (gm.dataSource().getBaseName().isEmpty()) {
+            LOG.error("Test grid model does not exist ? {}", gm.name());
             fail();
         }
         LoadFlowValidation loadFlowValidation = loadFlowValidation0;
@@ -95,25 +93,23 @@ public class LoadFlowTester {
     public void testLoadFlow(TestGridModel gm, LoadFlowValidation loadFlowValidation, Properties iparams)
             throws IOException {
         CgmesImport i = new CgmesImport();
-        try (FileSystem fs = Jimfs.newFileSystem()) {
-            ReadOnlyDataSource ds = gm.dataSourceBasedOn(fs);
-            Network network = i.importData(ds, iparams);
-            if (network.getSubstationCount() == 0) {
-                fail("Model is empty");
-            }
-            if (validateTopology) {
-                CgmesModel cgmes = network.getExtension(CgmesModelExtension.class).getCgmesModel();
-                // CgmesModel cgmes =
-                // (CgmesModel)network.getProperties().get(CgmesImport.NETWORK_PS_CGMES_MODEL);
-                if (!new TopologyTester(cgmes, network).test(strictTopologyTest)) {
-                    fail("Topology test failed");
-                }
-            }
-            if (loadFlowValidation.debugNetwork() != null) {
-                loadFlowValidation.debugNetwork().accept(network);
-            }
-            loadFlowValidation.validate(network);
+        ReadOnlyDataSource ds = gm.dataSource();
+        Network network = i.importData(ds, iparams);
+        if (network.getSubstationCount() == 0) {
+            fail("Model is empty");
         }
+        if (validateTopology) {
+            CgmesModel cgmes = network.getExtension(CgmesModelExtension.class).getCgmesModel();
+            // CgmesModel cgmes =
+            // (CgmesModel)network.getProperties().get(CgmesImport.NETWORK_PS_CGMES_MODEL);
+            if (!new TopologyTester(cgmes, network).test(strictTopologyTest)) {
+                fail("Topology test failed");
+            }
+        }
+        if (loadFlowValidation.debugNetwork() != null) {
+            loadFlowValidation.debugNetwork().accept(network);
+        }
+        loadFlowValidation.validate(network);
     }
 
     public static LoadFlowValidation loadFlowValidationFor(TestGridModel gm) throws IOException {

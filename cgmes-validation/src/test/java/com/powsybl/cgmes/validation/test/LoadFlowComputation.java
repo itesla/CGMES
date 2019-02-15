@@ -53,6 +53,10 @@ public class LoadFlowComputation {
         return loadFlowFactory != null;
     }
 
+    public boolean isMock() {
+        return loadFlowFactory.getClass().getName().contains("Mock");
+    }
+
     public void compute(
             Network network,
             LoadFlowParameters loadFlowParameters,
@@ -61,10 +65,10 @@ public class LoadFlowComputation {
         if (loadFlowFactory == null) {
             throw new PowsyblException("Can't compute LoadFlow. LoadFlowFactory not available");
         }
-        network.getStateManager().cloneState(
-                network.getStateManager().getWorkingStateId(),
+        network.getVariantManager().cloneVariant(
+                network.getVariantManager().getWorkingVariantId(),
                 targetStateId);
-        network.getStateManager().setWorkingState(targetStateId);
+        network.getVariantManager().setWorkingVariant(targetStateId);
         ComputationManager computationManager = new LocalComputationManager(workingDir);
         int priority = 1;
         LoadFlow loadFlow = loadFlowFactory.create(network, computationManager, priority);

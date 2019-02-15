@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -47,6 +48,7 @@ import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.Substation;
 import com.powsybl.iidm.network.Terminal;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
@@ -75,6 +77,7 @@ public final class LoadFlowValidation {
 
     private LoadFlowValidation(
             boolean validateInitialState,
+            boolean changeSignForPhaseTapChange,
             boolean changeSignForShuntReactivePowerFlowInitialState,
             double threshold,
             boolean specificCompatibility,
@@ -91,6 +94,7 @@ public final class LoadFlowValidation {
             String label,
             Consumer<Network> debugNetwork) {
         this.validateInitialState = validateInitialState;
+        this.changeSignForPhaseTapChange = changeSignForPhaseTapChange;
         this.changeSignForShuntReactivePowerFlowInitialState = changeSignForShuntReactivePowerFlowInitialState;
         this.threshold = threshold;
         this.compareWithInitialState = compareWithInitialState;
@@ -132,7 +136,10 @@ public final class LoadFlowValidation {
     public void validate(Network network) throws IOException {
         Files.createDirectories(this.workingDirectory);
 
-        String initialStateId = network.getStateManager().getWorkingStateId();
+        // We are modifying the network
+        applySignChanges(network);
+
+        String initialStateId = network.getVariantManager().getWorkingVariantId();
         String initialLabel = "initial";
         String initialCompletedLabel = "initial-completed";
         String computedStateId = "computed";
@@ -142,7 +149,7 @@ public final class LoadFlowValidation {
         for (Substation s : network.getSubstations()) {
             for (VoltageLevel vl : s.getVoltageLevels()) {
                 String fname = String.format("%s-%s.dot", s.getName(), vl.getName()).replaceAll("\\/", "-");
-                String f = workingDirectory.resolve(String.format("cgmes-initial-topo-%s", fname)).toString();
+                Path f = workingDirectory.resolve(String.format("cgmes-initial-topo-%s", fname));
                 try {
                     vl.exportTopology(f);
                 } catch (IOException e) {
@@ -158,6 +165,14 @@ public final class LoadFlowValidation {
                     maxGeneratorsFailInitialState,
                     maxBusesFailInitialState,
                     threshold);
+
+            resetFlows(network);
+            computeMissingFlows(network);
+            validateStateValues(network,
+                    "initial-recomputed-flows",
+                    maxGeneratorsFailInitialState,
+                    maxBusesFailInitialState,
+                    threshold);
         }
 
         if (loadFlowComputation.available()) {
@@ -167,58 +182,78 @@ public final class LoadFlowValidation {
                     computedStateId,
                     workingDirectory);
             FileDataSource fds = write(network, computedLabel);
-            validateStateValues(network,
-                    computedLabel,
-                    maxGeneratorsFailComputedState,
-                    maxBusesFailComputedState,
-                    threshold);
+            // Only validate state values if LoadFlow computation is not "Mock"
+            if (!loadFlowComputation.isMock()) {
+                validateStateValues(network,
+                        computedLabel,
+                        maxGeneratorsFailComputedState,
+                        maxBusesFailComputedState,
+                        threshold);
+            }
 
             // validate the state from the written file
             Network network1 = read(fds);
-            write(network, "computed-reread");
-            // FIXME debug topology of all voltage levels
-            boolean recover = false;
-            for (Substation s : network.getSubstations()) {
-                for (VoltageLevel vl : s.getVoltageLevels()) {
-                    VoltageLevel vl1 = network1.getVoltageLevel(vl.getId());
-                    debugRecoverInternalConnections(recover, vl, vl1);
-                }
+            write(network1, "computed-reread");
+            debugReread(network1, network);
+            if (!loadFlowComputation.isMock()) {
+                validateStateValues(network1,
+                        computedLabel + "-reread",
+                        maxGeneratorsFailComputedState,
+                        maxBusesFailComputedState,
+                        threshold);
             }
-            for (Substation s : network1.getSubstations()) {
-                for (VoltageLevel vl : s.getVoltageLevels()) {
-                    String f = workingDirectory.resolve(
-                            String.format("cgmes-reread-topo-%s-%s.dot",
-                                    s.getName(),
-                                    vl.getName()))
-                            .toString();
-                    try {
-                        vl.exportTopology(f);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            validateStateValues(network1,
-                    computedLabel + "-reread",
-                    maxGeneratorsFailComputedState,
-                    maxBusesFailComputedState,
-                    threshold);
             writeSV(network, computedLabel);
 
             if (compareWithInitialState) {
                 Map<String, BusValues> computedStateBusValues = collectBusValues(network);
-                network.getStateManager().setWorkingState(initialStateId);
+                network.getVariantManager().setWorkingVariant(initialStateId);
                 Map<String, BusValues> expectedBusValues = collectBusValues(network);
                 compareBusValues(expectedBusValues, computedStateBusValues);
             } else {
                 LOG.info("Bus values from LoadFlow results are not compared with initial values");
             }
             // After validation, leave load flow results as current state of network
-            network.getStateManager().setWorkingState(computedStateId);
+            network.getVariantManager().setWorkingVariant(computedStateId);
         }
     }
 
-    public static void debugRecoverInternalConnections(boolean recover, VoltageLevel vl, VoltageLevel vl1) {
+    private void debugReread(Network network1, Network network) {
+        // FIXME debug topology of all voltage levels
+        boolean recover = false;
+        for (Substation s : network.getSubstations()) {
+            for (VoltageLevel vl : s.getVoltageLevels()) {
+                VoltageLevel vl1 = network1.getVoltageLevel(vl.getId());
+                debugRecoverInternalConnections(recover, vl, vl1);
+            }
+        }
+        for (Substation s : network1.getSubstations()) {
+            for (VoltageLevel vl : s.getVoltageLevels()) {
+                Path f = workingDirectory.resolve(
+                        String.format("cgmes-reread-topo-%s-%s.dot",
+                                s.getName(),
+                                vl.getName()));
+                try {
+                    vl.exportTopology(f);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private static void resetFlows(Network network) {
+        network.getBranchStream().forEach(b -> {
+            b.getTerminal1().setP(Double.NaN);
+            b.getTerminal2().setP(Double.NaN);
+        });
+        network.getThreeWindingsTransformerStream().forEach(tx -> {
+            tx.getLeg1().getTerminal().setP(Double.NaN);
+            tx.getLeg2().getTerminal().setP(Double.NaN);
+            tx.getLeg3().getTerminal().setP(Double.NaN);
+        });
+    }
+
+    private static void debugRecoverInternalConnections(boolean recover, VoltageLevel vl, VoltageLevel vl1) {
         VoltageLevel.NodeBreakerView topo = vl.getNodeBreakerView();
 
         int[] nodes;
@@ -252,6 +287,20 @@ public final class LoadFlowValidation {
         }
     }
 
+    private void applySignChanges(Network network) {
+        if (changeSignForPhaseTapChange) {
+            network.getTwoWindingsTransformerStream()
+                    .filter(tx -> tx.getPhaseTapChanger() != null)
+                    .forEach(tx -> {
+                        PhaseTapChanger tc = tx.getPhaseTapChanger();
+                        for (int step = tc.getLowTapPosition(); step <= tc.getHighTapPosition(); step++) {
+                            double alpha = tc.getStep(step).getAlpha();
+                            tc.getStep(step).setAlpha(-alpha);
+                        }
+                    });
+        }
+    }
+
     private void computeMissingFlows(Network network) {
         float epsilonX = 0;
         boolean applyXCorrection = false;
@@ -274,7 +323,7 @@ public final class LoadFlowValidation {
 
     private Map<String, BusValues> collectBusValues(Network network) {
         Map<String, BusValues> values = new HashMap<>();
-        network.getBusBreakerView().getBuses()
+        network.getBusView().getBuses()
                 .forEach(b -> {
                     BusValues bv = new BusValues();
                     bv.v = b.getV();
@@ -369,7 +418,7 @@ public final class LoadFlowValidation {
                     LoadFlowFactoryMock.class.getCanonicalName());
 
             ValidationConfig config = ValidationConfig.load(platformConfig);
-            config.setVerbose(true);
+            config.setVerbose(false);
             config.setLoadFlowParameters(loadFlowParameters);
             LOG.info("specificCompatibility is {}", loadFlowParameters.isSpecificCompatibility());
             Path working = workingDirectory.resolve("temp-lf-validation-" + stateLabel);
@@ -447,11 +496,9 @@ public final class LoadFlowValidation {
             Writer writer = Files.newBufferedWriter(
                     working.resolve("check-generators-bad.csv"),
                     StandardCharsets.UTF_8);
-            ValidationWriter generatorsWriter = ValidationUtils.createValidationWriter(
-                    network.getId(), config, writer, ValidationType.GENERATORS);
             int count = 0;
             for (Generator g : network.getGenerators()) {
-                if (!GeneratorsValidation.checkGenerators(g, config, generatorsWriter)) {
+                if (!GeneratorsValidation.checkGenerators(g, config, writer)) {
                     count++;
                 }
             }
@@ -473,6 +520,11 @@ public final class LoadFlowValidation {
                 StandardCharsets.UTF_8);
         ValidationWriter flowsWriter = ValidationUtils.createValidationWriter(
                 network.getId(), config, writer, ValidationType.FLOWS);
+        writer = Files.newBufferedWriter(
+                working.resolve("check-flows-buses-bad.csv"),
+                StandardCharsets.UTF_8);
+        ValidationWriter busesWriter = ValidationUtils.createValidationWriter(
+                network.getId(), config, writer, ValidationType.BUSES);
 
         boolean linesValidated = network.getLineStream()
                 .sorted(Comparator.comparing(Line::getId))
@@ -487,6 +539,12 @@ public final class LoadFlowValidation {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("flow-line r {}, x {}, b1 {}, b2 {}, ok {}, id {}", l.getR(),
                                 l.getX(), l.getB1(), l.getB2(), r, l.getId());
+                    }
+                    if (!r) {
+                        config.setVerbose(true);
+                        BusesValidation.checkBuses(l.getTerminal1().getBusView().getBus(), config, busesWriter);
+                        BusesValidation.checkBuses(l.getTerminal2().getBusView().getBus(), config, busesWriter);
+                        config.setVerbose(false);
                     }
                     return r;
                 })
@@ -536,7 +594,9 @@ public final class LoadFlowValidation {
 
             XMLExporter xmlExporter = new XMLExporter();
             FileDataSource fds = new FileDataSource(workingDirectory, filename);
-            xmlExporter.export(network, null, fds);
+            Properties params = new Properties();
+            params.put(XMLExporter.THROW_EXCEPTION_IF_EXTENSION_NOT_FOUND, "false");
+            xmlExporter.export(network, params, fds);
             return fds;
         }
         return null;
@@ -617,6 +677,11 @@ public final class LoadFlowValidation {
 
         public Builder changeSignForShuntReactivePowerFlowInitialState(boolean b) {
             this.changeSignForShuntReactivePowerFlowInitialState = b;
+            return this;
+        }
+
+        public Builder changeSignForPhaseTapChange(boolean b) {
+            this.changeSignForPhaseTapChange = b;
             return this;
         }
 
@@ -704,6 +769,7 @@ public final class LoadFlowValidation {
         public LoadFlowValidation build() {
             return new LoadFlowValidation(
                     validateInitialState,
+                    changeSignForPhaseTapChange,
                     changeSignForShuntReactivePowerFlowInitialState,
                     threshold,
                     specificCompatibility,
@@ -723,6 +789,7 @@ public final class LoadFlowValidation {
 
         private boolean validateInitialState;
         private boolean changeSignForShuntReactivePowerFlowInitialState;
+        private boolean changeSignForPhaseTapChange;
         private double threshold;
         private boolean specificCompatibility;
         private boolean compareWithInitialState;
@@ -740,6 +807,7 @@ public final class LoadFlowValidation {
     }
 
     private final boolean validateInitialState;
+    private final boolean changeSignForPhaseTapChange;
     private final boolean changeSignForShuntReactivePowerFlowInitialState;
     private final double threshold;
     private final boolean compareWithInitialState;
