@@ -1,8 +1,6 @@
 package com.powsybl.cgmes.validation.test.flow;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -15,147 +13,33 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.powsybl.cgmes.model.test.TestGridModelPath;
+import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.triplestore.api.PropertyBag;
 
 public class CgmesFlowValidation {
 
-    @BeforeClass
-    public static void setUp() throws IOException {
-        inputModel = new CgmesPrepareModel();
+    public CgmesFlowValidation(CgmesModel m) {
+        inputModel = new PrepareModel(m);
     }
 
-    //@Test
-    public void testApg() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180221\\unzipped\\APG\\20180220T2330Z";
-        String basename = "20180220T2330Z_";
-        String modelname = "APG";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testRte() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180221\\unzipped\\RTE\\20180220T2330Z";
-        String basename = "20180220T2330Z_";
-        String modelname = "RTE";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testEms() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180221\\unzipped\\EMS\\20180220T2330Z";
-        String basename = "20180220T2330Z_";
-        String modelname = "EMS";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testNget() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180919\\unzipped\\NGET\\20180919T1730Z";
-        String basename = "20180919T1730Z_";
-        String modelname = "NGET";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testSeps() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180919\\unzipped\\SEPS\\20180918T2330Z";
-        String basename = "20180918T2330Z_";
-        String modelname = "SEPS";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testCeps() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180919\\unzipped\\CEPS\\20180919T0430Z";
-        String basename = "20180919T0430Z_";
-        String modelname = "CEPS";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testElering() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180919\\unzipped\\Elering\\20180918T2330Z";
-        String basename = "20180918T2330Z_";
-        String modelname = "Elering";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testTtg() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180919\\unzipped\\TTG\\20180918T2330Z";
-        String basename = "20180918T2330Z_";
-        String modelname = "TTG";
-        test(path, basename, modelname);
-    }
-
-    @Test
-    public void test50hertz() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180919\\unzipped\\50hertz\\20180918T2330Z";
-        String basename = "20180918T2330Z_";
-        String modelname = "50hertz";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testAst() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180919\\unzipped\\AST\\20180918T2330Z";
-        String basename = "20180918T2330Z_";
-        String modelname = "AST";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testCges() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180919\\unzipped\\CGES\\20180918T2230Z";
-        String basename = "20180918T2230Z_";
-        String modelname = "CGES";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testEles() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180919\\unzipped\\ELES\\20180917T2330Z";
-        String basename = "20180917T2330Z_";
-        String modelname = "ELES";
-        test(path, basename, modelname);
-    }
-
-    //@Test
-    public void testElia() throws IOException {
-        String path = "F:\\cgmes-csi\\DACF\\20180919\\unzipped\\Elia\\20180918T2330Z";
-        String basename = "20180918T2330Z_";
-        String modelname = "Elia";
-        test(path, basename, modelname);
-    }
-
-    private void addConfigurations(List<String> configs) {
-        //configs.add("default");
-        //configs.add("T2x_yshunt_split.T3x_yshunt_split"); // APG
-        //configs.add("T2x_yshunt_split.T2x_ratio0_end1"); // EMS
-        //configs.add("T2x_ratio0_rtc.T2x_ptc2_tabular_negate_on");    // RTE
-        //configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on"); // NGET
-        //configs.add("T2x_yshunt_split"); // ELES
-        //configs.add("T2x_ratio0_end1"); // CGES
-        //configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.T2x_yshunt_split.T3x_yshunt_split"); // Elia
-        configs.add("T2x_yshunt_split.T3x_yshunt_split"); // 50Hz
-    }
-
-    private void test(String path, String basename, String modelname) throws IOException {
-        TestGridModelPath gm = loadModel(path, basename);
-        inputModel.loadModel(gm);
+    public void test(String modelname) throws IOException {
+        inputModel.loadModel();
         calcBalances(modelname);
     }
 
-    private TestGridModelPath loadModel(String path, String basename) throws IOException {
-        Path p = Paths.get(path);
-        TestGridModelPath gm = new TestGridModelPath(p, basename, null);
-        return gm;
+    private void addConfigurations(List<String> configs) {
+        configs.add("default");
+        // configs.add("T2x_yshunt_split.T3x_yshunt_split"); // APG
+        // configs.add("T2x_yshunt_split.T2x_ratio0_end1"); // EMS
+        // configs.add("T2x_ratio0_rtc.T2x_ptc2_tabular_negate_on"); // RTE
+        // configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on"); // NGET
+        // configs.add("T2x_yshunt_split"); // ELES
+        // configs.add("T2x_ratio0_end1"); // CGES
+        // configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.T2x_yshunt_split.T3x_yshunt_split"); // Elia
+        // configs.add("T2x_yshunt_split.T3x_yshunt_split"); // 50Hz
     }
 
     private String evaluateCode(String code) {
@@ -223,20 +107,23 @@ public class CgmesFlowValidation {
             double balanceTolerance = 1.0;
             long totalNodes = report.values().size();
             long badNodes = report.values().stream().filter(pb -> {
-                return !pb.asBoolean("partialTx", false) && !pb.asBoolean("partialLine", false) && !pb.asBoolean("z0Line", false);
+                return !pb.asBoolean("partialTx", false) && !pb.asBoolean("partialLine", false)
+                        && !pb.asBoolean("z0Line", false);
             }).filter(pb -> {
                 return (Math.abs(pb.asDouble("balanceP"))
                         + Math.abs(pb.asDouble("balanceQ"))) > balanceTolerance;
             }).count();
 
             double totalError = report.values().stream().filter(pb -> {
-                return !pb.asBoolean("partialTx", false) && !pb.asBoolean("partialLine", false) && !pb.asBoolean("z0Line", false);
+                return !pb.asBoolean("partialTx", false) && !pb.asBoolean("partialLine", false)
+                        && !pb.asBoolean("z0Line", false);
             }).map(pb -> {
                 return Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ"));
             }).mapToDouble(Double::doubleValue).sum();
 
             double badNodesError = report.values().stream().filter(pb -> {
-                return !pb.asBoolean("partialTx", false) && !pb.asBoolean("partialLine", false) && !pb.asBoolean("z0Line", false);
+                return !pb.asBoolean("partialTx", false) && !pb.asBoolean("partialLine", false)
+                        && !pb.asBoolean("z0Line", false);
             }).filter(pb -> {
                 return (Math.abs(pb.asDouble("balanceP"))
                         + Math.abs(pb.asDouble("balanceQ"))) > balanceTolerance;
@@ -494,7 +381,7 @@ public class CgmesFlowValidation {
     }
 
     private static int                  show = 5;
-    private static CgmesPrepareModel    inputModel;
+    private static PrepareModel         inputModel;
     private static Map<String, Integer> equipmentsReport;
 
     private static final Logger         LOG  = LoggerFactory

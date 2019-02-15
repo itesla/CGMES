@@ -10,7 +10,7 @@ import com.powsybl.triplestore.api.PropertyBag;
 
 public class CalcFlow {
 
-    public CalcFlow(CgmesPrepareModel inputModel, Map<String, Integer> equipmentsReport) {
+    public CalcFlow(PrepareModel inputModel, Map<String, Integer> equipmentsReport) {
         this.inputModel = inputModel;
         this.equipmentsReport = equipmentsReport;
     }
@@ -194,7 +194,7 @@ public class CalcFlow {
 
     private Complex              sft;
     private Complex              stf;
-    private CgmesPrepareModel    inputModel;
+    private PrepareModel    inputModel;
     private Map<String, Integer> equipmentsReport;
     private static final Logger  LOG = LoggerFactory
             .getLogger(CalcFlow.class);

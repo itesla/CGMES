@@ -12,31 +12,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.powsybl.cgmes.model.CgmesModel;
-import com.powsybl.cgmes.model.CgmesTerminal;
-import com.powsybl.cgmes.model.CgmesModelFactory;
 import com.powsybl.cgmes.model.CgmesNames;
-import com.powsybl.cgmes.model.CgmesOnDataSource;
-import com.powsybl.cgmes.model.test.TestGridModel;
+import com.powsybl.cgmes.model.CgmesTerminal;
 import com.powsybl.cgmes.model.triplestore.CgmesModelTripleStore;
-import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.triplestore.api.PropertyBag;
 import com.powsybl.triplestore.api.PropertyBags;
-import com.powsybl.triplestore.api.TripleStoreFactory;
 
-public class CgmesPrepareModel {
+public class PrepareModel {
 
-    public void loadModel(TestGridModel gridModel) throws IOException {
-        ReadOnlyDataSource ds = gridModel.dataSource();
+    public PrepareModel(CgmesModel m) {
+        cgmes = m;
+    }
 
-        // Check that the case exists
-        // even if we do not have any available triple store implementation
-        // cimNamespace() will throw an exception if no CGMES data is found
-        CgmesOnDataSource cds = new CgmesOnDataSource(ds);
-        cds.cimNamespace();
-
-        String impl = TripleStoreFactory.defaultImplementation();
-
-        cgmes = CgmesModelFactory.create(ds, impl);
+    public void loadModel() throws IOException {
         nodeParameters = nodeParameters(cgmes);
         nodeParameters.keySet().forEach(key -> {
             LOG.debug("node {} ,  {}", key, nodeParameters.get(key));
@@ -424,15 +412,22 @@ public class CgmesPrepareModel {
         PropertyBag pt = powerTransformerPhaseTapChanger.get(ptc);
 
         PropertyBag transformer = transformers.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
-        transformer.put("r" + endNumber, r);
-        transformer.put("x" + endNumber, x);
-        transformer.put("b" + endNumber, b);
-        transformer.put("g" + endNumber, g);
+        if (r != null) {
+            transformer.put("r" + endNumber, r);
+        }
+        if (x != null) {
+            transformer.put("x" + endNumber, x);
+        }
+        if (b != null) {
+            transformer.put("b" + endNumber, b);
+        }
+        if (g != null) {
+            transformer.put("g" + endNumber, g);
+        }
         if (phaseAngleClock != null) {
             transformer.put("pac" + endNumber, phaseAngleClock);
         }
         transformer.put("ratedU" + endNumber, ratedU);
-        transformer.put("g" + endNumber, g);
         if (rt != null) {
             String ratioNeutralU = rt.get("neutralU");
             String ratioLowStep = rt.get("lowStep");
@@ -516,6 +511,6 @@ public class CgmesPrepareModel {
     private Map<String, List<String>> equipmentsInNode;
 
     private static final Logger       LOG = LoggerFactory
-            .getLogger(CgmesPrepareModel.class);
+            .getLogger(PrepareModel.class);
 
 }
