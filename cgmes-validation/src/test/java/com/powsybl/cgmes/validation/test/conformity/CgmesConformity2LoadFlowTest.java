@@ -20,8 +20,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.powsybl.cgmes.model.test.TestGridModel;
-import com.powsybl.cgmes.validation.test.LoadFlowTester;
-import com.powsybl.cgmes.validation.test.LoadFlowValidation;
+import com.powsybl.cgmes.validation.test.loadflow.LoadFlowTester;
+import com.powsybl.cgmes.validation.test.loadflow.LoadFlowValidation;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
 /**
