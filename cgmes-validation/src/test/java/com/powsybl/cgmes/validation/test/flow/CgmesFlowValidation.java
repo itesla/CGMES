@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +37,8 @@ public class CgmesFlowValidation {
         // configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on"); // NGET
         // configs.add("T2x_yshunt_split"); // ELES
         // configs.add("T2x_ratio0_end1"); // CGES
-        // configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.T2x_yshunt_split.T3x_yshunt_split"); // Elia
+        // configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.T2x_yshunt_split.T3x_yshunt_split");
+        // // Elia
         // configs.add("T2x_yshunt_split.T3x_yshunt_split"); // 50Hz
     }
 
@@ -107,23 +107,20 @@ public class CgmesFlowValidation {
             double balanceTolerance = 1.0;
             long totalNodes = report.values().size();
             long badNodes = report.values().stream().filter(pb -> {
-                return !pb.asBoolean("partialTx", false) && !pb.asBoolean("partialLine", false)
-                        && !pb.asBoolean("z0Line", false);
+                return pb.asBoolean("calculated", false);
             }).filter(pb -> {
                 return (Math.abs(pb.asDouble("balanceP"))
                         + Math.abs(pb.asDouble("balanceQ"))) > balanceTolerance;
             }).count();
 
             double totalError = report.values().stream().filter(pb -> {
-                return !pb.asBoolean("partialTx", false) && !pb.asBoolean("partialLine", false)
-                        && !pb.asBoolean("z0Line", false);
+                return pb.asBoolean("calculated", false);
             }).map(pb -> {
                 return Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ"));
             }).mapToDouble(Double::doubleValue).sum();
 
             double badNodesError = report.values().stream().filter(pb -> {
-                return !pb.asBoolean("partialTx", false) && !pb.asBoolean("partialLine", false)
-                        && !pb.asBoolean("z0Line", false);
+                return pb.asBoolean("calculated", false);
             }).filter(pb -> {
                 return (Math.abs(pb.asDouble("balanceP"))
                         + Math.abs(pb.asDouble("balanceQ"))) > balanceTolerance;
@@ -131,16 +128,24 @@ public class CgmesFlowValidation {
                 return Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ"));
             }).mapToDouble(Double::doubleValue).sum();
 
+            long okNodes = report.values().stream().filter(pb -> {
+                return pb.asBoolean("calculated", false);
+            }).filter(pb -> {
+                return (Math.abs(pb.asDouble("balanceP"))
+                        + Math.abs(pb.asDouble("balanceQ"))) <= balanceTolerance;
+            }).count();
+
             LOG.info("----> model {} config {}", model, config);
 
-            LOG.info("total error {} total nodes {} bad error {} bad nodes {} pct {}",
-                    totalError, totalNodes, badNodesError, badNodes,
+            LOG.info(
+                    "total error {} total nodes {} ok nodes {} bad error {} bad nodes {} pct {}",
+                    totalError, totalNodes, okNodes, badNodesError, badNodes,
                     Long.valueOf(badNodes).doubleValue()
                             / Long.valueOf(totalNodes).doubleValue() * 100.0);
 
             show = 5;
             report.keySet().forEach(nodes -> {
-                if (nodes.contains("_7fcdb92c-16af-4309-8695-e77ab8de2f79_TP")) {
+                if (nodes.contains("_09115273-16af-4309-8695-e77ab8de2f79_TP")) {
                     PropertyBag pb = report.get(nodes);
                     double nodeBalanceP = pb.asDouble("balanceP");
                     double nodeBalanceQ = pb.asDouble("balanceQ");
@@ -150,27 +155,17 @@ public class CgmesFlowValidation {
                     PropertyBag pb = report.get(nodes);
                     double nodeBalanceP = pb.asDouble("balanceP");
                     double nodeBalanceQ = pb.asDouble("balanceQ");
-                    boolean txPartialConnected = pb.asBoolean("partialTx", false);
-                    boolean linePartialConnected = pb.asBoolean("partialLine", false);
-                    boolean z0Line = pb.asBoolean("z0Line", false);
-                    if (txPartialConnected) {
-                        LOG.debug("nodes {} {} {} partial connected transformer", nodes,
-                                nodeBalanceP,
-                                nodeBalanceQ);
-                    } else if (linePartialConnected) {
-                        LOG.debug("nodes {} {} {} partial connected line", nodes, nodeBalanceP,
-                                nodeBalanceQ);
-                    } else if (z0Line) {
-                        LOG.debug("nodes {} {} {} node with z0Line", nodes, nodeBalanceP,
-                                nodeBalanceQ);
-                    } else {
-                        LOG.info("nodes {} {} {}", nodes, nodeBalanceP, nodeBalanceQ);
-                        show--;
-                    }
+                    boolean calculatedNode = pb.asBoolean("calculated", false);
+                    LOG.info("nodes {} calculated {} {} {}", nodes, calculatedNode, nodeBalanceP, nodeBalanceQ);
+                    show--;
                 }
             });
 
             report.keySet().forEach(nodes -> {
+                PropertyBag pb = report.get(nodes);
+                if (!pb.asBoolean("calculated", false)) {
+                    return;
+                }
                 nodes.forEach(n -> {
                     if (!inputModel.getEquipmentsInNode().containsKey(n)) {
                         return;
@@ -178,19 +173,11 @@ public class CgmesFlowValidation {
                     inputModel.getEquipmentsInNode().get(n).forEach(id -> {
                         PropertyBag line = inputModel.getLineParameters(id);
                         if (line != null) {
-                            Boolean connected = line.asBoolean("connected", false);
-                            if (connected) {
-                                LOG.debug("line code {}", line.get("code"));
-                            }
+                            LOG.debug("line code {}", line.get("code"));
                         }
                         PropertyBag transformer = inputModel.getTransformerParameters(id);
                         if (transformer != null) {
-                            Boolean connected1 = transformer.asBoolean("connected1", false);
-                            Boolean connected2 = transformer.asBoolean("connected2", false);
-                            Boolean connected3 = transformer.asBoolean("connected3", connected1);
-                            if (connected1 && connected2 && connected3) {
-                                LOG.debug("transformer code {}", transformer.get("code"));
-                            }
+                            LOG.debug("transformer code {}", transformer.get("code"));
                         }
                     });
                 });
@@ -220,7 +207,6 @@ public class CgmesFlowValidation {
         equipmentsReport = new HashMap<>();
         Map<List<String>, PropertyBag> report = new HashMap<>();
         List<String> pn = new ArrayList<>(Arrays.asList("balanceP", "balanceQ"));
-        CalcFlow calcFlow = new CalcFlow(inputModel, equipmentsReport);
 
         inputModel.getJoinedNodes().forEach(nodes -> {
             nodes.forEach(n -> {
@@ -229,8 +215,8 @@ public class CgmesFlowValidation {
                 }
                 PropertyBag node = inputModel.getNodeParameters(n);
                 LOG.debug("------  equipment node ----------> {}", n);
-                if (n.startsWith("_f7d16772")) {
-                    LOG.debug("node {}", node);
+                if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
+                    LOG.info("node {}", node);
                 }
                 if (!inputModel.getEquipmentsInNode().containsKey(n)) {
                     double p = node.asDouble("p");
@@ -244,67 +230,46 @@ public class CgmesFlowValidation {
                 inputModel.getEquipmentsInNode().get(n).forEach(id -> {
                     PropertyBag line = inputModel.getLineParameters(id);
                     if (line != null) {
-                        Boolean connected = line.asBoolean("connected", false);
-                        if (connected) {
-                            PropertyBag node1 = inputModel.getNodeParameters(line.get("terminal1"));
-                            PropertyBag node2 = inputModel.getNodeParameters(line.get("terminal2"));
-                            calcFlow.calcFlowLine(n, node1, node2, line, config);
-                            double balanceP = node.asDouble("balanceP", 0.0);
-                            double balanceQ = node.asDouble("balanceQ", 0.0);
-                            node.put("balanceP", Double.toString(balanceP + line.asDouble("p")));
-                            node.put("balanceQ", Double.toString(balanceQ + line.asDouble("q")));
-                            LOG.debug("Line {}  Line P {} Q {} balanceP {} balanceQ {}", line,
-                                    line.asDouble("p"), line.asDouble("q"),
-                                    node.asDouble("balanceP", 0.0),
-                                    node.asDouble("balanceQ", 0.0));
-                        }
-                        if (line.asBoolean("partial", false)) {
-                            node.put("partialLine", "true");
-                        }
-                        if (line.asBoolean("z0Line", false)) {
-                            node.put("z0Line", "true");
-                        }
+                        PropertyBag node1 = inputModel.getNodeParameters(line.get("terminal1"));
+                        PropertyBag node2 = inputModel.getNodeParameters(line.get("terminal2"));
+                        CalcFlow calcFlow = new CalcFlow(inputModel);
+                        calcFlow.calcFlowLine(n, node1, node2, line, config);
+                        registerCode(calcFlow.getModelCode());
+                        double balanceP = node.asDouble("balanceP", 0.0);
+                        double balanceQ = node.asDouble("balanceQ", 0.0);
+                        boolean calculated = node.asBoolean("calculated", true);
+                        node.put("balanceP", Double.toString(balanceP + calcFlow.getP()));
+                        node.put("balanceQ", Double.toString(balanceQ + calcFlow.getQ()));
+                        node.put("calculated", Boolean.toString(calculated && calcFlow.getCalculated()));
+                        LOG.debug("Line {}  Line P {} Q {} balanceP {} balanceQ {}", line,
+                                line.asDouble("p"), line.asDouble("q"),
+                                node.asDouble("balanceP", 0.0),
+                                node.asDouble("balanceQ", 0.0));
                     }
                     PropertyBag transformer = inputModel.getTransformerParameters(id);
                     if (transformer != null) {
-                        Boolean connected1 = transformer.asBoolean("connected1", false);
-                        Boolean connected2 = transformer.asBoolean("connected2", false);
-                        Boolean connected3 = transformer.asBoolean("connected3", connected1);
+                        PropertyBag node1 = inputModel
+                                .getNodeParameters(transformer.get("terminal1"));
+                        PropertyBag node2 = inputModel
+                                .getNodeParameters(transformer.get("terminal2"));
                         PropertyBag node3 = inputModel
                                 .getNodeParameters(transformer.get("terminal3"));
-                        if (connected1 && connected2 && connected3) {
-                            PropertyBag node1 = inputModel
-                                    .getNodeParameters(transformer.get("terminal1"));
-                            PropertyBag node2 = inputModel
-                                    .getNodeParameters(transformer.get("terminal2"));
-                            if (node3 == null) {
-                                calcFlow.calcFlowT2x(n, node1, node2, transformer, config);
-                            } else {
-                                calcFlow.calcFlowT3x(n, node1, node2, node3, transformer, config);
-                            }
-                            double balanceP = node.asDouble("balanceP", 0.0);
-                            double balanceQ = node.asDouble("balanceQ", 0.0);
-                            node.put("balanceP",
-                                    Double.toString(balanceP + transformer.asDouble("p")));
-                            node.put("balanceQ",
-                                    Double.toString(balanceQ + transformer.asDouble("q")));
-                            LOG.debug("Transformer {} P {} Q {} ", transformer,
-                                    transformer.asDouble("p"),
-                                    transformer.asDouble("q"));
-                            if (transformer.asBoolean("z0Line", false)) {
-                                node.put("z0Line", "true");
-                            }
+                        CalcFlow calcFlow = new CalcFlow(inputModel);
+                        if (node3 == null) {
+                            calcFlow.calcFlowT2x(n, node1, node2, transformer, config);
                         } else {
-                            if (node3 == null) {
-                                if (connected1 != connected2) {
-                                    node.put("partial", "true");
-                                }
-                            } else {
-                                if (connected1 != connected2 || connected1 != connected3) {
-                                    node.put("partial", "true");
-                                }
-                            }
+                            calcFlow.calcFlowT3x(n, node1, node2, node3, transformer, config);
                         }
+                        registerCode(calcFlow.getModelCode());
+                        double balanceP = node.asDouble("balanceP", 0.0);
+                        double balanceQ = node.asDouble("balanceQ", 0.0);
+                        boolean calculated = node.asBoolean("calculated", true);
+                        node.put("balanceP", Double.toString(balanceP + calcFlow.getP()));
+                        node.put("balanceQ", Double.toString(balanceQ + calcFlow.getQ()));
+                        node.put("calculated", Boolean.toString(calculated && calcFlow.getCalculated()));
+                        LOG.debug("Transformer {} P {} Q {} ", transformer,
+                                transformer.asDouble("p"),
+                                transformer.asDouble("q"));
                     }
                 });
                 double p = node.asDouble("p");
@@ -329,26 +294,20 @@ public class CgmesFlowValidation {
                 return node.asDouble("balanceQ", 0.0);
             }).mapToDouble(Double::doubleValue).sum();
 
-            Stream<String> txPartialConnected = nodes.stream().filter(n -> {
+            boolean calculatedNodes = nodes.stream().filter(n -> {
                 PropertyBag node = inputModel.getNodeParameters(n);
-                return node.containsKey("partial");
-            });
-            Stream<String> linePartialConnected = nodes.stream().filter(n -> {
-                PropertyBag node = inputModel.getNodeParameters(n);
-                return node.containsKey("partialLine");
-            });
-            Stream<String> z0Lines = nodes.stream().filter(n -> {
-                PropertyBag node = inputModel.getNodeParameters(n);
-                return node.containsKey("z0Line");
-            });
+                return !node.asBoolean("calculated", false);
+            }).count() == 0;
+            if (!calculatedNodes) {
+                nodeBalanceP = 0.0;
+                nodeBalanceQ = 0.0;
+            }
             LOG.debug("nodes {} {} {}", nodes, nodeBalanceP, nodeBalanceQ);
 
             PropertyBag pb = new PropertyBag(pn);
             pb.put("balanceP", "" + nodeBalanceP);
             pb.put("balanceQ", "" + nodeBalanceQ);
-            pb.put("partialTx", Boolean.toString(txPartialConnected.count() > 0));
-            pb.put("partialLine", Boolean.toString(linePartialConnected.count() > 0));
-            pb.put("z0Line", Boolean.toString(z0Lines.count() > 0));
+            pb.put("calculated", Boolean.toString(calculatedNodes));
             report.put(nodes, pb);
         });
 
@@ -378,6 +337,14 @@ public class CgmesFlowValidation {
                     LinkedHashMap::new));
 
         return sortedByBalanceReport;
+    }
+
+    private void registerCode(String code) {
+        Integer total = equipmentsReport.get(code);
+        if (total == null) {
+            total = new Integer(0);
+        }
+        equipmentsReport.put(code, total + 1);
     }
 
     private static int                  show = 5;

@@ -512,5 +512,4 @@ public class PrepareModel {
 
     private static final Logger       LOG = LoggerFactory
             .getLogger(PrepareModel.class);
-
 }

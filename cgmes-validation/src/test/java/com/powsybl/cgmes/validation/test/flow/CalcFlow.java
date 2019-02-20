@@ -1,7 +1,5 @@
 package com.powsybl.cgmes.validation.test.flow;
 
-import java.util.Map;
-
 import org.apache.commons.math3.complex.Complex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,89 +8,99 @@ import com.powsybl.triplestore.api.PropertyBag;
 
 public class CalcFlow {
 
-    public CalcFlow(PrepareModel inputModel, Map<String, Integer> equipmentsReport) {
+    public CalcFlow(PrepareModel inputModel) {
         this.inputModel = inputModel;
-        this.equipmentsReport = equipmentsReport;
+        this.p = 0.0;
+        this.q = 0.0;
+        this.modelCode = "";
+        this.calculated = false;
     }
 
     public void calcFlowT2x(String n, PropertyBag node1, PropertyBag node2,
             PropertyBag transformer, String config) {
-        if (n.startsWith("_f7d16772")) {
-            LOG.debug("From {}  {} To {}  {}", node1.asDouble("v"), node1.asDouble("angle"),
-                    node2.asDouble("v"), node2.asDouble("angle"));
-        }
         double r1 = transformer.asDouble("r1");
         double x1 = transformer.asDouble("x1");
         double r2 = transformer.asDouble("r2");
         double x2 = transformer.asDouble("x2");
-        if (r1 == 0.0 && x1 == 0.0 && r2 == 0.0 && x2 == 0.0) {
-            transformer.put("p", Double.toString(0.0));
-            transformer.put("q", Double.toString(0.0));
-            transformer.put("z0Line", "true");
+        double v1 = node1.asDouble("v");
+        double angleDegrees1 = node1.asDouble("angle");
+        double v2 = node2.asDouble("v");
+        double angleDegrees2 = node2.asDouble("angle");
+        Boolean connected1 = transformer.asBoolean("connected1", false);
+        Boolean connected2 = transformer.asBoolean("connected2", false);
+
+        if (!calcFlowT2xIsOk(connected1, connected2, r1, x1, r2, x2, v1, angleDegrees1, v2,
+                angleDegrees2)) {
             return;
         }
 
-        double v1 = node1.asDouble("v");
-        double angle1 = Math.toRadians(node1.asDouble("angle"));
-        double v2 = node2.asDouble("v");
-        double angle2 = Math.toRadians(node2.asDouble("angle"));
+        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
+            LOG.info("From {}  {} To {}  {}", v1, angleDegrees1, v2, angleDegrees2);
+        }
+
+        double angle1 = Math.toRadians(angleDegrees1);
+        double angle2 = Math.toRadians(angleDegrees2);
         Complex vf = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
         Complex vt = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
 
-        T2xAdmittanceMatrix admittanceMatrix = new T2xAdmittanceMatrix(inputModel.getCgmes(),
-                equipmentsReport);
+        T2xAdmittanceMatrix admittanceMatrix = new T2xAdmittanceMatrix(inputModel.getCgmes());
         admittanceMatrix.calculate(transformer, config);
 
         calculate(admittanceMatrix.getYff(), admittanceMatrix.getYft(),
                 admittanceMatrix.getYtf(), admittanceMatrix.getYtt(), vf, vt);
 
-        Complex res = Complex.ZERO;
         if (transformer.get("terminal1").equals(n)) {
-            res = getSft();
+            p = sft.getReal();
+            q = sft.getImaginary();
         } else if (transformer.get("terminal2").equals(n)) {
-            res = getStf();
+            p = stf.getReal();
+            q = stf.getImaginary();
         }
-        if (n.startsWith("_f7d16772")) {
-            LOG.debug(" transformer {}", transformer);
-            LOG.debug("t2x {} {} node {}", res.getReal(), res.getImaginary(), n);
+        modelCode = admittanceMatrix.getModelCode();
+        calculated = true;
+
+        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
+            LOG.info(" transformer {}", transformer);
+            LOG.info("t2x {} {} node {}", p, q, n);
         }
-        transformer.put("p", Double.toString(res.getReal()));
-        transformer.put("q", Double.toString(res.getImaginary()));
     }
 
     public void calcFlowT3x(String n, PropertyBag node1, PropertyBag node2, PropertyBag node3,
             PropertyBag transformer, String config) {
-        if (n.startsWith("_f7d16772")) {
-            LOG.debug("End1 {}  {} End2 {}  {} End3 {} {}", node1.asDouble("v"),
-                    node1.asDouble("angle"),
-                    node2.asDouble("v"), node2.asDouble("angle"), node3.asDouble("v"),
-                    node3.asDouble("angle"));
-        }
         double r1 = transformer.asDouble("r1");
         double x1 = transformer.asDouble("x1");
         double r2 = transformer.asDouble("r2");
         double x2 = transformer.asDouble("x2");
         double r3 = transformer.asDouble("r3");
         double x3 = transformer.asDouble("x3");
-        if (r1 == 0.0 && x1 == 0.0 || r2 == 0.0 && x2 == 0.0 || r3 == 0.0 && x3 == 0.0) {
-            transformer.put("p", Double.toString(0.0));
-            transformer.put("q", Double.toString(0.0));
-            transformer.put("z0Line", "true");
+        double v1 = node1.asDouble("v");
+        double angleDegrees1 = node1.asDouble("angle");
+        double v2 = node2.asDouble("v");
+        double angleDegrees2 = node2.asDouble("angle");
+        double v3 = node3.asDouble("v");
+        double angleDegrees3 = node3.asDouble("angle");
+        Boolean connected1 = transformer.asBoolean("connected1", false);
+        Boolean connected2 = transformer.asBoolean("connected2", false);
+        Boolean connected3 = transformer.asBoolean("connected3", false);
+
+        if (!calcFlowT3xIsOk(connected1, connected2, connected3, r1, x1, r2, x2, r3, x3, v1,
+                angleDegrees1, v2, angleDegrees2, v3, angleDegrees3)) {
             return;
         }
 
-        double v1 = node1.asDouble("v");
-        double angle1 = Math.toRadians(node1.asDouble("angle"));
-        double v2 = node2.asDouble("v");
-        double angle2 = Math.toRadians(node2.asDouble("angle"));
-        double v3 = node3.asDouble("v");
-        double angle3 = Math.toRadians(node3.asDouble("angle"));
+        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
+            LOG.info("End1 {}  {} End2 {}  {} End3 {} {}", v1, angleDegrees1,
+                    v2, angleDegrees2, v3, angleDegrees3);
+        }
+
+        double angle1 = Math.toRadians(angleDegrees1);
+        double angle2 = Math.toRadians(angleDegrees2);
+        double angle3 = Math.toRadians(angleDegrees3);
         Complex vf1 = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
         Complex vf2 = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
         Complex vf3 = new Complex(v3 * Math.cos(angle3), v3 * Math.sin(angle3));
 
-        T3xAdmittanceMatrix admittanceMatrix = new T3xAdmittanceMatrix(inputModel.getCgmes(),
-                equipmentsReport);
+        T3xAdmittanceMatrix admittanceMatrix = new T3xAdmittanceMatrix(inputModel.getCgmes());
         admittanceMatrix.calculate(transformer, config);
         Complex v0 = admittanceMatrix.getYtf1().multiply(vf1)
                 .add(admittanceMatrix.getYtf2().multiply(vf2))
@@ -101,78 +109,72 @@ public class CalcFlow {
                         .add(admittanceMatrix.getYtt3()));
         LOG.debug("V0 ------> {} {}", v0.abs(), v0.getArgument());
 
-        Complex res = Complex.ZERO;
         if (transformer.get("terminal1").equals(n)) {
             calculate(admittanceMatrix.getYff1(), admittanceMatrix.getYft1(),
                     admittanceMatrix.getYtf1(), admittanceMatrix.getYtt1(), vf1, v0);
-            res = getSft();
+            p = sft.getReal();
+            q = sft.getImaginary();
         } else if (transformer.get("terminal2").equals(n)) {
             calculate(admittanceMatrix.getYff2(), admittanceMatrix.getYft2(),
                     admittanceMatrix.getYtf2(), admittanceMatrix.getYtt2(), vf2, v0);
-            res = getSft();
+            p = sft.getReal();
+            q = sft.getImaginary();
         } else if (transformer.get("terminal3").equals(n)) {
             calculate(admittanceMatrix.getYff3(), admittanceMatrix.getYft3(),
                     admittanceMatrix.getYtf3(), admittanceMatrix.getYtt3(), vf3, v0);
-            res = getSft();
+            p = sft.getReal();
+            q = sft.getImaginary();
         }
-        if (n.startsWith("_f7d16772")) {
-            LOG.debug("trafo3D {}", transformer);
-            LOG.debug("trafo3D {} {} node {}", res.getReal(), res.getImaginary(), n);
+        modelCode = admittanceMatrix.getModelCode();
+        calculated = true;
+        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
+            LOG.info("trafo3D {}", transformer);
+            LOG.info("trafo3D {} {} node {}", p, q, n);
         }
-        transformer.put("p", Double.toString(res.getReal()));
-        transformer.put("q", Double.toString(res.getImaginary()));
     }
 
     public void calcFlowLine(String n, PropertyBag node1, PropertyBag node2, PropertyBag line,
             String config) {
-        if (n.startsWith("_f7d16772")) {
-            LOG.debug("From {}  {} To {}  {}", node1.asDouble("v"), node1.asDouble("angle"),
-                    node2.asDouble("v"), node2.asDouble("angle"));
-        }
-        double v1 = node1.asDouble("v");
-        double angle1 = Math.toRadians(node1.asDouble("angle"));
-        double v2 = node2.asDouble("v");
-        double angle2 = Math.toRadians(node2.asDouble("angle"));
-        if (angle1 == 0.0) {
-            v1 = v2;
-            angle1 = angle2;
-            line.put("partial", "true");
-        } else if (angle2 == 0.0) {
-            v2 = v1;
-            angle2 = angle1;
-            line.put("partial", "true");
-        }
-
         double r = line.asDouble("r");
         double x = line.asDouble("x");
-        if (r < 0.0001 && x < 0.0001 || v1 == v2 && angle1 == angle2) {
-            line.put("p", Double.toString(0.0));
-            line.put("q", Double.toString(0.0));
-            line.put("z0Line", "true");
+        double v1 = node1.asDouble("v");
+        double angleDegrees1 = node1.asDouble("angle");
+        double v2 = node2.asDouble("v");
+        double angleDegrees2 = node2.asDouble("angle");
+        Boolean connected = line.asBoolean("connected", false);
+
+        if (!calcFlowLineIsOk(connected, r, x, v1, angleDegrees1, v2, angleDegrees2)) {
             return;
         }
 
+        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
+            LOG.info("From {}  {} To {}  {}", v1, angleDegrees1, v2, angleDegrees2);
+        }
+
+        double angle1 = Math.toRadians(angleDegrees1);
+        double angle2 = Math.toRadians(angleDegrees2);
         Complex vf = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
         Complex vt = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
-        LineAdmittanceMatrix admittanceMatrix = new LineAdmittanceMatrix(inputModel.getCgmes(),
-                equipmentsReport);
+        LineAdmittanceMatrix admittanceMatrix = new LineAdmittanceMatrix(inputModel.getCgmes());
         admittanceMatrix.calculate(line, config);
 
         calculate(admittanceMatrix.getYff(), admittanceMatrix.getYft(),
                 admittanceMatrix.getYtf(), admittanceMatrix.getYtt(), vf, vt);
 
-        Complex res = Complex.ZERO;
         if (line.get("terminal1").equals(n)) {
-            res = getSft();
+            p = sft.getReal();
+            q = sft.getImaginary();
         } else if (line.get("terminal2").equals(n)) {
-            res = getStf();
+            p = stf.getReal();
+            q = stf.getImaginary();
         }
-        if (n.startsWith("_f7d16772")) {
-            LOG.debug("line {}", line);
-            LOG.debug("line {} {} node {}", res.getReal(), res.getImaginary(), n);
+        modelCode = admittanceMatrix.getModelCode();
+        calculated = true;
+
+        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
+            LOG.info("line {}", line);
+            LOG.info("line {} {} node {}", p, q, n);
         }
-        line.put("p", Double.toString(res.getReal()));
-        line.put("q", Double.toString(res.getImaginary()));
     }
 
     private void calculate(Complex yff, Complex yft, Complex ytf, Complex ytt, Complex vf,
@@ -184,18 +186,68 @@ public class CalcFlow {
         stf = itf.conjugate().multiply(vt);
     }
 
-    public Complex getSft() {
-        return sft;
+    private boolean calcFlowT2xIsOk(boolean connected1, boolean connected2,
+            double r1, double x1, double r2, double x2,
+            double v1, double angleDegrees1, double v2, double anglesDegrees2) {
+        if (!connected1 || !connected2) {
+            return false;
+        }
+        if (r1 == 0.0 && x1 == 0.0 && r2 == 0.0 && x2 == 0.0) {
+            return false;
+        }
+        return true;
     }
 
-    public Complex getStf() {
-        return stf;
+    private boolean calcFlowT3xIsOk(boolean connected1, boolean connected2, boolean connected3,
+            double r1, double x1, double r2, double x2,
+            double r3, double x3, double v1, double angleDegrees1,
+            double v2, double anglesDegrees2, double v3, double anglesDegrees3) {
+        if (!connected1 || !connected2 || !connected3) {
+            return false;
+        }
+        if (r1 == 0.0 && x1 == 0.0 || r2 == 0.0 && x2 == 0.0 || r3 == 0.0 && x3 == 0.0) {
+            return false;
+        }
+        return true;
     }
 
-    private Complex              sft;
-    private Complex              stf;
-    private PrepareModel    inputModel;
-    private Map<String, Integer> equipmentsReport;
-    private static final Logger  LOG = LoggerFactory
+    private boolean calcFlowLineIsOk(boolean connected, double r, double x, double v1, double angleDegrees1,
+            double v2, double angleDegrees2) {
+        if (!connected) {
+            return false;
+        }
+        if (r < 0.0001 && x < 0.0001 || v1 == v2 && angleDegrees1 == angleDegrees2) {
+            return false;
+        }
+        if (angleDegrees1 == 0.0 || angleDegrees2 == 0.0) {
+            return false;
+        }
+        return true;
+    }
+
+    public double getP() {
+        return p;
+    }
+
+    public double getQ() {
+        return q;
+    }
+
+    public String getModelCode() {
+        return modelCode;
+    }
+
+    public boolean getCalculated() {
+        return calculated;
+    }
+
+    private double              p;
+    private double              q;
+    private String              modelCode;
+    private boolean             calculated;
+    private Complex             sft;
+    private Complex             stf;
+    private PrepareModel        inputModel;
+    private static final Logger LOG = LoggerFactory
             .getLogger(CalcFlow.class);
 }
