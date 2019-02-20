@@ -1,4 +1,4 @@
-package com.powsybl.cgmes.validation.test;
+package com.powsybl.cgmes.validation.test.loadflow;
 
 /*
  * #%L
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-import com.powsybl.cgmes.validation.test.LoadFlowComputation.LoadFlowEngine;
+import com.powsybl.cgmes.validation.test.loadflow.LoadFlowComputation.LoadFlowEngine;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.config.InMemoryPlatformConfig;
 import com.powsybl.commons.config.MapModuleConfig;
@@ -304,8 +304,11 @@ public final class LoadFlowValidation {
     private void computeMissingFlows(Network network) {
         float epsilonX = 0;
         boolean applyXCorrection = false;
-        LoadFlowResultsCompletionParameters p;
-        p = new LoadFlowResultsCompletionParameters(epsilonX, applyXCorrection);
+        double z0Threshold = 1e-6;
+        LoadFlowResultsCompletionParameters p = new LoadFlowResultsCompletionParameters(
+                epsilonX,
+                applyXCorrection,
+                z0Threshold);
         LoadFlowResultsCompletion lf = new LoadFlowResultsCompletion(p, loadFlowParameters);
         try {
             lf.run(network, null);

@@ -1,4 +1,4 @@
-package com.powsybl.cgmes.validation.test;
+package com.powsybl.cgmes.validation.test.loadflow;
 
 /*
  * #%L
