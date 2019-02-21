@@ -13,24 +13,23 @@ public class LineAdmittanceMatrix extends AdmittanceMatrix {
 
     public void calculate(PropertyBag line, String config) {
 
-        readParameters(line);
-        double[] bsh = getBshunt(config);
-        setCode(line, bsh[0], bsh[1]);
+        readLineParameters(line);
+        double[] bsh = getLineBshunt(config);
+        double bsh1 = bsh[0];
+        double bsh2 = bsh[1];
 
         Complex z = new Complex(r, x);
-        Complex ysh1 = new Complex(0.0, bsh[0]);
-        Complex ysh2 = new Complex(0.0, bsh[1]);
+        Complex ysh1 = new Complex(0.0, bsh1);
+        Complex ysh2 = new Complex(0.0, bsh2);
         yff = z.reciprocal().add(ysh1);
         yft = z.reciprocal().negate();
         ytf = z.reciprocal().negate();
         ytt = z.reciprocal().add(ysh2);
+
+        setModelCode(lineModelCode(bsh1, bsh2));
     }
 
-    private void setCode(PropertyBag line, double bsh1, double bsh2) {
-        setModelCode(bShuntCode(bsh1, bsh2));
-    }
-
-    private double[] getBshunt(String config) {
+    private double[] getLineBshunt(String config) {
         String configurationBsh = "split";
         if (config.contains("Line_end1")) {
             configurationBsh = "end1";
@@ -52,10 +51,10 @@ public class LineAdmittanceMatrix extends AdmittanceMatrix {
             bsh1 = bch * 0.5;
             bsh2 = bch * 0.5;
         }
-        return new double[] {bsh1, bsh2};
+        return new double[] {bsh1, bsh2 };
     }
 
-    private void readParameters(PropertyBag line) {
+    private void readLineParameters(PropertyBag line) {
         r = line.asDouble("r");
         x = line.asDouble("x");
         bch = line.asDouble("bch");

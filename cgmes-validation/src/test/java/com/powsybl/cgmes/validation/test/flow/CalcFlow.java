@@ -29,22 +29,24 @@ public class CalcFlow {
         Boolean connected1 = transformer.asBoolean("connected1", false);
         Boolean connected2 = transformer.asBoolean("connected2", false);
 
+        // The admittance and the model code can always be calculated
+        T2xAdmittanceMatrix admittanceMatrix = new T2xAdmittanceMatrix(inputModel.getCgmes());
+        admittanceMatrix.calculate(transformer, config);
+        modelCode = admittanceMatrix.getModelCode();
+
         if (!calcFlowT2xIsOk(connected1, connected2, r1, x1, r2, x2, v1, angleDegrees1, v2,
                 angleDegrees2)) {
             return;
         }
 
         if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.info("From {}  {} To {}  {}", v1, angleDegrees1, v2, angleDegrees2);
+            LOG.debug("From {}  {} To {}  {}", v1, angleDegrees1, v2, angleDegrees2);
         }
 
         double angle1 = Math.toRadians(angleDegrees1);
         double angle2 = Math.toRadians(angleDegrees2);
         Complex vf = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
         Complex vt = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
-
-        T2xAdmittanceMatrix admittanceMatrix = new T2xAdmittanceMatrix(inputModel.getCgmes());
-        admittanceMatrix.calculate(transformer, config);
 
         calculate(admittanceMatrix.getYff(), admittanceMatrix.getYft(),
                 admittanceMatrix.getYtf(), admittanceMatrix.getYtt(), vf, vt);
@@ -56,12 +58,11 @@ public class CalcFlow {
             p = stf.getReal();
             q = stf.getImaginary();
         }
-        modelCode = admittanceMatrix.getModelCode();
         calculated = true;
 
         if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.info(" transformer {}", transformer);
-            LOG.info("t2x {} {} node {}", p, q, n);
+            LOG.debug(" transformer {}", transformer);
+            LOG.debug("t2x {} {} node {}", p, q, n);
         }
     }
 
@@ -83,13 +84,18 @@ public class CalcFlow {
         Boolean connected2 = transformer.asBoolean("connected2", false);
         Boolean connected3 = transformer.asBoolean("connected3", false);
 
+        // The admittance and model code can always be calculated
+        T3xAdmittanceMatrix admittanceMatrix = new T3xAdmittanceMatrix(inputModel.getCgmes());
+        admittanceMatrix.calculate(transformer, config);
+        modelCode = admittanceMatrix.getModelCode();
+
         if (!calcFlowT3xIsOk(connected1, connected2, connected3, r1, x1, r2, x2, r3, x3, v1,
                 angleDegrees1, v2, angleDegrees2, v3, angleDegrees3)) {
             return;
         }
 
         if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.info("End1 {}  {} End2 {}  {} End3 {} {}", v1, angleDegrees1,
+            LOG.debug("End1 {}  {} End2 {}  {} End3 {} {}", v1, angleDegrees1,
                     v2, angleDegrees2, v3, angleDegrees3);
         }
 
@@ -100,8 +106,6 @@ public class CalcFlow {
         Complex vf2 = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
         Complex vf3 = new Complex(v3 * Math.cos(angle3), v3 * Math.sin(angle3));
 
-        T3xAdmittanceMatrix admittanceMatrix = new T3xAdmittanceMatrix(inputModel.getCgmes());
-        admittanceMatrix.calculate(transformer, config);
         Complex v0 = admittanceMatrix.getYtf1().multiply(vf1)
                 .add(admittanceMatrix.getYtf2().multiply(vf2))
                 .add(admittanceMatrix.getYtf3().multiply(vf3))
@@ -125,11 +129,10 @@ public class CalcFlow {
             p = sft.getReal();
             q = sft.getImaginary();
         }
-        modelCode = admittanceMatrix.getModelCode();
         calculated = true;
         if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.info("trafo3D {}", transformer);
-            LOG.info("trafo3D {} {} node {}", p, q, n);
+            LOG.debug("trafo3D {}", transformer);
+            LOG.debug("trafo3D {} {} node {}", p, q, n);
         }
     }
 
@@ -143,20 +146,23 @@ public class CalcFlow {
         double angleDegrees2 = node2.asDouble("angle");
         Boolean connected = line.asBoolean("connected", false);
 
+        // The admittance and model code can always be calculated
+        LineAdmittanceMatrix admittanceMatrix = new LineAdmittanceMatrix(inputModel.getCgmes());
+        admittanceMatrix.calculate(line, config);
+        modelCode = admittanceMatrix.getModelCode();
+
         if (!calcFlowLineIsOk(connected, r, x, v1, angleDegrees1, v2, angleDegrees2)) {
             return;
         }
 
         if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.info("From {}  {} To {}  {}", v1, angleDegrees1, v2, angleDegrees2);
+            LOG.debug("From {}  {} To {}  {}", v1, angleDegrees1, v2, angleDegrees2);
         }
 
         double angle1 = Math.toRadians(angleDegrees1);
         double angle2 = Math.toRadians(angleDegrees2);
         Complex vf = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
         Complex vt = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
-        LineAdmittanceMatrix admittanceMatrix = new LineAdmittanceMatrix(inputModel.getCgmes());
-        admittanceMatrix.calculate(line, config);
 
         calculate(admittanceMatrix.getYff(), admittanceMatrix.getYft(),
                 admittanceMatrix.getYtf(), admittanceMatrix.getYtt(), vf, vt);
@@ -168,12 +174,11 @@ public class CalcFlow {
             p = stf.getReal();
             q = stf.getImaginary();
         }
-        modelCode = admittanceMatrix.getModelCode();
         calculated = true;
 
         if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.info("line {}", line);
-            LOG.info("line {} {} node {}", p, q, n);
+            LOG.debug("line {}", line);
+            LOG.debug("line {} {} node {}", p, q, n);
         }
     }
 
