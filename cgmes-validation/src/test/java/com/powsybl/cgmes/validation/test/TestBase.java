@@ -41,12 +41,22 @@ public class TestBase {
         return convert(this.data.resolve(rpath));
     }
 
+    public Network convert(String rpath, String rboundaries) {
+        return convert(this.data.resolve(rpath), this.data.resolve(rboundaries));
+    }
+
     public Network convert(Path path) {
-        Properties iparams = new Properties();
-        // iparams.put("createBusbarSectionForEveryConnectivityNode", "true");
+        return convert(path, null);
+    }
+
+    public Network convert(Path path, Path boundaries) {
+        Properties params = new Properties();
+        if (boundaries != null) {
+            params.put("useTheseBoundaries", dataSource(boundaries));
+        }
         Network network = Importers.importData("CGMES",
                 dataSource(path),
-                iparams,
+                params,
                 LocalComputationManager.getDefault());
         return network;
     }
@@ -68,15 +78,15 @@ public class TestBase {
         return null;
     }
 
-    public void reportLimits(Network network) {
-        new LimitsSummary(network.getExtension(CgmesModelExtension.class).getCgmesModel()).report();
+    public LimitsSummary reportLimits(Network network) {
+        return new LimitsSummary(network.getExtension(CgmesModelExtension.class).getCgmesModel());
     }
 
-    public void computeMissingFlows(Network network) {
-        computeMissingFlows(network, loadFlowParameters());
+    public Network computeMissingFlows(Network network) {
+        return computeMissingFlows(network, loadFlowParameters());
     }
 
-    public void computeMissingFlows(Network network, LoadFlowParameters lfp) {
+    public Network computeMissingFlows(Network network, LoadFlowParameters lfp) {
         float epsilonX = 0;
         boolean applyXCorrection = false;
         double z0Threshold = 1e-6;
@@ -87,6 +97,20 @@ public class TestBase {
                         z0Threshold),
                 lfp);
         lf.run(network, null);
+        return network;
+    }
+
+    public Network resetFlows(Network network) {
+        network.getBranchStream().forEach(b -> {
+            b.getTerminal1().setP(Double.NaN);
+            b.getTerminal2().setP(Double.NaN);
+        });
+        network.getThreeWindingsTransformerStream().forEach(tx -> {
+            tx.getLeg1().getTerminal().setP(Double.NaN);
+            tx.getLeg2().getTerminal().setP(Double.NaN);
+            tx.getLeg3().getTerminal().setP(Double.NaN);
+        });
+        return network;
     }
 
     public void assertCheckBuses(Network network) throws IOException {
@@ -97,23 +121,27 @@ public class TestBase {
         return checkBuses(network, null);
     }
 
-    public boolean checkBuses(Network network, List<String> detail) throws IOException {
-        double threshold = 1.0;
+    public boolean checkBuses(Network network, List<String> detail) {
+        double threshold = 1.5;
 
         LoadFlowParameters lfp = loadFlowParameters();
         computeMissingFlows(network, lfp);
-        try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
-            Path working = validationWorking(fs);
-            boolean r = ValidationType.BUSES.check(
-                    network,
-                    validationConfig(fs, lfp, threshold),
-                    working);
-            if (detail != null) {
-                detail.addAll(
-                        Files.readAllLines(ValidationType.BUSES.getOutputFile(working),
-                                Charset.defaultCharset()));
+        try {
+            try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
+                Path working = validationWorking(fs);
+                boolean r = ValidationType.BUSES.check(
+                        network,
+                        validationConfig(fs, lfp, threshold),
+                        working);
+                if (detail != null) {
+                    detail.addAll(
+                            Files.readAllLines(ValidationType.BUSES.getOutputFile(working),
+                                    Charset.defaultCharset()));
+                }
+                return r;
             }
-            return r;
+        } catch (IOException x) {
+            throw new RuntimeException(x);
         }
     }
 
