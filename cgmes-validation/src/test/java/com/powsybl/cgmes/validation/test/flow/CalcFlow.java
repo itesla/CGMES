@@ -39,10 +39,6 @@ public class CalcFlow {
             return;
         }
 
-        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.debug("From {}  {} To {}  {}", v1, angleDegrees1, v2, angleDegrees2);
-        }
-
         double angle1 = Math.toRadians(angleDegrees1);
         double angle2 = Math.toRadians(angleDegrees2);
         Complex vf = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
@@ -59,11 +55,6 @@ public class CalcFlow {
             q = stf.getImaginary();
         }
         calculated = true;
-
-        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.debug(" transformer {}", transformer);
-            LOG.debug("t2x {} {} node {}", p, q, n);
-        }
     }
 
     public void calcFlowT3x(String n, PropertyBag node1, PropertyBag node2, PropertyBag node3,
@@ -94,11 +85,6 @@ public class CalcFlow {
             return;
         }
 
-        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.debug("End1 {}  {} End2 {}  {} End3 {} {}", v1, angleDegrees1,
-                    v2, angleDegrees2, v3, angleDegrees3);
-        }
-
         double angle1 = Math.toRadians(angleDegrees1);
         double angle2 = Math.toRadians(angleDegrees2);
         double angle3 = Math.toRadians(angleDegrees3);
@@ -111,7 +97,6 @@ public class CalcFlow {
                 .add(admittanceMatrix.getYtf3().multiply(vf3))
                 .negate().divide(admittanceMatrix.getYtt1().add(admittanceMatrix.getYtt2())
                         .add(admittanceMatrix.getYtt3()));
-        LOG.debug("V0 ------> {} {}", v0.abs(), v0.getArgument());
 
         if (transformer.get("terminal1").equals(n)) {
             calculate(admittanceMatrix.getYff1(), admittanceMatrix.getYft1(),
@@ -130,10 +115,6 @@ public class CalcFlow {
             q = sft.getImaginary();
         }
         calculated = true;
-        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.debug("trafo3D {}", transformer);
-            LOG.debug("trafo3D {} {} node {}", p, q, n);
-        }
     }
 
     public void calcFlowLine(String n, PropertyBag node1, PropertyBag node2, PropertyBag line,
@@ -141,22 +122,20 @@ public class CalcFlow {
         double r = line.asDouble("r");
         double x = line.asDouble("x");
         double v1 = node1.asDouble("v");
+        double nominalV1 = node1.asDouble("nominalV");
         double angleDegrees1 = node1.asDouble("angle");
         double v2 = node2.asDouble("v");
+        double nominalV2 = node2.asDouble("nominalV");
         double angleDegrees2 = node2.asDouble("angle");
         Boolean connected = line.asBoolean("connected", false);
 
         // The admittance and model code can always be calculated
         LineAdmittanceMatrix admittanceMatrix = new LineAdmittanceMatrix(inputModel.getCgmes());
-        admittanceMatrix.calculate(line, config);
+        admittanceMatrix.calculate(line, nominalV1, nominalV2, config);
         modelCode = admittanceMatrix.getModelCode();
 
-        if (!calcFlowLineIsOk(connected, r, x, v1, angleDegrees1, v2, angleDegrees2)) {
+        if (!calcFlowLineIsOk(connected, r, x, nominalV1, nominalV2, v1, angleDegrees1, v2, angleDegrees2)) {
             return;
-        }
-
-        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.debug("From {}  {} To {}  {}", v1, angleDegrees1, v2, angleDegrees2);
         }
 
         double angle1 = Math.toRadians(angleDegrees1);
@@ -175,11 +154,6 @@ public class CalcFlow {
             q = stf.getImaginary();
         }
         calculated = true;
-
-        if (n.startsWith("_c4e78550") || n.startsWith("_59f72142")) {
-            LOG.debug("line {}", line);
-            LOG.debug("line {} {} node {}", p, q, n);
-        }
     }
 
     private void calculate(Complex yff, Complex yft, Complex ytf, Complex ytt, Complex vf,
@@ -193,11 +167,20 @@ public class CalcFlow {
 
     private boolean calcFlowT2xIsOk(boolean connected1, boolean connected2,
             double r1, double x1, double r2, double x2,
-            double v1, double angleDegrees1, double v2, double anglesDegrees2) {
+            double v1, double angleDegrees1, double v2, double angleDegrees2) {
         if (!connected1 || !connected2) {
             return false;
         }
         if (r1 == 0.0 && x1 == 0.0 && r2 == 0.0 && x2 == 0.0) {
+            return false;
+        }
+        if (v1 == 0.0 || v2 == 0.0) {
+            return false;
+        }
+        if (v1 == 1.0 && angleDegrees1 == 0.0) {
+            return false;
+        }
+        if (v2 == 1.0 && angleDegrees2 == 0.0) {
             return false;
         }
         return true;
@@ -206,25 +189,54 @@ public class CalcFlow {
     private boolean calcFlowT3xIsOk(boolean connected1, boolean connected2, boolean connected3,
             double r1, double x1, double r2, double x2,
             double r3, double x3, double v1, double angleDegrees1,
-            double v2, double anglesDegrees2, double v3, double anglesDegrees3) {
+            double v2, double angleDegrees2, double v3, double angleDegrees3) {
         if (!connected1 || !connected2 || !connected3) {
             return false;
         }
         if (r1 == 0.0 && x1 == 0.0 || r2 == 0.0 && x2 == 0.0 || r3 == 0.0 && x3 == 0.0) {
             return false;
         }
+        if (v1 == 0.0 || v2 == 0.0 || v3 == 0.0) {
+            return false;
+        }
+        if (v1 == 1.0 && angleDegrees1 == 0.0) {
+            return false;
+        }
+        if (v2 == 1.0 && angleDegrees2 == 0.0) {
+            return false;
+        }
+        if (v3 == 1.0 && angleDegrees3 == 0.0) {
+            return false;
+        }
         return true;
     }
 
-    private boolean calcFlowLineIsOk(boolean connected, double r, double x, double v1, double angleDegrees1,
-            double v2, double angleDegrees2) {
+    private boolean calcFlowLineIsOk(boolean connected, double r, double x, double vNominal1,
+            double vNominal2, double v1, double angleDegrees1, double v2, double angleDegrees2) {
         if (!connected) {
             return false;
         }
-        if (r < 0.0001 && x < 0.0001 || v1 == v2 && angleDegrees1 == angleDegrees2) {
+        double baseMVA = 100.0;
+        double z0Threshold = 0.00025;
+        double vNominal = 1.0;
+        if (!Double.isNaN(vNominal1) && vNominal1 > vNominal) {
+            vNominal = vNominal1;
+        }
+        if (!Double.isNaN(vNominal2) && vNominal2 > vNominal) {
+            vNominal = vNominal2;
+        }
+        if (r * baseMVA / Math.pow(vNominal, 2.0) <= z0Threshold
+                && x * baseMVA / Math.pow(vNominal, 2.0) <= z0Threshold
+                || v1 == v2 && angleDegrees1 == angleDegrees2) {
             return false;
         }
-        if (angleDegrees1 == 0.0 || angleDegrees2 == 0.0) {
+        if (v1 == 0.0 || v2 == 0.0) {
+            return false;
+        }
+        if (v1 == 1.0 && angleDegrees1 == 0.0) {
+            return false;
+        }
+        if (v2 == 1.0 && angleDegrees2 == 0.0) {
             return false;
         }
         return true;

@@ -18,10 +18,46 @@ public class AdmittanceMatrix {
         return x * (1.0 + xc / 100.0);
     }
 
-    protected double[] getRatioTapChangerData(double rstep, double rns, double rsvi) {
-        double rtca = 1.0 + (rstep - rns) * (rsvi / 100.0);
-        double rtcA = 0.0;
-        return new double[] {rtca, rtcA };
+    protected boolean ratioTapChangerIsTabular(String ratioTapChangerTable) {
+        if (ratioTapChangerTable != null) {
+            return true;
+        }
+        return false;
+    }
+
+    protected TapChangerData getRatioTapChangerData(double rstep, double rns, double rsvi) {
+        TapChangerData tapChangerData = new TapChangerData();
+        tapChangerData.rptca = 1.0 + (rstep - rns) * (rsvi / 100.0);
+        tapChangerData.rptcA = 0.0;
+        return tapChangerData;
+    }
+
+    protected TapChangerData getTabularRatioTapChangerData(double rstep,
+            String ratioTapChangerTableName) {
+        TapChangerData tapChangerData = new TapChangerData();
+        PropertyBags ratioTapChangerTable = cgmes.ratioTapChangerTable(ratioTapChangerTableName);
+        if (ratioTapChangerTable.isEmpty()) {
+            LOG.warn("Empty RatioTapChangerTable");
+        }
+        for (PropertyBag point : ratioTapChangerTable) {
+            if (point.asInt("step") == rstep) {
+                tapChangerData.rptca = point.asDouble("ratio", 0.0);
+                tapChangerData.xc = point.asDouble("x", 0.0);
+                tapChangerData.rc = point.asDouble("r", 0.0);
+                tapChangerData.bc = point.asDouble("b", 0.0);
+                tapChangerData.gc = point.asDouble("g", 0.0);
+                return tapChangerData;
+            }
+        }
+
+        return tapChangerData;
+    }
+
+    protected boolean getTabularRatioTapChangerDifferentRatios(String ratioTapChangerTableName) {
+        PropertyBags ratioTapChangerTable = cgmes.ratioTapChangerTable(ratioTapChangerTableName);
+        return ratioTapChangerTable.stream().map(pb -> {
+            return pb.asDouble("ratio");
+        }).mapToDouble(Double::doubleValue).distinct().limit(2).count() > 1;
     }
 
     protected boolean phaseTapChangerIsTabular(String ptype, String phaseTapChangerTable) {
@@ -67,54 +103,57 @@ public class AdmittanceMatrix {
         return false;
     }
 
-    protected double[] getTabularPhaseTapChangerData(double pstep,
+    protected TapChangerData getTabularPhaseTapChangerData(double pstep,
             String phaseTapChangerTableName) {
-        double ptca = 1.0;
-        double ptcA = 0.0;
-        double rc = 0.0;
-        double xc = 0.0;
-        double bc = 0.0;
-        double gc = 0.0;
+        TapChangerData tapChangerData = new TapChangerData();
         PropertyBags phaseTapChangerTable = cgmes.phaseTapChangerTable(phaseTapChangerTableName);
+        if (phaseTapChangerTable.isEmpty()) {
+            LOG.warn("Empty PhaseTapChangerTable");
+        }
         for (PropertyBag point : phaseTapChangerTable) {
             if (point.asInt("step") == pstep) {
-                ptca = point.asDouble("ratio");
-                ptcA = point.asDouble("angle");
-                xc = point.asDouble("x");
-                rc = point.asDouble("r");
-                bc = point.asDouble("b");
-                gc = point.asDouble("g");
-                return new double[] {ptca, ptcA, xc, rc, bc, gc };
+                tapChangerData.rptca = point.asDouble("ratio", 1.0);
+                tapChangerData.rptcA = point.asDouble("angle", 0.0);
+
+                tapChangerData.xc = point.asDouble("x", 0.0);
+                tapChangerData.rc = point.asDouble("r", 0.0);
+                tapChangerData.bc = point.asDouble("b", 0.0);
+                tapChangerData.gc = point.asDouble("g", 0.0);
+                return tapChangerData;
             }
         }
-        return new double[] {ptca, ptcA, xc, rc, bc, gc };
+        return tapChangerData;
     }
 
-    protected double[] getSymmetricalPhaseTapChangerData(String ptype, double pstep, double pns,
+    protected TapChangerData getSymmetricalPhaseTapChangerData(String ptype, double pstep,
+            double pns,
             double psvi, double stepPhaseShiftIncrement1) {
-        double ptca = 1.0;
-        double ptcA = 0.0;
+        TapChangerData tapChangerData = new TapChangerData();
+        tapChangerData.rptca = 1.0;
+        tapChangerData.rptcA = 0.0;
         if (stepPhaseShiftIncrement1 != 0.0) {
-            ptca = 1.0;
-            ptcA = (pstep - pns) * stepPhaseShiftIncrement1;
+            tapChangerData.rptca = 1.0;
+            tapChangerData.rptcA = (pstep - pns) * stepPhaseShiftIncrement1;
         } else {
             double dy = (pstep - pns) * (psvi / 100.0);
-            ptca = 1.0;
-            ptcA = Math.toDegrees(Math.atan2(dy, 1.0));
+            tapChangerData.rptca = 1.0;
+            tapChangerData.rptcA = Math.toDegrees(Math.atan2(dy, 1.0));
         }
-        return new double[] {ptca, ptcA };
+        return tapChangerData;
     }
 
-    protected double[] getAsymmetricalPhaseTapChangerData(String ptype, double pstep, double pns,
+    protected TapChangerData getAsymmetricalPhaseTapChangerData(String ptype, double pstep,
+            double pns,
             double psvi, double pwca) {
-        double ptca = 1.0;
-        double ptcA = 0.0;
+        TapChangerData tapChangerData = new TapChangerData();
+        tapChangerData.rptca = 1.0;
+        tapChangerData.rptcA = 0.0;
         double dx = 1.0 + (pstep - pns) * (psvi / 100.0) * Math.cos(Math.toRadians(pwca));
         double dy = (pstep - pns) * (psvi / 100.0) * Math.sin(Math.toRadians(pwca));
-        ptca = Math.hypot(dx, dy);
-        ptcA = Math.toDegrees(Math.atan2(dy, dx));
+        tapChangerData.rptca = Math.hypot(dx, dy);
+        tapChangerData.rptcA = Math.toDegrees(Math.atan2(dy, dx));
 
-        return new double[] {ptca, ptcA };
+        return tapChangerData;
     }
 
     protected double getPhaseAngleClock(int phaseAngleClock) {
@@ -155,19 +194,18 @@ public class AdmittanceMatrix {
         return modelCode.toString();
     }
 
-    protected String t3xModelCodeEnd(Complex ysh1, Complex ysh2,
-            double a1, double angle1, double a2, double angle2,
-            double rsvi1, double rls1, double rhs1, boolean pct1TabularDifferentRatios,
-            boolean pct1AsymmetricalDifferentRatios,
-            double psvi1, double stepPhaseShiftIncrement1, double pls1, double phs1,
-            boolean pct1TabularDifferentAngles) {
+    protected String t3xModelCodeEnd(Complex ysh1, Complex ysh2, double a1, double angle1,
+            double a2, double angle2, double rsvi1, double rls1, double rhs1,
+            boolean rct1TabularDifferentRatios, boolean pct1TabularDifferentRatios,
+            boolean pct1AsymmetricalDifferentRatios, double psvi1, double stepPhaseShiftIncrement1,
+            double pls1, double phs1, boolean pct1TabularDifferentAngles) {
         StringBuilder modelCode = new StringBuilder();
 
         // Only one of them (a1, a2) could be != 1.0
         // Only one of them (angle1, angle2) could be != 0.0
 
         if (a1 != 1.0) {
-            modelCode.append(t2xRatioModelCode(a1, rsvi1, rls1, rhs1,
+            modelCode.append(t2xRatioModelCode(a1, rsvi1, rls1, rhs1, rct1TabularDifferentRatios,
                     pct1TabularDifferentRatios, pct1AsymmetricalDifferentRatios));
         } else {
             modelCode.append(t2xRatioModelCodeNoRatio());
@@ -183,7 +221,7 @@ public class AdmittanceMatrix {
         modelCode.append(t2xYshuntModelCode(ysh1, ysh2));
 
         if (a2 != 1.0) {
-            modelCode.append(t2xRatioModelCode(a2, rsvi1, rls1, rhs1,
+            modelCode.append(t2xRatioModelCode(a2, rsvi1, rls1, rhs1, rct1TabularDifferentRatios,
                     pct1TabularDifferentRatios, pct1AsymmetricalDifferentRatios));
         } else {
             modelCode.append(t2xRatioModelCodeNoRatio());
@@ -199,23 +237,21 @@ public class AdmittanceMatrix {
         return modelCode.toString();
     }
 
-    protected String t2xModelCode(Complex ysh1, Complex ysh2,
-            double a1, double angle1, double a2, double angle2,
-            double rsvi1, double rls1, double rhs1, boolean pct1TabularDifferentRatios,
-            boolean pct1AsymmetricalDifferentRatios,
-            double psvi1, double stepPhaseShiftIncrement1, double pls1, double phs1,
-            boolean pct1TabularDifferentAngles,
-            double rsvi2, double rls2, double rhs2, boolean pct2TabularDifferentRatios,
-            boolean pct2AsymmetricalDifferentRatios,
-            double psvi2, double stepPhaseShiftIncrement2, double pls2, double phs2,
-            boolean pct2TabularDifferentAngles) {
+    protected String t2xModelCode(Complex ysh1, Complex ysh2, double a1, double angle1, double a2,
+            double angle2, double rsvi1, double rls1, double rhs1,
+            boolean rct1TabularDifferentRatios, boolean pct1TabularDifferentRatios,
+            boolean pct1AsymmetricalDifferentRatios, double psvi1, double stepPhaseShiftIncrement1,
+            double pls1, double phs1, boolean pct1TabularDifferentAngles, double rsvi2, double rls2,
+            double rhs2, boolean rct2TabularDifferentRatios, boolean pct2TabularDifferentRatios,
+            boolean pct2AsymmetricalDifferentRatios, double psvi2, double stepPhaseShiftIncrement2,
+            double pls2, double phs2, boolean pct2TabularDifferentAngles) {
         StringBuilder modelCode = new StringBuilder();
-        modelCode.append(t2xRatioModelCode(a1, rsvi1, rls1, rhs1,
+        modelCode.append(t2xRatioModelCode(a1, rsvi1, rls1, rhs1, rct1TabularDifferentRatios,
                 pct1TabularDifferentRatios, pct1AsymmetricalDifferentRatios));
         modelCode.append(t2xPhaseModelCode(angle1, psvi1, stepPhaseShiftIncrement1, pls1, phs1,
                 pct1TabularDifferentAngles));
         modelCode.append(t2xYshuntModelCode(ysh1, ysh2));
-        modelCode.append(t2xRatioModelCode(a2, rsvi2, rls2, rhs2,
+        modelCode.append(t2xRatioModelCode(a2, rsvi2, rls2, rhs2, rct2TabularDifferentRatios,
                 pct2TabularDifferentRatios, pct2AsymmetricalDifferentRatios));
         modelCode.append(t2xPhaseModelCode(angle2, psvi2, stepPhaseShiftIncrement1, pls2, phs2,
                 pct2TabularDifferentAngles));
@@ -223,11 +259,14 @@ public class AdmittanceMatrix {
     }
 
     protected String t2xRatioModelCode(double a, double rsvi, double rls, double rhs,
+            boolean rctTabularDifferentRatios,
             boolean pctTabularDifferentRatios, boolean pctAsymmetricalDifferentRatios) {
         StringBuilder modelCode = new StringBuilder();
 
         if (a == 1.0) {
             if (rsvi != 0.0 && rls != rhs) {
+                modelCode.append("r");
+            } else if (rctTabularDifferentRatios) {
                 modelCode.append("r");
             } else if (pctTabularDifferentRatios) {
                 modelCode.append("r");
@@ -238,6 +277,8 @@ public class AdmittanceMatrix {
             }
         } else {
             if (rsvi != 0.0 && rls != rhs) {
+                modelCode.append("R");
+            } else if (rctTabularDifferentRatios) {
                 modelCode.append("R");
             } else if (pctTabularDifferentRatios) {
                 modelCode.append("R");
@@ -327,6 +368,37 @@ public class AdmittanceMatrix {
 
     protected void setModelCode(String code) {
         this.code = new StringBuilder(code);
+    }
+
+    protected class TapChangerData {
+        double rptca = 1.0;
+        double rptcA = 0.0;
+        double rc    = 0.0;
+        double xc    = 0.0;
+        double bc    = 0.0;
+        double gc    = 0.0;
+    }
+
+    protected class RatioPhaseData {
+        double a1     = 1.0;
+        double angle1 = 0.0;
+        double a2     = 1.0;
+        double angle2 = 0.0;
+    }
+
+    protected class YShuntData {
+        Complex ysh1 = Complex.ZERO;
+        Complex ysh2 = Complex.ZERO;
+    }
+
+    protected class Ratio0Data {
+        double a01 = 1.0;
+        double a02 = 1.0;
+    }
+
+    protected class PhaseAngleClockData {
+        double angle1 = 0.0;
+        double angle2 = 0.0;
     }
 
     protected CgmesModel          cgmes;

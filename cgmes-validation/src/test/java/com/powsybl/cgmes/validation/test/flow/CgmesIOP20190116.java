@@ -22,18 +22,19 @@ import com.powsybl.triplestore.api.TripleStoreFactory;
 public class CgmesIOP20190116 extends CatalogReview {
 
     public CgmesIOP20190116() {
-        super("F:\\cgmes-csi\\IOP\\CGMES_IOP_20190116");
+        super("\\cgmes-csi\\IOP\\CGMES_IOP_20190116");
+    }
+
+    // @Test
+    public void reviewAll1030() throws IOException {
+        reviewAll("glob:**BD**1030*zip");
     }
 
     @Test
-    public void reviewAll1130() throws IOException {
-        reviewAll("glob:**BD**1130*zip");
+    public void reviewDebug1030() throws IOException {
+        reviewAll("glob:**BD*MAVIR**1030*zip");
     }
 
-    //@Test
-    public void reviewTennet1130() throws IOException {
-        reviewAll("glob:**BD*Tennet**1130*zip");
-    }
     // @Test
     public void reviewNodeBreaker1130() throws IOException {
         reviewAll("glob:**BD*NodeBreaker**1130*zip");
@@ -49,6 +50,7 @@ public class CgmesIOP20190116 extends CatalogReview {
         Map<String, Exception> exceptions = new HashMap<>();
         reviewAll(pattern, p -> {
             try {
+                LOG.info("case {}", p.getParent().getFileName().toString());
                 DataSource ds = dataSource(p);
                 CgmesOnDataSource cds = new CgmesOnDataSource(ds);
                 cds.cimNamespace();

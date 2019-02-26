@@ -178,12 +178,15 @@ public class PrepareModel {
             String id = n.getId("TopologicalNode");
             String v = n.get("v");
             String angle = n.get("angle");
+            String baseVoltageId = n.getId("BaseVoltage");
+            double nominalV = cgmes.nominalVoltage(baseVoltageId);
 
             PropertyBag node = nodes.computeIfAbsent(id, x -> new PropertyBag(propertyNames));
             node.put("v", v);
             node.put("angle", angle);
             node.put("p", "0.0");
             node.put("q", "0.0");
+            node.put("nominalV", Double.toString(nominalV));
         });
 
         return nodes;
@@ -197,6 +200,7 @@ public class PrepareModel {
         cgmes.staticVarCompensators().forEach(e -> terminalFlow(cgmes, nodes, e));
         cgmes.asynchronousMachines().forEach(e -> terminalFlow(cgmes, nodes, e));
         cgmes.synchronousMachines().forEach(e -> terminalFlow(cgmes, nodes, e));
+        cgmes.externalNetworkInjections().forEach(e -> terminalFlow(cgmes, nodes, e));
     }
 
     private void terminalFlow(CgmesModel cgmes, Map<String, PropertyBag> nodes,
@@ -209,7 +213,7 @@ public class PrepareModel {
         PropertyBag node = nodes.get(nodeId);
         if (node == null) {
             PropertyBag n = voltages.get(nodeId);
-            String v = "1.0";
+            String v = "0.0";
             String angle = "0.0";
             if (n != null) {
                 v = n.get("v");
@@ -255,7 +259,10 @@ public class PrepareModel {
         double bPerSection = equipment.asDouble(CgmesNames.B_PER_SECTION);
         double gPerSection = equipment.asDouble("gPerSection");
         int normalSections = equipment.asInt("normalSections", 0);
-        double sections = equipment.asDouble("SVsections", normalSections);
+        double sections = equipment.asDouble("SVsections");
+        if (Double.isNaN(sections)) {
+            sections = equipment.asDouble("SSHsections", normalSections);
+        }
 
         double pNode = node.asDouble("p");
         double qNode = node.asDouble("q");
@@ -429,12 +436,16 @@ public class PrepareModel {
         }
         transformer.put("ratedU" + endNumber, ratedU);
         if (rt != null) {
+            String tableId = rt.getId("RatioTapChangerTable");
             String ratioNeutralU = rt.get("neutralU");
             String ratioLowStep = rt.get("lowStep");
             String ratioHighStep = rt.get("highStep");
             String ratioNeutralStep = rt.get("neutralStep");
             String ratioStepVoltageIncrement = rt.get("stepVoltageIncrement");
             String ratioStep = rt.get("SVtapStep");
+            if (tableId != null) {
+                transformer.put("RatioTapChangerTable" + endNumber, tableId);
+            }
             if (ratioNeutralU != null) {
                 transformer.put("rnU" + endNumber, ratioNeutralU);
             }
@@ -461,6 +472,7 @@ public class PrepareModel {
             String phaseHighStep = pt.get("highStep");
             String phaseNeutralStep = pt.get("neutralStep");
             String phaseStepVoltageIncrement = pt.get("voltageStepIncrement");
+            String stepPhaseShiftIncrement = pt.get("stepPhaseShiftIncrement");
             String phaseStep = pt.get("SVtapStep");
             String phaseWindingConnectionAngle = pt.get("windingConnectionAngle");
             String ptcType = pt.getLocal("phaseTapChangerType").toLowerCase();
@@ -481,6 +493,9 @@ public class PrepareModel {
             }
             if (phaseStepVoltageIncrement != null) {
                 transformer.put("psvi" + endNumber, phaseStepVoltageIncrement);
+            }
+            if (stepPhaseShiftIncrement != null) {
+                transformer.put("pspsi" + endNumber, stepPhaseShiftIncrement);
             }
             if (phaseStep != null) {
                 transformer.put("pstep" + endNumber, phaseStep);
