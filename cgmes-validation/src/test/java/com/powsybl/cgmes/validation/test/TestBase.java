@@ -1,5 +1,6 @@
 package com.powsybl.cgmes.validation.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -10,11 +11,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+
+import org.apache.commons.math3.complex.Complex;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.cgmes.conversion.CgmesModelExtension;
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.config.InMemoryPlatformConfig;
 import com.powsybl.commons.config.MapModuleConfig;
 import com.powsybl.commons.datasource.DataSource;
@@ -38,21 +43,30 @@ public class TestBase {
     }
 
     public Network convert(String rpath) {
-        return convert(this.data.resolve(rpath));
+        return convert(this.data.resolve(rpath), null);
     }
 
-    public Network convert(String rpath, String rboundaries) {
-        return convert(this.data.resolve(rpath), this.data.resolve(rboundaries));
+    public Network convert(String rpath, Properties params) {
+        return convert(this.data.resolve(rpath), params);
+    }
+
+    public Network convert(String rpath, Properties params, String rboundaries) {
+        return convert(this.data.resolve(rpath), params, this.data.resolve(rboundaries));
     }
 
     public Network convert(Path path) {
-        return convert(path, null);
+        return convert(path, null, null);
     }
 
-    public Network convert(Path path, Path boundaries) {
-        Properties params = new Properties();
+    public Network convert(Path path, Properties params) {
+        return convert(path, params, null);
+    }
+
+    public Network convert(Path path, Properties params0, Path boundaries) {
+        Properties params = new Properties(params0);
         if (boundaries != null) {
             params.put("useTheseBoundaries", dataSource(boundaries));
+            throw new PowsyblException("Explicit boundaries not available");
         }
         Network network = Importers.importData("CGMES",
                 dataSource(path),
@@ -78,7 +92,7 @@ public class TestBase {
         return null;
     }
 
-    public LimitsSummary reportLimits(Network network) {
+    public LimitsSummary limitsSummary(Network network) {
         return new LimitsSummary(network.getExtension(CgmesModelExtension.class).getCgmesModel());
     }
 
@@ -113,17 +127,29 @@ public class TestBase {
         return network;
     }
 
-    public void assertCheckBuses(Network network) throws IOException {
-        assertTrue(checkBuses(network));
+    private static final double DEFAULT_CHECK_BUSES_THRESHOLD = 1.0;
+
+    public void assertCheckBuses(Network network) {
+        assertTrue(checkBuses(network, DEFAULT_CHECK_BUSES_THRESHOLD));
     }
 
-    public boolean checkBuses(Network network) throws IOException {
-        return checkBuses(network, null);
+    public void assertCheckBuses(Network network, double threshold) {
+        assertTrue(checkBuses(network, threshold));
     }
 
-    public boolean checkBuses(Network network, List<String> detail) {
-        double threshold = 1.5;
+    public boolean checkBuses(Network network) {
+        return checkBuses(network, DEFAULT_CHECK_BUSES_THRESHOLD, null);
+    }
 
+    public boolean checkBuses(Network network, double threshold) {
+        return checkBuses(network, threshold, null);
+    }
+
+    public boolean checkBuses(Network network, Map<String, Complex> errors) {
+        return checkBuses(network, DEFAULT_CHECK_BUSES_THRESHOLD, errors);
+    }
+
+    public boolean checkBuses(Network network, double threshold, Map<String, Complex> errors) {
         LoadFlowParameters lfp = loadFlowParameters();
         computeMissingFlows(network, lfp);
         try {
@@ -133,10 +159,33 @@ public class TestBase {
                         network,
                         validationConfig(fs, lfp, threshold),
                         working);
-                if (detail != null) {
-                    detail.addAll(
-                            Files.readAllLines(ValidationType.BUSES.getOutputFile(working),
-                                    Charset.defaultCharset()));
+                if (errors != null) {
+                    List<String> lines = Files.readAllLines(
+                            ValidationType.BUSES.getOutputFile(working),
+                            Charset.defaultCharset());
+                    // Check header matches expected contents
+                    assertEquals("id;incomingP;incomingQ;loadP;loadQ", lines.get(1));
+                    // Skip title and header
+                    lines.stream().skip(2).forEach(d -> {
+                        String[] fields = d.split(";");
+                        String id = fields[0];
+                        try {
+                            double incomingp = asDouble(fields[1]);
+                            double incomingq = asDouble(fields[2]);
+                            double loadp = asDouble(fields[3]);
+                            double loadq = asDouble(fields[4]);
+                            // Ignore invalid values
+                            if (valid(incomingp, incomingq, loadp, loadq)) {
+                                double errp = Math.abs(incomingp + loadp);
+                                double errq = Math.abs(incomingq + loadq);
+                                if (errp > threshold || errq > threshold) {
+                                    errors.put(id, new Complex(errp, errq));
+                                }
+                            }
+                        } catch (Exception x) {
+                            System.out.println("error " + x.getMessage());
+                        }
+                    });
                 }
                 return r;
             }

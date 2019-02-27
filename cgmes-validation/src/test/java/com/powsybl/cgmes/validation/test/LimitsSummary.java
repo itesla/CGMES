@@ -1,7 +1,12 @@
 package com.powsybl.cgmes.validation.test;
 
+import java.io.PrintStream;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -12,36 +17,59 @@ import com.powsybl.triplestore.api.PropertyBags;
 
 public class LimitsSummary {
 
+    public LimitsSummary() {
+        // For dry runs
+        forTerminals = Collections.emptyList();
+        forEquipment = Collections.emptyList();
+    }
+
     public LimitsSummary(CgmesModel cgmes) {
-        this.cgmes = cgmes;
-    }
-
-    public void report() {
         PropertyBags limits = cgmes.operationalLimits();
-        System.out.println("Summary limits");
-        Supplier<Stream<PropertyBag>> forTerminals = () -> limits.stream().filter(l -> l.containsKey("Terminal"));
-        Supplier<Stream<PropertyBag>> forEquipment = () -> limits.stream().filter(l -> l.containsKey("Equipment"));
-        System.out.println("    for Terminals : ");
-        limitsSummary(forTerminals, cgmes);
-        System.out.println("    for Equipment : ");
-        limitsSummary(forEquipment, cgmes);
+        forTerminals = summary(() -> limits.stream().filter(l -> l.containsKey("Terminal")), cgmes);
+        forEquipment = summary(() -> limits.stream().filter(l -> l.containsKey("Equipment")), cgmes);
     }
 
-    private static void limitsSummary(Supplier<Stream<PropertyBag>> limits, CgmesModel cgmes) {
-        Set<String> equipmentClasses = limits.get()
-                .map(l -> eqclass(l, cgmes))
-                .collect(Collectors.toSet());
-        equipmentClasses.forEach(eqclass -> {
-            Supplier<Stream<PropertyBag>> eqlimits = () -> limits.get()
-                    .filter(l -> eqclass(l, cgmes).equals(eqclass));
-            Set<LimitType> ltypes = eqlimits.get()
-                    .map(l -> new LimitType(l))
-                    .collect(Collectors.toSet());
-            System.out.printf("        %-32s %5d %s%n", eqclass, eqlimits.get().count(), ltypes);
+    public List<Limits> forTerminals() {
+        return forTerminals;
+    }
+
+    public List<Limits> forEquipment() {
+        return forEquipment;
+    }
+
+    public void report(PrintStream p) {
+        p.println("Summary limits");
+        p.println("    for Terminals : ");
+        report(forTerminals, p);
+        p.println("    for Equipment : ");
+        report(forEquipment, p);
+    }
+
+    private void report(List<Limits> ls, PrintStream p) {
+        ls.forEach(l -> {
+            p.printf("        %5d %s%n", l.num, l.equipmentClass);
+            l.types.forEach((t, num) -> {
+                p.printf("            %5d %s%n", num, t);
+            });
         });
     }
 
-    private static String eqclass(PropertyBag limit, CgmesModel cgmes) {
+    private List<Limits> summary(Supplier<Stream<PropertyBag>> limits, CgmesModel cgmes) {
+        Set<String> equipmentClasses = limits.get()
+                .map(l -> equipmentClass(l, cgmes))
+                .collect(Collectors.toSet());
+        return equipmentClasses.stream()
+                .map(equipmentClass -> {
+                    Supplier<Stream<PropertyBag>> classLimits = () -> limits.get()
+                            .filter(l -> equipmentClass(l, cgmes).equals(equipmentClass));
+                    Map<LimitType, Long> types = classLimits.get()
+                            .map(l -> new LimitType(l))
+                            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+                    return new Limits(equipmentClass, classLimits.get().count(), types);
+                }).collect(Collectors.toList());
+    }
+
+    private static String equipmentClass(PropertyBag limit, CgmesModel cgmes) {
         if (limit.containsKey("Terminal")) {
             return cgmes.terminal(limit.getId("Terminal")).conductingEquipmentType();
         } else {
@@ -49,9 +77,21 @@ public class LimitsSummary {
         }
     }
 
-    private static class LimitType {
+    public static class Limits {
+        Limits(String equipmentClass, long num, Map<LimitType, Long> types) {
+            this.equipmentClass = equipmentClass;
+            this.num = num;
+            this.types = types;
+        }
+
+        public final String equipmentClass;
+        public final long num;
+        public final Map<LimitType, Long> types;
+    }
+
+    public static class LimitType {
         LimitType(PropertyBag l) {
-            type = l.getLocal("limitType");
+            type = l.getLocal("limitType").replace("LimitTypeKind.", "");
             name = l.getLocal("operationalLimitTypeName");
             subclass = l.getLocal("OperationalLimitSubclass");
         }
@@ -80,10 +120,11 @@ public class LimitsSummary {
             return Objects.hash(type, name, subclass);
         }
 
-        final String type;
-        final String name;
-        final String subclass;
+        public final String type;
+        public final String name;
+        public final String subclass;
     }
 
-    private final CgmesModel cgmes;
+    private final List<Limits> forTerminals;
+    private final List<Limits> forEquipment;
 }
