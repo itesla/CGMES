@@ -305,23 +305,30 @@ public class PrepareModel {
 
             CgmesTerminal t1 = cgmes.terminal(l.getId(CgmesNames.TERMINAL + 1));
             CgmesTerminal t2 = cgmes.terminal(l.getId(CgmesNames.TERMINAL + 2));
+            String nodeId1 = t1.topologicalNode();
+            boolean t1connected = t1.connected();
+            String nodeId2 = t2.topologicalNode();
+            boolean t2connected = t2.connected();
+            if (!t1connected && !t2connected) {
+                return;
+            }
             PropertyBag line = lines.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
             line.put("r", r);
             line.put("x", x);
             line.put("bch", bch);
 
-            String nodeId = t1.topologicalNode();
-            boolean t1connected = t1.connected();
-            line.put("terminal1", nodeId);
-            List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId, z -> new ArrayList<>());
-            idLines.add(id);
+            line.put("terminal1", nodeId1);
+            if (t1connected) {
+                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
+                idLines.add(id);
+            }
 
-            nodeId = t2.topologicalNode();
-            boolean t2connected = t2.connected();
-            line.put("terminal2", nodeId);
+            line.put("terminal2", nodeId2);
             line.put("connected", Boolean.toString(t1connected && t2connected));
-            idLines = equipmentsInNode.computeIfAbsent(nodeId, z -> new ArrayList<>());
-            idLines.add(id);
+            if (t2connected) {
+                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
+                idLines.add(id);
+            }
         });
         cgmes.equivalentBranches().forEach(eb -> {
             String id = eb.getId("EquivalentBranch");
@@ -330,23 +337,30 @@ public class PrepareModel {
 
             CgmesTerminal t1 = cgmes.terminal(eb.getId(CgmesNames.TERMINAL + 1));
             CgmesTerminal t2 = cgmes.terminal(eb.getId(CgmesNames.TERMINAL + 2));
+            String nodeId1 = t1.topologicalNode();
+            boolean t1connected = t1.connected();
+            String nodeId2 = t2.topologicalNode();
+            boolean t2connected = t2.connected();
+            if (!t1connected && !t2connected) {
+                return;
+            }
             PropertyBag line = lines.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
             line.put("r", r);
             line.put("x", x);
             line.put("bch", "0.0");
 
-            String nodeId = t1.topologicalNode();
-            boolean t1connected = t1.connected();
-            line.put("terminal1", nodeId);
-            List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId, z -> new ArrayList<>());
-            idLines.add(id);
+            line.put("terminal1", nodeId1);
+            if (t1connected) {
+                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
+                idLines.add(id);
+            }
 
-            nodeId = t2.topologicalNode();
-            boolean t2connected = t2.connected();
-            line.put("terminal2", nodeId);
+            line.put("terminal2", nodeId2);
             line.put("connected", Boolean.toString(t1connected && t2connected));
-            idLines = equipmentsInNode.computeIfAbsent(nodeId, z -> new ArrayList<>());
-            idLines.add(id);
+            if (t1connected) {
+                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
+                idLines.add(id);
+            }
         });
         cgmes.seriesCompensators().forEach(sc -> {
             String id = sc.getId(CgmesNames.SERIES_COMPENSATOR);
@@ -355,23 +369,30 @@ public class PrepareModel {
 
             CgmesTerminal t1 = cgmes.terminal(sc.getId(CgmesNames.TERMINAL + 1));
             CgmesTerminal t2 = cgmes.terminal(sc.getId(CgmesNames.TERMINAL + 2));
+            String nodeId1 = t1.topologicalNode();
+            boolean t1connected = t1.connected();
+            String nodeId2 = t2.topologicalNode();
+            boolean t2connected = t2.connected();
+            if (!t1connected && !t2connected) {
+                return;
+            }
             PropertyBag line = lines.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
             line.put("r", r);
             line.put("x", x);
             line.put("bch", "0.0");
 
-            String nodeId = t1.topologicalNode();
-            boolean t1connected = t1.connected();
-            line.put("terminal1", nodeId);
-            List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId, z -> new ArrayList<>());
-            idLines.add(id);
+            line.put("terminal1", nodeId1);
+            if (t1connected) {
+                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
+                idLines.add(id);
+            }
 
-            nodeId = t2.topologicalNode();
-            boolean t2connected = t2.connected();
-            line.put("terminal2", nodeId);
+            line.put("terminal2", nodeId2);
             line.put("connected", Boolean.toString(t1connected && t2connected));
-            idLines = equipmentsInNode.computeIfAbsent(nodeId, z -> new ArrayList<>());
-            idLines.add(id);
+            if (t2connected) {
+                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
+                idLines.add(id);
+            }
         });
         return lines;
     }
@@ -402,9 +423,18 @@ public class PrepareModel {
         cgmes.groupedTransformerEnds().entrySet().forEach(tends -> {
             String id = tends.getKey();
             PropertyBags ends = tends.getValue();
-            ends.forEach(end -> transformerEndParameters(cgmes, equipmentsInNode,
+            boolean partialConnected = false;
+            for (PropertyBag end : ends) {
+                CgmesTerminal t = cgmes.terminal(end.getId(CgmesNames.TERMINAL));
+                if (t.connected()) {
+                    partialConnected = true;
+                }
+            }
+            if (partialConnected) {
+                ends.forEach(end -> transformerEndParameters(cgmes, equipmentsInNode,
                     powerTransformerRatioTapChanger, powerTransformerPhaseTapChanger, transformers,
                     id, end));
+            }
         });
         return transformers;
     }
@@ -520,8 +550,10 @@ public class PrepareModel {
         String nodeId = t.topologicalNode();
         transformer.put("terminal" + endNumber, nodeId);
         transformer.put("connected" + endNumber, Boolean.toString(t.connected()));
-        List<String> idTransformers = equipmentsInNode.computeIfAbsent(nodeId, z -> new ArrayList<>());
-        idTransformers.add(id);
+        if (t.connected()) {
+            List<String> idTransformers = equipmentsInNode.computeIfAbsent(nodeId, z -> new ArrayList<>());
+            idTransformers.add(id);
+        }
     }
 
     private CgmesModel                 cgmes;
