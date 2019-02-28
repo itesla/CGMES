@@ -41,16 +41,24 @@ public class AdmittanceMatrix {
         }
         for (PropertyBag point : ratioTapChangerTable) {
             if (point.asInt("step") == rstep) {
-                tapChangerData.rptca = point.asDouble("ratio", 0.0);
-                tapChangerData.xc = point.asDouble("x", 0.0);
-                tapChangerData.rc = point.asDouble("r", 0.0);
-                tapChangerData.bc = point.asDouble("b", 0.0);
-                tapChangerData.gc = point.asDouble("g", 0.0);
+                tapChangerData.rptca = getDoublePoint(point, "ratio", 1.0);
+                tapChangerData.xc = getDoublePoint(point, "x", 0.0);
+                tapChangerData.rc = getDoublePoint(point, "r", 0.0);
+                tapChangerData.bc = getDoublePoint(point, "b", 0.0);
+                tapChangerData.gc = getDoublePoint(point, "g", 0.0);
                 return tapChangerData;
             }
         }
 
         return tapChangerData;
+    }
+
+    private double getDoublePoint(PropertyBag point, String parameter, double defaultValue) {
+        double value = point.asDouble(parameter, defaultValue);
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            return defaultValue;
+        }
+        return value;
     }
 
     protected boolean getTabularRatioTapChangerDifferentRatios(String ratioTapChangerTableName) {
@@ -112,13 +120,13 @@ public class AdmittanceMatrix {
         }
         for (PropertyBag point : phaseTapChangerTable) {
             if (point.asInt("step") == pstep) {
-                tapChangerData.rptca = point.asDouble("ratio", 1.0);
-                tapChangerData.rptcA = point.asDouble("angle", 0.0);
+                tapChangerData.rptca = getDoublePoint(point, "ratio", 1.0);
+                tapChangerData.rptcA = getDoublePoint(point, "angle", 0.0);
 
-                tapChangerData.xc = point.asDouble("x", 0.0);
-                tapChangerData.rc = point.asDouble("r", 0.0);
-                tapChangerData.bc = point.asDouble("b", 0.0);
-                tapChangerData.gc = point.asDouble("g", 0.0);
+                tapChangerData.xc = getDoublePoint(point, "x", 0.0);
+                tapChangerData.rc = getDoublePoint(point, "r", 0.0);
+                tapChangerData.bc = getDoublePoint(point, "b", 0.0);
+                tapChangerData.gc = getDoublePoint(point, "g", 0.0);
                 return tapChangerData;
             }
         }

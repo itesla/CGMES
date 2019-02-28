@@ -81,6 +81,12 @@ public class T3xAdmittanceMatrix extends AdmittanceMatrix3 {
                     stepPhaseShiftIncrement1);
             ptc1a = tapChangerData.rptca;
             ptc1A = tapChangerData.rptcA;
+        } else {
+            TapChangerData tapChangerData = getSymmetricalPhaseTapChangerData(ptype1, pstep1, pns1,
+                    psvi1,
+                    stepPhaseShiftIncrement1);
+            ptc1a = tapChangerData.rptca;
+            ptc1A = tapChangerData.rptcA;
         }
 
         boolean rct2TabularDifferentRatios = false;
@@ -144,6 +150,12 @@ public class T3xAdmittanceMatrix extends AdmittanceMatrix3 {
                     stepPhaseShiftIncrement2);
             ptc2a = tapChangerData.rptca;
             ptc2A = tapChangerData.rptcA;
+        } else {
+            TapChangerData tapChangerData = getSymmetricalPhaseTapChangerData(ptype2, pstep2, pns2,
+                    psvi2,
+                    stepPhaseShiftIncrement2);
+            ptc2a = tapChangerData.rptca;
+            ptc2A = tapChangerData.rptcA;
         }
 
         boolean rct3TabularDifferentRatios = false;
@@ -202,6 +214,12 @@ public class T3xAdmittanceMatrix extends AdmittanceMatrix3 {
                     pls3, phs3);
 
         } else if (phaseTapChangerIsSymmetrical(ptype3)) {
+            TapChangerData tapChangerData = getSymmetricalPhaseTapChangerData(ptype3, pstep3, pns3,
+                    psvi3,
+                    stepPhaseShiftIncrement3);
+            ptc3a = tapChangerData.rptca;
+            ptc3A = tapChangerData.rptcA;
+        } else {
             TapChangerData tapChangerData = getSymmetricalPhaseTapChangerData(ptype3, pstep3, pns3,
                     psvi3,
                     stepPhaseShiftIncrement3);

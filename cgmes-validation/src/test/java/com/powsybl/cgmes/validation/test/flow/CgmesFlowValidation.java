@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ import com.powsybl.triplestore.api.PropertyBag;
 public class CgmesFlowValidation {
 
     public CgmesFlowValidation(CgmesModel m) {
-        LOG.debug("PrepareModel");
+        LOG.debug("Time {} PrepareModel", DateTime.now());
         inputModel = new PrepareModel(m);
         outputReport = new StringBuilder();
     }
@@ -40,7 +41,12 @@ public class CgmesFlowValidation {
         return outputReport.toString();
     }
 
+    public double getBestError() {
+        return bestError;
+    }
+
     private void addConfigurations(List<String> configs) {
+
         configs.add("default");
         configs.add("T2x_yshunt_split");
         configs.add("T2x_yshunt_split.T2x_ratio0_end1");
@@ -52,83 +58,106 @@ public class CgmesFlowValidation {
         configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.T2x_yshunt_split.T3x_yshunt_split");
         configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.T2x_yshunt_split.T3x_yshunt_split.Line_ratio0_on");
         configs.add("T3x_ratio0_outside");
+
     }
 
     private void calcBalances(String model) {
 
-        String bestConfig = "none";
-        double bestError = Double.MAX_VALUE;
-
         List<String> configs = new ArrayList<>();
         addConfigurations(configs);
 
-        StringBuilder modelReport = new StringBuilder();
-        for (String config : configs) {
-            LOG.debug("config {}", config);
+        Map<String, ConfigReport> modelReports = new HashMap<>();
+        configs.forEach(config -> {
+            LOG.debug("Time {} config {}", DateTime.now(), config);
             String outputText;
-            Map<List<String>, PropertyBag> report = calcBalance(config);
-            LOG.debug("Report");
+            ConfigReport configReport = calcBalance(config);
+            LOG.debug("Time {} Prepare Report", DateTime.now());
 
-            long totalNodes = report.values().size();
-            long badNodes = report.values().stream().filter(pb -> {
-                return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false);
+            modelReports.put(config, configReport);
+        });
+
+        Comparator<Map.Entry<String, ConfigReport>> byBalance = (
+                Entry<String, ConfigReport> o1,
+                Entry<String, ConfigReport> o2) -> {
+            return Double.compare(o1.getValue().balance, o2.getValue().balance);
+        };
+
+        Map<String, ConfigReport> sortedModelReports = modelReports.entrySet().stream()
+                .sorted(byBalance)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
+                    throw new AssertionError();
+                }, LinkedHashMap::new));
+
+        Entry<String, ConfigReport> bestConfig = sortedModelReports.entrySet().iterator().next();
+        bestError = bestConfig.getValue().balance;
+        outputReport.append(String.format(
+                "------> Model %s bestConfig %s TotalError %f BadNodesError %f BadVoltageError %f",
+                model,
+                bestConfig.getKey(), bestConfig.getValue().balance,
+                bestConfig.getValue().balanceBad, bestConfig.getValue().balanceBadVoltage));
+        outputReport.append(System.getProperty("line.separator"));
+
+        StringBuilder modelReport = new StringBuilder();
+        sortedModelReports.keySet().forEach(config -> {
+            ConfigReport configReport = modelReports.get(config);
+            long totalNodes = configReport.balanceReport.values().size();
+            long badNodes = configReport.balanceReport.values().stream().filter(pb -> {
+                return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false)
+                        && !pb.asBoolean("badVoltage", false);
             }).filter(pb -> {
                 return (Math.abs(pb.asDouble("balanceP"))
                         + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
             }).count();
 
-            double totalError = report.values().stream().filter(pb -> {
-                return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false);
-            }).map(pb -> {
-                return Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ"));
-            }).mapToDouble(Double::doubleValue).sum();
+            long badVoltageNodes = configReport.balanceReport.values().stream().filter(pb -> {
+                return pb.asBoolean("calculated", false) && pb.asBoolean("badVoltage", false);
+            }).count();
 
-            double badNodesError = report.values().stream().filter(pb -> {
-                return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false);
-            }).filter(pb -> {
-                return (Math.abs(pb.asDouble("balanceP"))
-                        + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
-            }).map(pb -> {
-                return Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ"));
-            }).mapToDouble(Double::doubleValue).sum();
-
-            long okNodes = report.values().stream().filter(pb -> {
-                return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false);
+            long okNodes = configReport.balanceReport.values().stream().filter(pb -> {
+                return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false)
+                        && !pb.asBoolean("badVoltage", false);
             }).filter(pb -> {
                 return (Math.abs(pb.asDouble("balanceP"))
                         + Math.abs(pb.asDouble("balanceQ"))) <= BALANCE_TOLERANCE;
             }).count();
 
-            long isolatedNodes = report.values().stream().filter(pb -> {
+            long isolatedNodes = configReport.balanceReport.values().stream().filter(pb -> {
                 return pb.asBoolean("isolated", false);
             }).count();
 
-            if (totalError < bestError) {
-                bestError = totalError;
-                bestConfig = config;
-            }
-
             DateTimeFormatter fmt = DateTimeFormat.forPattern("HH:mm");
-            LOG.debug("----> model {} time {} config {}", model, fmt.print(inputModel.getCgmes().scenarioTime()), config);
-            modelReport.append(String.format("----> model %s time %s config %s", model, fmt.print(inputModel.getCgmes().scenarioTime()), config));
+            LOG.debug("----> model {} time {} config {}", model,
+                    fmt.print(inputModel.getCgmes().scenarioTime()), config);
+            modelReport.append(String.format("----> model %s time %s config %s", model,
+                    fmt.print(inputModel.getCgmes().scenarioTime()), config));
             modelReport.append(System.getProperty("line.separator"));
 
             LOG.debug(
-                    "total error {} total nodes {} isolated nodes {} ok nodes {} bad error {} bad nodes {} pct {}",
-                    totalError, totalNodes, isolatedNodes, okNodes, badNodesError, badNodes,
+                    "total error {} total nodes {} isolated nodes {} ok nodes {} bad error {} bad nodes {} pct {} badVoltage error {} badVoltage nodes {} pct {}",
+                    configReport.balance, totalNodes, isolatedNodes, okNodes,
+                    configReport.balanceBad,
+                    badNodes,
                     Long.valueOf(badNodes).doubleValue()
+                            / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
+                    configReport.balanceBadVoltage, badVoltageNodes,
+                    Long.valueOf(badVoltageNodes).doubleValue()
                             / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0);
             modelReport.append(String.format(
-                    "total error %f total nodes %d isolated nodes %d ok nodes %d bad error %f bad nodes %d pct %f",
-                    totalError, totalNodes, isolatedNodes, okNodes, badNodesError, badNodes,
+                    "total error %f total nodes %d isolated nodes %d ok nodes %d bad error %f bad nodes %d pct %f badVoltage error %f badVoltage nodes %d pct %f",
+                    configReport.balance, totalNodes, isolatedNodes, okNodes,
+                    configReport.balanceBad,
+                    badNodes,
                     Long.valueOf(badNodes).doubleValue()
+                            / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
+                    configReport.balanceBadVoltage, badVoltageNodes,
+                    Long.valueOf(badVoltageNodes).doubleValue()
                             / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0));
             modelReport.append(System.getProperty("line.separator"));
 
             show = 5;
-            report.keySet().forEach(nodes -> {
+            configReport.balanceReport.keySet().forEach(nodes -> {
                 if (show > 0) {
-                    PropertyBag pb = report.get(nodes);
+                    PropertyBag pb = configReport.balanceReport.get(nodes);
                     double nodeBalanceP = pb.asDouble("balanceP");
                     double nodeBalanceQ = pb.asDouble("balanceQ");
                     boolean calculatedNode = pb.asBoolean("calculated", false);
@@ -136,12 +165,14 @@ public class CgmesFlowValidation {
                     int lines = pb.asInt("line");
                     int t2xs = pb.asInt("t2x");
                     int t3xs = pb.asInt("t3x");
-                    LOG.debug("nodes {} isolated {} calculated {} balance {} {} lines {} t2xs {} t3xs {}", nodes,
-                            isolatedNode, calculatedNode, nodeBalanceP,
-                            nodeBalanceQ, lines, t2xs, t3xs);
+                    LOG.debug(
+                            "id {} isolated {} calculated {} balance {} {} lines {} t2xs {} t3xs {} nodes {}",
+                            nodes.iterator().next(), isolatedNode, calculatedNode, nodeBalanceP,
+                            nodeBalanceQ, lines, t2xs, t3xs, nodes);
                     modelReport.append(String.format(
-                            "nodes %s isolated %b calculated %b balance %f %f lines %d t2xs %d t3xs %d", nodes,
-                            isolatedNode, calculatedNode, nodeBalanceP, nodeBalanceQ, lines, t2xs, t3xs));
+                            "id %s isolated %b calculated %b balance %f %f lines %d t2xs %d t3xs %d nodes %s",
+                            nodes.iterator().next(), isolatedNode, calculatedNode, nodeBalanceP,
+                            nodeBalanceQ, lines, t2xs, t3xs, nodes));
                     modelReport.append(System.getProperty("line.separator"));
                     show--;
                 }
@@ -158,7 +189,7 @@ public class CgmesFlowValidation {
                         }
                     });
 
-            sortedByModelCodeReport.putAll(modelCodeReport);
+            sortedByModelCodeReport.putAll(configReport.modelCodeReport);
             sortedByModelCodeReport.keySet().forEach(code -> {
                 LOG.debug("total {} calculated {} ok {} code {} --- {}",
                         sortedByModelCodeReport.get(code).getLeft(),
@@ -172,17 +203,13 @@ public class CgmesFlowValidation {
                         code, evaluateCode((String) code)));
                 modelReport.append(System.getProperty("line.separator"));
             });
-        }
-
-        outputReport.append(String.format("------> Model %s bestConfig %s bestError %f", model,
-                bestConfig, bestError == Double.MAX_VALUE ? Double.NaN : bestError));
-        outputReport.append(System.getProperty("line.separator"));
+        });
         outputReport.append(modelReport.toString());
     }
 
-    private Map<List<String>, PropertyBag> calcBalance(String config) {
+    private ConfigReport calcBalance(String config) {
 
-        modelCodeReport = new HashMap<>();
+        ConfigReport configReport = new ConfigReport();
         Map<List<String>, PropertyBag> balanceReport = new HashMap<>();
         List<String> pn = new ArrayList<>(
                 Arrays.asList("balanceP", "balanceQ", "calculated", "line", "t2x", "t3x"));
@@ -190,78 +217,14 @@ public class CgmesFlowValidation {
         inputModel.getJoinedNodes().forEach(nodes -> {
             Map<String, Integer> nodeModelCodeReport = new HashMap<>();
             PropertyBag nodeBalanceData = initNodeBalanceData(pn);
-            nodes.forEach(n -> {
-                if (n == null) {
-                    return;
-                }
-                PropertyBag node = inputModel.getNodeParameters(n);
-                Objects.requireNonNull(node, "node without parameters");
-                LOG.debug("------  node ----------> {}", n);
-                if (n.startsWith("_05fc5714")) {
-                    LOG.info("node {}", node);
-                }
-                if (inputModel.getEquipmentsInNode().containsKey(n)) {
-                    inputModel.getEquipmentsInNode().get(n).forEach(id -> {
-                        boolean isLine = false;
-                        boolean isT2x = false;
-                        boolean isT3x = false;
-                        CalcFlow calcFlow = new CalcFlow(inputModel);
-                        PropertyBag line = inputModel.getLineParameters(id);
-                        if (line != null) {
-                            PropertyBag node1 = inputModel.getNodeParameters(line.get("terminal1"));
-                            Objects.requireNonNull(node1, "node1 null in line");
-                            PropertyBag node2 = inputModel.getNodeParameters(line.get("terminal2"));
-                            Objects.requireNonNull(node2, "node2 null in line");
-                            calcFlow.calcFlowLine(n, node1, node2, line, config);
-                            isLine = true;
-                        }
-                        PropertyBag transformer = inputModel.getTransformerParameters(id);
-                        if (transformer != null) {
-                            PropertyBag node1 = inputModel
-                                    .getNodeParameters(transformer.get("terminal1"));
-                            Objects.requireNonNull(node1, "node1 null in transformer");
-                            PropertyBag node2 = inputModel
-                                    .getNodeParameters(transformer.get("terminal2"));
-                            Objects.requireNonNull(node2, "node2 null in transformer");
-                            PropertyBag node3 = inputModel
-                                    .getNodeParameters(transformer.get("terminal3"));
-                            if (node3 == null) {
-                                calcFlow.calcFlowT2x(n, node1, node2, transformer, config);
-                                isT2x = true;
-                            } else {
-                                calcFlow.calcFlowT3x(n, node1, node2, node3, transformer, config);
-                                isT3x = true;
-                            }
-                        }
-
-                        writeToNodeModelCodeReport(nodeModelCodeReport, calcFlow.getModelCode());
-                        writeToNodeBalanceReport(nodeBalanceData, calcFlow, isLine, isT2x, isT3x);
-
-                        if (line != null) {
-                            LOG.debug("Line {}  Line P {} Q {} balanceP {} balanceQ {}", line,
-                                    line.asDouble("p"), line.asDouble("q"),
-                                    node.asDouble("balanceP", 0.0),
-                                    node.asDouble("balanceQ", 0.0));
-                        }
-                        if (transformer != null) {
-                            LOG.debug("Transformer {} P {} Q {} ", transformer,
-                                    transformer.asDouble("p"),
-                                    transformer.asDouble("q"));
-                        }
-                    });
-                } else {
-                    isolateNodeBalance(nodeBalanceData);
-                }
-
-                addNodeInjectionToJoinedBusBalance(node, nodeBalanceData);
-
-                LOG.debug("node {} ,  {}", n, inputModel.getEquipmentsInNode().get(n));
-                LOG.debug("node {} P {} Q {} balanceP {} balanceQ {}", n, node.asDouble("p"),
-                        node.asDouble("q"), nodeBalanceData.asDouble("balanceP"),
-                        nodeBalanceData.asDouble("balanceQ"));
-            });
-
-            writeToModelCodeReport(modelCodeReport, nodeModelCodeReport, nodeBalanceData);
+            Boolean isIsolatedNodes = inputModel.getIsolatedNodes().get(nodes);
+            if (isIsolatedNodes != null && isIsolatedNodes) {
+                isolateNodeBalance(nodeBalanceData);
+            } else {
+                calcNodesBalance(config, nodes, nodeBalanceData, nodeModelCodeReport);
+            }
+            writeToModelCodeReport(configReport.modelCodeReport, nodeModelCodeReport,
+                    nodeBalanceData);
             writeToBalanceReport(pn, balanceReport, nodes, nodeBalanceData);
         });
 
@@ -275,13 +238,117 @@ public class CgmesFlowValidation {
                             + Math.abs(o2.getValue().asDouble("balanceQ", 0.0)));
         };
 
-        Map<List<String>, PropertyBag> sortedByBalanceReport = balanceReport.entrySet().stream()
+        configReport.balanceReport = balanceReport.entrySet().stream()
                 .sorted(byBalance.reversed())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
                     throw new AssertionError();
                 }, LinkedHashMap::new));
 
-        return sortedByBalanceReport;
+        double totalError = configReport.balanceReport.values().stream().filter(pb -> {
+            return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false);
+        }).map(pb -> {
+            return Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ"));
+        }).mapToDouble(Double::doubleValue).sum();
+
+        double badVoltageNodesError = configReport.balanceReport.values().stream()
+                .filter(pb -> {
+                    return pb.asBoolean("calculated", false) && pb.asBoolean("badVoltage", false);
+                }).map(pb -> {
+                    return Math.abs(pb.asDouble("balanceP"))
+                            + Math.abs(pb.asDouble("balanceQ"));
+                }).mapToDouble(Double::doubleValue).sum();
+
+        double badNodesError = configReport.balanceReport.values().stream().filter(pb -> {
+            return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false)
+                    && !pb.asBoolean("badVoltage", false);
+        }).filter(pb -> {
+            return (Math.abs(pb.asDouble("balanceP"))
+                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
+        }).map(pb -> {
+            return Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ"));
+        }).mapToDouble(Double::doubleValue).sum();
+
+        configReport.balance = totalError;
+        configReport.balanceBad = badNodesError;
+        configReport.balanceBadVoltage = badVoltageNodesError;
+
+        return configReport;
+    }
+
+    private void calcNodesBalance(String config, List<String> nodes, PropertyBag nodeBalanceData,
+            Map<String, Integer> nodeModelCodeReport) {
+        nodes.forEach(n -> {
+            if (n == null) {
+                return;
+            }
+            PropertyBag node = inputModel.getNodeParameters(n);
+            if (n.startsWith("_ARGIAP7_TN1") || n.startsWith("_ARGIAP7_TN2")) {
+                LOG.debug("node {}", node);
+            }
+            Objects.requireNonNull(node, "node without parameters");
+            if (inputModel.getEquipmentsInNode().containsKey(n)) {
+                inputModel.getEquipmentsInNode().get(n).forEach(id -> {
+                    boolean isLine = false;
+                    boolean isT2x = false;
+                    boolean isT3x = false;
+                    CalcFlow calcFlow = new CalcFlow(inputModel);
+                    PropertyBag line = inputModel.getLineParameters(id);
+                    if (line != null) {
+                        PropertyBag node1 = inputModel
+                                .getNodeParameters(line.get("terminal1"));
+                        Objects.requireNonNull(node1, "node1 null in line");
+                        PropertyBag node2 = inputModel
+                                .getNodeParameters(line.get("terminal2"));
+                        Objects.requireNonNull(node2, "node2 null in line");
+                        calcFlow.calcFlowLine(n, node1, node2, line, config);
+                        isLine = true;
+                    }
+                    PropertyBag transformer = inputModel.getTransformerParameters(id);
+                    if (transformer != null) {
+                        PropertyBag node1 = inputModel
+                                .getNodeParameters(transformer.get("terminal1"));
+                        Objects.requireNonNull(node1, "node1 null in transformer");
+                        PropertyBag node2 = inputModel
+                                .getNodeParameters(transformer.get("terminal2"));
+                        Objects.requireNonNull(node2, "node2 null in transformer");
+                        PropertyBag node3 = inputModel
+                                .getNodeParameters(transformer.get("terminal3"));
+                        if (node3 == null) {
+                            calcFlow.calcFlowT2x(n, node1, node2, transformer, config);
+                            isT2x = true;
+                        } else {
+                            calcFlow.calcFlowT3x(n, node1, node2, node3, transformer,
+                                    config);
+                            isT3x = true;
+                        }
+                    }
+
+                    writeToNodeModelCodeReport(nodeModelCodeReport,
+                            calcFlow.getModelCode());
+                    writeToNodeBalanceReport(nodeBalanceData, calcFlow, isLine, isT2x,
+                            isT3x);
+
+                    if (line != null) {
+                        LOG.debug("Line {}  Line P {} Q {} balanceP {} balanceQ {}", line,
+                                line.asDouble("p"), line.asDouble("q"),
+                                node.asDouble("balanceP", 0.0),
+                                node.asDouble("balanceQ", 0.0));
+                    }
+                    if (transformer != null) {
+                        LOG.debug("Transformer {} P {} Q {} ", transformer,
+                                transformer.asDouble("p"),
+                                transformer.asDouble("q"));
+                    }
+                });
+            }
+
+            addNodeInjectionToJoinedBusBalance(node, nodeBalanceData);
+
+            LOG.debug("node {} ,  {}", n, inputModel.getEquipmentsInNode().get(n));
+            LOG.debug("node {} P {} Q {} balanceP {} balanceQ {}", n, node.asDouble("p"),
+                    node.asDouble("q"), nodeBalanceData.asDouble("balanceP"),
+                    nodeBalanceData.asDouble("balanceQ"));
+        });
     }
 
     private void addNodeInjectionToJoinedBusBalance(PropertyBag node,
@@ -300,6 +367,7 @@ public class CgmesFlowValidation {
         nodeBalanceReport.put("balanceQ", Double.toString(0.0));
         nodeBalanceReport.put("calculated", "true");
         nodeBalanceReport.put("isolated", "false");
+        nodeBalanceReport.put("badVoltage", "false");
         nodeBalanceReport.put("line", Integer.toString(0));
         nodeBalanceReport.put("t2x", Integer.toString(0));
         nodeBalanceReport.put("t3x", Integer.toString(0));
@@ -319,6 +387,10 @@ public class CgmesFlowValidation {
                     Double.toString(balanceP + calcFlow.getP()));
             nodeBalanceReport.put("balanceQ",
                     Double.toString(balanceQ + calcFlow.getQ()));
+            if (calcFlow.getBadVoltage()) {
+                nodeBalanceReport.put("badVoltage",
+                        Boolean.toString(calcFlow.getBadVoltage()));
+            }
         } else {
             nodeBalanceReport.put("calculated",
                     Boolean.toString(calcFlow.getCalculated()));
@@ -353,6 +425,7 @@ public class CgmesFlowValidation {
             PropertyBag nodeBalanceReport) {
         boolean calculatedNodes = nodeBalanceReport.asBoolean("calculated", true);
         boolean isolatedNodes = nodeBalanceReport.asBoolean("isolated", true);
+        boolean badVoltageNodes = nodeBalanceReport.asBoolean("badVoltage", true);
         int nodeLines = nodeBalanceReport.asInt("line");
         int nodeT2xs = nodeBalanceReport.asInt("t2x");
         int nodeT3xs = nodeBalanceReport.asInt("t3x");
@@ -369,6 +442,7 @@ public class CgmesFlowValidation {
             pb.put("balanceQ", Double.toString(0.0));
         }
         pb.put("calculated", Boolean.toString(calculatedNodes));
+        pb.put("badVoltage", Boolean.toString(badVoltageNodes));
         pb.put("isolated", Boolean.toString(isolatedNodes));
         pb.put("line", Integer.toString(nodeLines));
         pb.put("t2x", Integer.toString(nodeT2xs));
@@ -376,7 +450,8 @@ public class CgmesFlowValidation {
         balanceReport.put(nodes, pb);
     }
 
-    private void writeToModelCodeReport(Map<String, Triple<Integer, Integer, Integer>> modelCodeReport,
+    private void writeToModelCodeReport(
+            Map<String, Triple<Integer, Integer, Integer>> modelCodeReport,
             Map<String, Integer> nodeModelCodeReport, PropertyBag nodeBalanceReport) {
 
         nodeModelCodeReport.keySet().forEach(code -> {
@@ -394,12 +469,15 @@ public class CgmesFlowValidation {
             boolean isolatedNodes = nodeBalanceReport.asBoolean("isolated", false);
             if (calculatedNodes && !isolatedNodes) {
                 if (Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) <= BALANCE_TOLERANCE) {
-                    value = new ImmutableTriple<Integer, Integer, Integer>(total + totalCode, calculated + totalCode, ok + totalCode);
+                    value = new ImmutableTriple<Integer, Integer, Integer>(total + totalCode,
+                            calculated + totalCode, ok + totalCode);
                 } else {
-                    value = new ImmutableTriple<Integer, Integer, Integer>(total + totalCode, calculated + totalCode, ok);
+                    value = new ImmutableTriple<Integer, Integer, Integer>(total + totalCode,
+                            calculated + totalCode, ok);
                 }
             } else {
-                value = new ImmutableTriple<Integer, Integer, Integer>(total + totalCode, calculated, ok);
+                value = new ImmutableTriple<Integer, Integer, Integer>(total + totalCode,
+                        calculated, ok);
             }
             modelCodeReport.put(code, value);
         });
@@ -460,12 +538,29 @@ public class CgmesFlowValidation {
         return "ok";
     }
 
-    private static final double                        BALANCE_TOLERANCE = 1.0;
-    private static int                                 show              = 5;
-    private static PrepareModel                        inputModel;
-    private static Map<String, Triple<Integer, Integer, Integer>> modelCodeReport;
-    private StringBuilder                              outputReport;
+    class ConfigReport {
+        double                                         balance;
+        double                                         balanceBad;
+        double                                         balanceBadVoltage;
+        Map<List<String>, PropertyBag>                 balanceReport;
+        Map<String, Triple<Integer, Integer, Integer>> modelCodeReport;
 
-    private static final Logger                        LOG               = LoggerFactory
+        ConfigReport() {
+            balance = 0.0;
+            balanceBad = 0.0;
+            balanceBadVoltage = 0.0;
+            balanceReport = new HashMap<>();
+            modelCodeReport = new HashMap<>();
+        }
+    }
+
+    private static final double BALANCE_TOLERANCE = 1.0;
+    private static int          show              = 5;
+    private static PrepareModel inputModel;
+    private double              bestError;
+    private StringBuilder       outputReport;
+
+    private static final Logger LOG               = LoggerFactory
             .getLogger(CgmesFlowValidation.class);
+
 }

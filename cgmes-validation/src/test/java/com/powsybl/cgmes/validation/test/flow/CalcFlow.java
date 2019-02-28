@@ -23,8 +23,10 @@ public class CalcFlow {
         double r2 = transformer.asDouble("r2");
         double x2 = transformer.asDouble("x2");
         double v1 = node1.asDouble("v");
+        double nominalV1 = node1.asDouble("nominalV");
         double angleDegrees1 = node1.asDouble("angle");
         double v2 = node2.asDouble("v");
+        double nominalV2 = node2.asDouble("nominalV");
         double angleDegrees2 = node2.asDouble("angle");
         Boolean connected1 = transformer.asBoolean("connected1", false);
         Boolean connected2 = transformer.asBoolean("connected2", false);
@@ -34,8 +36,8 @@ public class CalcFlow {
         admittanceMatrix.calculate(transformer, config);
         modelCode = admittanceMatrix.getModelCode();
 
-        if (!calcFlowT2xIsOk(connected1, connected2, r1, x1, r2, x2, v1, angleDegrees1, v2,
-                angleDegrees2)) {
+        if (!calcFlowT2xIsOk(connected1, connected2, nominalV1, nominalV2, r1, x1, r2, x2, v1,
+                angleDegrees1, v2, angleDegrees2)) {
             return;
         }
 
@@ -54,7 +56,14 @@ public class CalcFlow {
             p = stf.getReal();
             q = stf.getImaginary();
         }
+        if (n.startsWith("_ARGIAP7_TN1") || n.startsWith("_ARGIAP7_TN2")) {
+            LOG.debug("t2x {}", transformer);
+            LOG.debug("node1 {}", node1);
+            LOG.debug("node2 {}", node2);
+            LOG.debug("p {} q {}", p, q);
+        }
         calculated = true;
+        badVoltage = !voltageIsOk(angleDegrees1, angleDegrees2);
     }
 
     public void calcFlowT3x(String n, PropertyBag node1, PropertyBag node2, PropertyBag node3,
@@ -114,7 +123,15 @@ public class CalcFlow {
             p = sft.getReal();
             q = sft.getImaginary();
         }
+        if (n.startsWith("_ARGIAP7_TN1") || n.startsWith("_ARGIAP7_TN2")) {
+            LOG.debug("t3x {}", transformer);
+            LOG.debug("node1 {}", node1);
+            LOG.debug("node2 {}", node2);
+            LOG.debug("node3 {}", node3);
+            LOG.debug("p {} q {}", p, q);
+        }
         calculated = true;
+        badVoltage = !t3xVoltageIsOk(angleDegrees1, angleDegrees2, angleDegrees3);
     }
 
     public void calcFlowLine(String n, PropertyBag node1, PropertyBag node2, PropertyBag line,
@@ -134,7 +151,8 @@ public class CalcFlow {
         admittanceMatrix.calculate(line, nominalV1, nominalV2, config);
         modelCode = admittanceMatrix.getModelCode();
 
-        if (!calcFlowLineIsOk(connected, r, x, nominalV1, nominalV2, v1, angleDegrees1, v2, angleDegrees2)) {
+        if (!calcFlowLineIsOk(connected, r, x, nominalV1, nominalV2, v1, angleDegrees1, v2,
+                angleDegrees2)) {
             return;
         }
 
@@ -153,7 +171,15 @@ public class CalcFlow {
             p = stf.getReal();
             q = stf.getImaginary();
         }
+
+        if (n.startsWith("_ARGIAP7_TN1") || n.startsWith("_ARGIAP7_TN2")) {
+            LOG.debug("line {}", line);
+            LOG.debug("node1 {}", node1);
+            LOG.debug("node2 {}", node2);
+            LOG.debug("p {} q {}", p, q);
+        }
         calculated = true;
+        badVoltage = !voltageIsOk(angleDegrees1, angleDegrees2);
     }
 
     private void calculate(Complex yff, Complex yft, Complex ytf, Complex ytt, Complex vf,
@@ -166,21 +192,28 @@ public class CalcFlow {
     }
 
     private boolean calcFlowT2xIsOk(boolean connected1, boolean connected2,
+            double vNominal1, double vNominal2,
             double r1, double x1, double r2, double x2,
             double v1, double angleDegrees1, double v2, double angleDegrees2) {
         if (!connected1 || !connected2) {
             return false;
         }
-        if (r1 == 0.0 && x1 == 0.0 && r2 == 0.0 && x2 == 0.0) {
+        double baseMVA = 100.0;
+        double z0Threshold = 0.00025;
+        double vNominal = 1.0;
+        if (!Double.isNaN(vNominal1) && vNominal1 > vNominal) {
+            vNominal = vNominal1;
+        }
+        if (!Double.isNaN(vNominal2) && vNominal2 > vNominal) {
+            vNominal = vNominal2;
+        }
+        double r = r1 + r2;
+        double x = x1 + x2;
+        if (r * baseMVA / Math.pow(vNominal, 2.0) <= z0Threshold
+                && x * baseMVA / Math.pow(vNominal, 2.0) <= z0Threshold) {
             return false;
         }
         if (v1 == 0.0 || v2 == 0.0) {
-            return false;
-        }
-        if (v1 == 1.0 && angleDegrees1 == 0.0) {
-            return false;
-        }
-        if (v2 == 1.0 && angleDegrees2 == 0.0) {
             return false;
         }
         return true;
@@ -197,15 +230,6 @@ public class CalcFlow {
             return false;
         }
         if (v1 == 0.0 || v2 == 0.0 || v3 == 0.0) {
-            return false;
-        }
-        if (v1 == 1.0 && angleDegrees1 == 0.0) {
-            return false;
-        }
-        if (v2 == 1.0 && angleDegrees2 == 0.0) {
-            return false;
-        }
-        if (v3 == 1.0 && angleDegrees3 == 0.0) {
             return false;
         }
         return true;
@@ -233,10 +257,18 @@ public class CalcFlow {
         if (v1 == 0.0 || v2 == 0.0) {
             return false;
         }
-        if (v1 == 1.0 && angleDegrees1 == 0.0) {
+        return true;
+    }
+
+    private boolean voltageIsOk(double angleDegrees1, double angleDegrees2) {
+        if (angleDegrees1 == 0.0 || angleDegrees2 == 0.0) {
             return false;
         }
-        if (v2 == 1.0 && angleDegrees2 == 0.0) {
+        return true;
+    }
+
+    private boolean t3xVoltageIsOk(double angleDegrees1, double angleDegrees2, double angleDegrees3) {
+        if (angleDegrees1 == 0.0 || angleDegrees2 == 0.0 || angleDegrees3 == 0.0) {
             return false;
         }
         return true;
@@ -258,10 +290,15 @@ public class CalcFlow {
         return calculated;
     }
 
+    public boolean getBadVoltage() {
+        return badVoltage;
+    }
+
     private double              p;
     private double              q;
     private String              modelCode;
     private boolean             calculated;
+    private boolean             badVoltage;
     private Complex             sft;
     private Complex             stf;
     private PrepareModel        inputModel;

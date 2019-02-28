@@ -5,8 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -25,14 +29,14 @@ public class CgmesIOP20190116 extends CatalogReview {
         super("\\cgmes-csi\\IOP\\CGMES_IOP_20190116");
     }
 
-    // @Test
+    @Test
     public void reviewAll1030() throws IOException {
         reviewAll("glob:**BD**1030*zip");
     }
 
-    @Test
+    // @Test
     public void reviewDebug1030() throws IOException {
-        reviewAll("glob:**BD*MAVIR**1030*zip");
+        reviewAll("glob:**BD*RTE**1030*FR0*zip");
     }
 
     // @Test
@@ -46,11 +50,12 @@ public class CgmesIOP20190116 extends CatalogReview {
     }
 
     void reviewAll(String pattern) throws IOException {
-        Map<String, String> results = new HashMap<>();
+        Map<String, ModelReport> results = new HashMap<>();
         Map<String, Exception> exceptions = new HashMap<>();
         reviewAll(pattern, p -> {
             try {
-                LOG.info("case {}", p.getParent().getFileName().toString());
+                String modelName = p.getParent().getFileName().toString() + "_" + p.getFileName().toString().replace(".zip", "");
+                LOG.info("case {}", modelName);
                 DataSource ds = dataSource(p);
                 CgmesOnDataSource cds = new CgmesOnDataSource(ds);
                 cds.cimNamespace();
@@ -59,23 +64,39 @@ public class CgmesIOP20190116 extends CatalogReview {
 
                 CgmesModel cgmes = CgmesModelFactory.create(ds, impl);
                 CgmesFlowValidation flowValidation = new CgmesFlowValidation(cgmes);
-                flowValidation.test(p.getParent().getFileName().toString());
-                String report = flowValidation.getReport();
-                results.put(p.getParent().getFileName().toString(), report);
+                flowValidation.test(modelName);
+
+                ModelReport modelReport = new ModelReport();
+                modelReport.error = flowValidation.getBestError();
+                modelReport.report = flowValidation.getReport();
+                results.put(modelName, modelReport);
             } catch (Exception x) {
-                exceptions.put(p.getParent().getFileName().toString(), x);
+                String modelName = p.getParent().getFileName().toString() + "_" + p.getFileName().toString().replace(".zip", "");
+                exceptions.put(modelName, x);
             }
         });
-        dumpReport(results, exceptions);
+
+        Comparator<Map.Entry<String, ModelReport>> byError = (
+                Entry<String, ModelReport> o1,
+                Entry<String, ModelReport> o2) -> {
+            return Double.compare(o1.getValue().error, o2.getValue().error);
+        };
+
+        Map<String, ModelReport> sortedResults = results.entrySet().stream()
+                .sorted(byError.reversed())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
+                    throw new AssertionError();
+                }, LinkedHashMap::new));
+        dumpReport(sortedResults, exceptions);
     }
 
-    private void dumpReport(Map<String, String> results, Map<String, Exception> exceptions) {
+    private void dumpReport(Map<String, ModelReport> results, Map<String, Exception> exceptions) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
         LocalDateTime dateTime = LocalDateTime.now();
         String formattedDateTime = dateTime.format(formatter);
         results.values().forEach(r -> {
             try {
-                Files.write(data.resolve(formattedDateTime + "_report.txt"), r.getBytes(),
+                Files.write(data.resolve(formattedDateTime + "_report.txt"), r.report.getBytes(),
                         StandardOpenOption.APPEND, StandardOpenOption.CREATE);
                 Files.write(data.resolve(formattedDateTime + "_report.txt"),
                         System.getProperty("line.separator").getBytes(), StandardOpenOption.APPEND,
@@ -94,10 +115,14 @@ public class CgmesIOP20190116 extends CatalogReview {
                         System.getProperty("line.separator").getBytes(), StandardOpenOption.APPEND,
                         StandardOpenOption.CREATE);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 LOG.error("Error message {}", e.getMessage());
             }
         });
+    }
+
+    class ModelReport {
+        double error;
+        String report;
     }
 
     private static final Logger LOG = LoggerFactory

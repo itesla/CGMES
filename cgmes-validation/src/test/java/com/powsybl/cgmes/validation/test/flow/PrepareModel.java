@@ -26,10 +26,6 @@ public class PrepareModel {
 
     public void loadModel() throws IOException {
         nodeParameters = nodeParameters(cgmes);
-        nodeParameters.keySet().forEach(key -> {
-            LOG.debug("node {} ,  {}", key, nodeParameters.get(key));
-        });
-
         equipmentsInNode = new HashMap<>();
         lineParameters = lineParameters(cgmes, equipmentsInNode);
         transformerParameters = transformerParameters(cgmes,
@@ -37,12 +33,17 @@ public class PrepareModel {
         joinedNodes = joinRetainedSwitchesNodes(cgmes, nodeParameters);
         getNodeFlow(cgmes, nodeParameters);
 
-        lineParameters.keySet().forEach(key -> {
-            LOG.debug("line {} , {}", key, lineParameters.get(key));
-        });
-        transformerParameters.keySet().forEach(key -> {
-            LOG.debug("transformer {} , {}", key, transformerParameters.get(key));
-        });
+        if (LOG.isDebugEnabled()) {
+            nodeParameters.keySet().forEach(key -> {
+                LOG.debug("node {} ,  {}", key, nodeParameters.get(key));
+            });
+            lineParameters.keySet().forEach(key -> {
+                LOG.debug("line {} , {}", key, lineParameters.get(key));
+            });
+            transformerParameters.keySet().forEach(key -> {
+                LOG.debug("transformer {} , {}", key, transformerParameters.get(key));
+            });
+        }
     }
 
     public CgmesModel getCgmes() {
@@ -69,6 +70,10 @@ public class PrepareModel {
         return joinedNodes;
     }
 
+    public Map<List<String>, Boolean> getIsolatedNodes() {
+        return isolatedNodes;
+    }
+
     public Map<String, List<String>> getEquipmentsInNode() {
         return equipmentsInNode;
     }
@@ -76,6 +81,7 @@ public class PrepareModel {
     private List<List<String>> joinRetainedSwitchesNodes(CgmesModel cgmes,
             Map<String, PropertyBag> nodeParameters) {
 
+        isolatedNodes = new HashMap<>();
         List<List<String>> joinedNodes = new ArrayList<>();
         Map<String, List<String>> nodes = new HashMap<>();
 
@@ -116,37 +122,39 @@ public class PrepareModel {
         });
 
         List<String> visitedNodes = new ArrayList<>();
-        nodes.keySet().forEach(k -> {
+        nodeParameters.keySet().forEach(k -> {
             if (visitedNodes.contains(k)) {
                 return;
             }
             List<String> joinNodes = new ArrayList<>();
             joinNodes.add(k);
             visitedNodes.add(k);
-            int indice = 0;
-            while (indice < joinNodes.size()) {
-                String node = joinNodes.get(indice);
-                List<String> ns = nodes.get(node);
-                ns.forEach(nodeAd -> {
-                    if (visitedNodes.contains(nodeAd)) {
-                        return;
-                    }
-                    joinNodes.add(nodeAd);
-                    visitedNodes.add(nodeAd);
-                });
-                indice++;
+            if (nodes.containsKey(k)) {
+                int indice = 0;
+                while (indice < joinNodes.size()) {
+                    String node = joinNodes.get(indice);
+                    List<String> ns = nodes.get(node);
+                    ns.forEach(nodeAd -> {
+                        if (visitedNodes.contains(nodeAd)) {
+                            return;
+                        }
+                        joinNodes.add(nodeAd);
+                        visitedNodes.add(nodeAd);
+                    });
+                    indice++;
+                }
             }
             joinedNodes.add(joinNodes);
         });
 
-        nodeParameters.keySet().forEach(node -> {
-            if (visitedNodes.contains(node)) {
-                return;
+        joinedNodes.forEach(joinNodes -> {
+            isolatedNodes.put(joinNodes, Boolean.valueOf("true"));
+            for (String node : joinNodes) {
+                if (equipmentsInNode.containsKey(node)) {
+                    isolatedNodes.put(joinNodes, Boolean.valueOf("false"));
+                    return;
+                }
             }
-            List<String> joinNodes = new ArrayList<>();
-            joinNodes.add(node);
-            visitedNodes.add(node);
-            joinedNodes.add(joinNodes);
         });
 
         return joinedNodes;
@@ -516,15 +524,16 @@ public class PrepareModel {
         idTransformers.add(id);
     }
 
-    private CgmesModel                cgmes;
-    private List<String>              propertyNames;
-    private Map<String, PropertyBag>  voltages;
-    private List<List<String>>        joinedNodes;
-    private Map<String, PropertyBag>  nodeParameters;
-    private Map<String, PropertyBag>  lineParameters;
-    private Map<String, PropertyBag>  transformerParameters;
-    private Map<String, List<String>> equipmentsInNode;
+    private CgmesModel                 cgmes;
+    private List<String>               propertyNames;
+    private Map<String, PropertyBag>   voltages;
+    private List<List<String>>         joinedNodes;
+    private Map<List<String>, Boolean> isolatedNodes;
+    private Map<String, PropertyBag>   nodeParameters;
+    private Map<String, PropertyBag>   lineParameters;
+    private Map<String, PropertyBag>   transformerParameters;
+    private Map<String, List<String>>  equipmentsInNode;
 
-    private static final Logger       LOG = LoggerFactory
+    private static final Logger        LOG = LoggerFactory
             .getLogger(PrepareModel.class);
 }
