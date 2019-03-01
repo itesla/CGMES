@@ -1,9 +1,8 @@
 package com.powsybl.cgmes.validation.test;
 
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -106,7 +105,7 @@ public class CatalogReview extends TestBase {
         reportWrong(wrong);
     }
 
-    public void reviewLimits(String pattern) throws IOException {
+    public void reviewLimits(String pattern, String outputFilename) throws IOException {
         Map<Path, LimitsSummary> limits = new HashMap<>();
         Map<Path, String> mass = new HashMap<>();
         Map<Path, Exception> wrong = reviewAll(pattern, p -> {
@@ -120,11 +119,26 @@ public class CatalogReview extends TestBase {
                 limits.put(p, new LimitsSummary(cgmes));
             }
         });
-        reportLimits(limits, mass);
+        reportLimits(outputFilename, limits, mass);
         reportWrong(wrong);
+
+        System.err.println("Anomalies");
+        System.err.println("Different subclasses for the same limit Type");
+        System.err.println("    model");
+        System.err.println("        number, sample equipment Id, type with different subclasses");
+        limits.forEach((p, l) -> {
+            if (l.hasEquipmentWithSameLimitTypeAndDifferentSubclasses()) {
+                System.err.println(modelName(p));
+                l.sameLimitTypeAndDifferentSubclasses().forEach(ls -> System.err.printf("    %5d %-32s %s%n",
+                    l.sameLimitTypeAndDifferentSubclassesCount(ls),
+                    l.sameLimitTypeAndDifferentSubclassesSample(ls),
+                    ls));
+            }
+        });
     }
 
-    private void reportLimits(Map<Path, LimitsSummary> limits, Map<Path, String> mass) throws IOException {
+    private void reportLimits(String outputFilename, Map<Path, LimitsSummary> limits, Map<Path, String> mass)
+        throws IOException {
         boolean printHeader = true;
         boolean printTitle = false;
         TableFormatterConfig config = new TableFormatterConfig(Locale.US, ',', "-", printHeader, printTitle);
@@ -142,8 +156,8 @@ public class CatalogReview extends TestBase {
             new Column("Limit Subclass"),
             new Column("Limit Type Count")
         };
-        try (Writer writer = new OutputStreamWriter(System.err, StandardCharsets.UTF_8);
-            TableFormatter formatter = factory.create(writer, "OperationalLimits Summary", config, columns)) {
+        try (Writer writer = new FileWriter(outputFilename)) {
+            TableFormatter formatter = factory.create(writer, "OperationalLimits Summary", config, columns);
             limits.forEach((p, l) -> {
                 String m = modelName(p);
                 String tso = tsoName(p);
@@ -153,7 +167,6 @@ public class CatalogReview extends TestBase {
                 reportLimits(l.forEquipment(), formatter, m, tso, country, mas, "Equipment");
             });
         }
-
     }
 
     private void reportLimits(
