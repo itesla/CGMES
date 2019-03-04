@@ -120,12 +120,15 @@ public class CatalogReview extends TestBase {
             }
         });
         reportLimits(outputFilename, limits, mass);
+        reportLimitAnomalies(limits);
         reportWrong(wrong);
+    }
 
+    private void reportLimitAnomalies(Map<Path, LimitsSummary> limits) {
         System.err.println("Anomalies");
         System.err.println("Different subclasses for the same limit Type");
         System.err.println("    model");
-        System.err.println("        number, sample equipment Id, type with different subclasses");
+        System.err.println("        number of equipment, sample equipment Id, type with different subclasses");
         limits.forEach((p, l) -> {
             if (l.hasEquipmentWithSameLimitTypeAndDifferentSubclasses()) {
                 System.err.println(modelName(p));
