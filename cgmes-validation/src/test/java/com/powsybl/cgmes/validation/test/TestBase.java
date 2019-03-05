@@ -63,7 +63,10 @@ public class TestBase {
     }
 
     public Network convert(Path path, Properties params0, Path boundaries) {
-        Properties params = new Properties(params0);
+        Properties params = new Properties();
+        if (params0 != null) {
+            params.putAll(params0);
+        }
         if (boundaries != null) {
             params.put("useTheseBoundaries", dataSource(boundaries));
             throw new PowsyblException("Explicit boundaries not available");
