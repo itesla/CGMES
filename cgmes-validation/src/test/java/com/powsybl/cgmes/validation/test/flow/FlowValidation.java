@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
-import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -572,7 +571,7 @@ public class FlowValidation {
 
     private static final double BALANCE_TOLERANCE = 1.0;
     private static int          show;
-    private static PrepareModel inputModel;
+    private PrepareModel        inputModel;
     private double              bestError;
     private StringBuilder       modelReport;
 
