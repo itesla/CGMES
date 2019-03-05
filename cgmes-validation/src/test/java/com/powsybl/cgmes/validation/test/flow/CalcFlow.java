@@ -67,7 +67,6 @@ public class CalcFlow {
         modelCode = admittanceMatrix.getModelCode();
 
         if (!calcFlowT3xIsOk(r1, x1, r2, x2, r3, x3)) {
-            LOG.warn("T3x {}", transformer);
             return;
         }
 

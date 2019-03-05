@@ -27,7 +27,6 @@ import com.powsybl.triplestore.api.PropertyBag;
 public class FlowValidation {
 
     public FlowValidation(CgmesModel m) {
-        LOG.debug("Time {} PrepareModel", DateTime.now());
         inputModel = new PrepareModel(m);
         modelReport = new StringBuilder();
         bestError = Double.MAX_VALUE;
@@ -360,27 +359,10 @@ public class FlowValidation {
                             calcFlow.getModelCode());
                     writeToNodeBalanceData(nodeBalanceData, calcFlow, isLine, isT2x,
                             isT3x);
-
-                    if (line != null) {
-                        LOG.debug("Line {}  Line P {} Q {} balanceP {} balanceQ {}", line,
-                                line.asDouble("p"), line.asDouble("q"),
-                                node.asDouble("balanceP", 0.0),
-                                node.asDouble("balanceQ", 0.0));
-                    }
-                    if (transformer != null) {
-                        LOG.debug("Transformer {} P {} Q {} ", transformer,
-                                transformer.asDouble("p"),
-                                transformer.asDouble("q"));
-                    }
                 });
             }
 
             addNodeInjectionToJoinedBusBalance(node, nodeBalanceData);
-
-            LOG.debug("node {} ,  {}", n, inputModel.getEquipmentsInNode().get(n));
-            LOG.debug("node {} P {} Q {} balanceP {} balanceQ {}", n, node.asDouble("p"),
-                    node.asDouble("q"), nodeBalanceData.asDouble("balanceP"),
-                    nodeBalanceData.asDouble("balanceQ"));
         });
     }
 

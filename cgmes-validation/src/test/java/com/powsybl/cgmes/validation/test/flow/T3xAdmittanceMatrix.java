@@ -16,8 +16,6 @@ public class T3xAdmittanceMatrix extends AdmittanceMatrix3 {
     public void calculate(PropertyBag transformer, String config) {
         readT3xParameters(transformer);
 
-        LOG.debug(" transformer {}", transformer);
-
         // ratio configuration
         boolean rct1TabularDifferentRatios = false;
         double rtc1a = 1.0;
@@ -300,8 +298,6 @@ public class T3xAdmittanceMatrix extends AdmittanceMatrix3 {
         Complex aA22 = new Complex(a22 * Math.cos(angle22), a22 * Math.sin(angle22));
         Complex aA31 = new Complex(a31 * Math.cos(angle31), a31 * Math.sin(angle31));
         Complex aA32 = new Complex(a32 * Math.cos(angle32), a32 * Math.sin(angle32));
-        LOG.debug(" aA11 {} aA12 {} aA21 {} aA22 {} aA31 {} aA32 {}", aA11, aA12, aA21, aA22,
-                aA31, aA32);
 
         Complex z1 = new Complex(r1, x1);
         yff = z1.reciprocal().add(ysh11).divide(aA11.conjugate().multiply(aA11));

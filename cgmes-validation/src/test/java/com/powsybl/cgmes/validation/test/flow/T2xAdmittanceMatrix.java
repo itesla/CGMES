@@ -14,8 +14,6 @@ public class T2xAdmittanceMatrix extends AdmittanceMatrix {
     public void calculate(PropertyBag transformer, String config) {
         readT2xParameters(transformer);
 
-        LOG.debug(" transformer {}", transformer);
-
         // ratio configuration
         boolean rct1TabularDifferentRatios = false;
         double rtc1a = 1.0;
