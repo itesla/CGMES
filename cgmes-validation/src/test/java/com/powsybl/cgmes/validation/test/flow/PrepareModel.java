@@ -50,6 +50,30 @@ public class PrepareModel {
         return cgmes;
     }
 
+    public void setJoinedNodes(List<List<String>> joinedNodes) {
+        this.joinedNodes = joinedNodes;
+    }
+
+    public void setNodeParameters(Map<String, PropertyBag> nodeParameters) {
+        this.nodeParameters = nodeParameters;
+    }
+
+    public void setLineParameters(Map<String, PropertyBag> lineParameters) {
+        this.lineParameters = lineParameters;
+    }
+
+    public void setTransformerParameters(Map<String, PropertyBag> transformerParameters) {
+        this.transformerParameters = transformerParameters;
+    }
+
+    public void setEquipmentsInNode(Map<String, List<String>> equipmentsInNode) {
+        this.equipmentsInNode = equipmentsInNode;
+    }
+
+    public void setIsolatedNodes(Map<List<String>, Boolean> isolatedNodes) {
+        this.isolatedNodes = isolatedNodes;
+    }
+
     public PropertyBag getNodeParameters(String n) {
         return nodeParameters.get(n);
     }
@@ -120,6 +144,12 @@ public class PrepareModel {
                 node.add(id1);
             }
         });
+        cgmes.acLineSegments()
+                .forEach(l -> getZ0LinesNodesAd(l, CgmesNames.AC_LINE_SEGMENT, nodes));
+        cgmes.equivalentBranches().forEach(eb -> getZ0LinesNodesAd(eb, "EquivalentBranch", nodes));
+        cgmes.seriesCompensators()
+                .forEach(sc -> getZ0LinesNodesAd(sc, CgmesNames.SERIES_COMPENSATOR, nodes));
+        cgmes.groupedTransformerEnds().values().forEach(tends -> getZ0T2xNodesAd(tends, nodes));
 
         List<String> visitedNodes = new ArrayList<>();
         nodeParameters.keySet().forEach(k -> {
@@ -158,6 +188,53 @@ public class PrepareModel {
         });
 
         return joinedNodes;
+    }
+
+    private void getZ0LinesNodesAd(PropertyBag equipment, String cgmesNameId,
+            Map<String, List<String>> nodes) {
+        CgmesTerminal t1 = cgmes.terminal(equipment.getId(CgmesNames.TERMINAL + 1));
+        CgmesTerminal t2 = cgmes.terminal(equipment.getId(CgmesNames.TERMINAL + 2));
+        if (!t1.connected() || !t2.connected()) {
+            return;
+        }
+
+        double r = equipment.asDouble("r");
+        double x = equipment.asDouble("x");
+        String nodeId1 = t1.topologicalNode();
+        String nodeId2 = t2.topologicalNode();
+        if (!isZ0(r, x, nodeId1, nodeId2)) {
+            return;
+        }
+        List<String> node = nodes.computeIfAbsent(nodeId1, k -> new ArrayList<>());
+        node.add(nodeId2);
+        node = nodes.computeIfAbsent(nodeId2, k -> new ArrayList<>());
+        node.add(nodeId1);
+    }
+
+    private void getZ0T2xNodesAd(PropertyBags ends, Map<String, List<String>> nodes) {
+        if (ends.size() == 2) {
+            return;
+        }
+
+        CgmesTerminal t1 = cgmes.terminal(ends.get(0).getId(CgmesNames.TERMINAL));
+        CgmesTerminal t2 = cgmes.terminal(ends.get(1).getId(CgmesNames.TERMINAL));
+        if (!t1.connected() || !t2.connected()) {
+            return;
+        }
+
+        double r1 = ends.get(0).asDouble("r");
+        double x1 = ends.get(0).asDouble("x");
+        double r2 = ends.get(1).asDouble("r");
+        double x2 = ends.get(1).asDouble("x");
+        String nodeId1 = t1.topologicalNode();
+        String nodeId2 = t2.topologicalNode();
+        if (!isZ0(r1 + r2, x1 + x2, nodeId1, nodeId2)) {
+            return;
+        }
+        List<String> node = nodes.computeIfAbsent(nodeId1, k -> new ArrayList<>());
+        node.add(nodeId2);
+        node = nodes.computeIfAbsent(nodeId2, k -> new ArrayList<>());
+        node.add(nodeId1);
     }
 
     private Map<String, PropertyBag> nodeParameters(CgmesModel cgmes) {
@@ -209,6 +286,7 @@ public class PrepareModel {
         cgmes.asynchronousMachines().forEach(e -> terminalFlow(cgmes, nodes, e));
         cgmes.synchronousMachines().forEach(e -> terminalFlow(cgmes, nodes, e));
         cgmes.externalNetworkInjections().forEach(e -> terminalFlow(cgmes, nodes, e));
+        cgmes.acDcConverters().forEach(e -> terminalFlow(cgmes, nodes, e));
     }
 
     private void terminalFlow(CgmesModel cgmes, Map<String, PropertyBag> nodes,
@@ -238,7 +316,19 @@ public class PrepareModel {
         double qNode = node.asDouble("q");
 
         double pEquipment = t.flow().p();
+        if (Double.isNaN(pEquipment)) {
+            pEquipment = 0.0;
+            if (equipment.containsKey("p")) {
+                pEquipment = equipment.asDouble("p");
+            }
+        }
         double qEquipment = t.flow().q();
+        if (Double.isNaN(qEquipment)) {
+            qEquipment = 0.0;
+            if (equipment.containsKey("q")) {
+                qEquipment = equipment.asDouble("q");
+            }
+        }
 
         node.put("p", String.valueOf(pNode + pEquipment));
         node.put("q", String.valueOf(qNode + qEquipment));
@@ -297,104 +387,52 @@ public class PrepareModel {
 
         propertyNames = new ArrayList<>(Arrays.asList("r", "x", "bch"));
         Map<String, PropertyBag> lines = new HashMap<>();
-        cgmes.acLineSegments().forEach(l -> {
-            String id = l.getId(CgmesNames.AC_LINE_SEGMENT);
-            String r = l.get("r");
-            String x = l.get("x");
-            String bch = l.get("bch");
-
-            CgmesTerminal t1 = cgmes.terminal(l.getId(CgmesNames.TERMINAL + 1));
-            CgmesTerminal t2 = cgmes.terminal(l.getId(CgmesNames.TERMINAL + 2));
-            String nodeId1 = t1.topologicalNode();
-            boolean t1connected = t1.connected();
-            String nodeId2 = t2.topologicalNode();
-            boolean t2connected = t2.connected();
-            if (!t1connected && !t2connected) {
-                return;
-            }
-            PropertyBag line = lines.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
-            line.put("r", r);
-            line.put("x", x);
-            line.put("bch", bch);
-
-            line.put("terminal1", nodeId1);
-            if (t1connected) {
-                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
-                idLines.add(id);
-            }
-
-            line.put("terminal2", nodeId2);
-            line.put("connected", Boolean.toString(t1connected && t2connected));
-            if (t2connected) {
-                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
-                idLines.add(id);
-            }
-        });
-        cgmes.equivalentBranches().forEach(eb -> {
-            String id = eb.getId("EquivalentBranch");
-            String r = eb.get("r");
-            String x = eb.get("x");
-
-            CgmesTerminal t1 = cgmes.terminal(eb.getId(CgmesNames.TERMINAL + 1));
-            CgmesTerminal t2 = cgmes.terminal(eb.getId(CgmesNames.TERMINAL + 2));
-            String nodeId1 = t1.topologicalNode();
-            boolean t1connected = t1.connected();
-            String nodeId2 = t2.topologicalNode();
-            boolean t2connected = t2.connected();
-            if (!t1connected && !t2connected) {
-                return;
-            }
-            PropertyBag line = lines.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
-            line.put("r", r);
-            line.put("x", x);
-            line.put("bch", "0.0");
-
-            line.put("terminal1", nodeId1);
-            if (t1connected) {
-                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
-                idLines.add(id);
-            }
-
-            line.put("terminal2", nodeId2);
-            line.put("connected", Boolean.toString(t1connected && t2connected));
-            if (t1connected) {
-                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
-                idLines.add(id);
-            }
-        });
-        cgmes.seriesCompensators().forEach(sc -> {
-            String id = sc.getId(CgmesNames.SERIES_COMPENSATOR);
-            String r = sc.get("r");
-            String x = sc.get("x");
-
-            CgmesTerminal t1 = cgmes.terminal(sc.getId(CgmesNames.TERMINAL + 1));
-            CgmesTerminal t2 = cgmes.terminal(sc.getId(CgmesNames.TERMINAL + 2));
-            String nodeId1 = t1.topologicalNode();
-            boolean t1connected = t1.connected();
-            String nodeId2 = t2.topologicalNode();
-            boolean t2connected = t2.connected();
-            if (!t1connected && !t2connected) {
-                return;
-            }
-            PropertyBag line = lines.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
-            line.put("r", r);
-            line.put("x", x);
-            line.put("bch", "0.0");
-
-            line.put("terminal1", nodeId1);
-            if (t1connected) {
-                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
-                idLines.add(id);
-            }
-
-            line.put("terminal2", nodeId2);
-            line.put("connected", Boolean.toString(t1connected && t2connected));
-            if (t2connected) {
-                List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
-                idLines.add(id);
-            }
-        });
+        cgmes.acLineSegments()
+                .forEach(l -> getLineParameters(l, CgmesNames.AC_LINE_SEGMENT, lines));
+        cgmes.equivalentBranches().forEach(eb -> getLineParameters(eb, "EquivalentBranch", lines));
+        cgmes.seriesCompensators()
+                .forEach(sc -> getLineParameters(sc, CgmesNames.SERIES_COMPENSATOR, lines));
         return lines;
+    }
+
+    private void getLineParameters(PropertyBag equipment, String cgmesNameId,
+            Map<String, PropertyBag> lines) {
+        String id = equipment.getId(cgmesNameId);
+        double r = equipment.asDouble("r");
+        double x = equipment.asDouble("x");
+        double bch = equipment.asDouble("bch", 0.0);
+
+        CgmesTerminal t1 = cgmes.terminal(equipment.getId(CgmesNames.TERMINAL + 1));
+        CgmesTerminal t2 = cgmes.terminal(equipment.getId(CgmesNames.TERMINAL + 2));
+        String nodeId1 = t1.topologicalNode();
+        boolean t1connected = t1.connected();
+        String nodeId2 = t2.topologicalNode();
+        boolean t2connected = t2.connected();
+        if (!t1connected && !t2connected) {
+            return;
+        }
+        // Connected z0 lines are used to join buses
+        if (t1connected && t2connected && isZ0(r, x, nodeId1, nodeId2)) {
+            return;
+        }
+        PropertyBag line = lines.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
+        line.put("r", Double.toString(r));
+        line.put("x", Double.toString(x));
+        line.put("bch", Double.toString(bch));
+
+        line.put("terminal1", nodeId1);
+        line.put("connected1", Boolean.toString(t1connected));
+        if (t1connected) {
+            List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
+            idLines.add(id);
+        }
+
+        line.put("terminal2", nodeId2);
+        line.put("connected2", Boolean.toString(t2connected));
+        if (t2connected) {
+            List<String> idLines = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
+            idLines.add(id);
+        }
     }
 
     private Map<String, PropertyBag> transformerParameters(CgmesModel cgmes,
@@ -423,6 +461,24 @@ public class PrepareModel {
         cgmes.groupedTransformerEnds().entrySet().forEach(tends -> {
             String id = tends.getKey();
             PropertyBags ends = tends.getValue();
+            if (ends.size() == 2) {
+                PropertyBag end1 = ends.get(0);
+                PropertyBag end2 = ends.get(1);
+                CgmesTerminal t1 = cgmes.terminal(end1.getId(CgmesNames.TERMINAL));
+                CgmesTerminal t2 = cgmes.terminal(end2.getId(CgmesNames.TERMINAL));
+
+                double r1 = end1.asDouble("r");
+                double x1 = end1.asDouble("x");
+                double r2 = end2.asDouble("r");
+                double x2 = end2.asDouble("x");
+                String nodeId1 = t1.topologicalNode();
+                String nodeId2 = t2.topologicalNode();
+
+                if (t1.connected() && t2.connected() && isZ0(r1 + r2, x1 + x2, nodeId1, nodeId2)) {
+                    return;
+                }
+            }
+
             boolean partialConnected = false;
             for (PropertyBag end : ends) {
                 CgmesTerminal t = cgmes.terminal(end.getId(CgmesNames.TERMINAL));
@@ -431,9 +487,11 @@ public class PrepareModel {
                 }
             }
             if (partialConnected) {
+                // Add all ends. Associate with a node only it is connected to it
                 ends.forEach(end -> transformerEndParameters(cgmes, equipmentsInNode,
-                    powerTransformerRatioTapChanger, powerTransformerPhaseTapChanger, transformers,
-                    id, end));
+                        powerTransformerRatioTapChanger, powerTransformerPhaseTapChanger,
+                        transformers,
+                        id, end));
             }
         });
         return transformers;
@@ -554,6 +612,59 @@ public class PrepareModel {
             List<String> idTransformers = equipmentsInNode.computeIfAbsent(nodeId, z -> new ArrayList<>());
             idTransformers.add(id);
         }
+    }
+
+    private boolean isZ0(double r, double x, String nodeId1, String nodeId2) {
+        double z0Threshold = 0.00025;
+
+        PropertyBag node1 = nodeParameters.get(nodeId1);
+        if (node1 == null) {
+            node1 = voltages.get(nodeId1);
+        }
+        PropertyBag node2 = nodeParameters.get(nodeId2);
+        if (node2 == null) {
+            node2 = voltages.get(nodeId2);
+        }
+        if (node1 == null && node2 == null) {
+            return false;
+        }
+
+        double v1 = 0.0;
+        double vNominal1 = 0.0;
+        double angleDegrees1 = 0.0;
+        if (node1 != null) {
+            v1 = node1.asDouble("v");
+            vNominal1 = node1.asDouble("nominalV");
+            angleDegrees1 = node1.asDouble("angle");
+        }
+        double v2 = 0.0;
+        double vNominal2 = 0.0;
+        double angleDegrees2 = 0.0;
+        if (node2 != null) {
+            v2 = node2.asDouble("v");
+            vNominal2 = node2.asDouble("nominalV");
+            angleDegrees2 = node2.asDouble("angle");
+        }
+        double baseMVA = 100.0;
+        double vNominal = 1.0;
+        if (!Double.isNaN(vNominal1) && vNominal1 > vNominal) {
+            vNominal = vNominal1;
+        }
+        if (!Double.isNaN(vNominal2) && vNominal2 > vNominal) {
+            vNominal = vNominal2;
+        }
+        if (convertToPerUnit(r, baseMVA, vNominal) <= z0Threshold
+                && convertToPerUnit(x, baseMVA, vNominal) <= z0Threshold) {
+            return true;
+        }
+        if (v1 == v2 && angleDegrees1 == angleDegrees2) {
+            return true;
+        }
+        return false;
+    }
+
+    private double convertToPerUnit(double impedance, double baseMVA, double vNominal) {
+        return impedance * baseMVA / Math.pow(vNominal, 2.0);
     }
 
     private CgmesModel                 cgmes;
