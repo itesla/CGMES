@@ -122,7 +122,6 @@ public class FlowValidation {
         long notCalculatedNodes = validationData.balanceData.entrySet().stream().filter(entry -> {
             return !entry.getValue().asBoolean("calculated", false) && !entry.getValue().asBoolean("isolated", false);
         }).count();
-            
 
         long totalNodes = validationData.balanceData.values().size();
         long badNodes = validationData.balanceData.values().stream().filter(pb -> {
@@ -202,8 +201,8 @@ public class FlowValidation {
                 int lines = pb.asInt("line");
                 int t2xs = pb.asInt("t2x");
                 int t3xs = pb.asInt("t3x");
-                boolean okNode = calculatedNode && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) <= BALANCE_TOLERANCE; 
-                boolean badNode = calculatedNode && !badVoltage && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE; 
+                boolean okNode = calculatedNode && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) <= BALANCE_TOLERANCE;
+                boolean badNode = calculatedNode && !badVoltage && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
                 boolean badVoltageNode = calculatedNode && badVoltage && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
                 LOG.debug(
                         "id {} isolated {} calculated {} ok {} bad {} badVoltage {} balance {} {} lines {} t2xs {} t3xs {} nodes {}",
