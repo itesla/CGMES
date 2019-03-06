@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.powsybl.cgmes.validation.test;
+package com.powsybl.cgmes.validation.test.loadflow;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -61,6 +61,10 @@ public class LoadFlowComputation {
 
     public boolean available() {
         return loadFlowFactory != null;
+    }
+
+    public boolean isMock() {
+        return loadFlowFactory.getClass().getName().contains("Mock");
     }
 
     public void compute(

@@ -195,13 +195,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>license-maven-plugin</artifactId>
-				<configuration>
-					<licenseResolver>${project.baseUri}../src/license</licenseResolver>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
 </project>

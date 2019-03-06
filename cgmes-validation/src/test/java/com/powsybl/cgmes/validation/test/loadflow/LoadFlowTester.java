@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.powsybl.cgmes.validation.test;
+package com.powsybl.cgmes.validation.test.loadflow;
 
 import static org.junit.Assert.fail;
 
@@ -51,14 +51,19 @@ public class LoadFlowTester {
     }
 
     public void testLoadFlow(TestGridModel gm) throws IOException {
-        testLoadFlow(gm, this.loadFlowValidation);
+        testLoadFlow(gm, this.loadFlowValidation, null);
     }
 
     public void testLoadFlow(TestGridModel gm, LoadFlowValidation loadFlowValidation0) throws IOException {
         testLoadFlow(gm, loadFlowValidation0, null);
     }
 
-    public void testLoadFlow(TestGridModel gm, LoadFlowValidation loadFlowValidation0, Properties importParams0) throws IOException {
+    public void testLoadFlow(TestGridModel gm, LoadFlowValidation loadFlowValidation0, Properties importParams0)
+        throws IOException {
+        if (gm.dataSource().getBaseName().isEmpty()) {
+            LOG.error("Test grid model does not exist ? {}", gm.name());
+            fail();
+        }
         LoadFlowValidation loadFlowValidation = loadFlowValidation0;
         if (loadFlowValidation == null) {
             loadFlowValidation = loadFlowValidationFor(gm);
@@ -67,7 +72,6 @@ public class LoadFlowTester {
             LOG.error("LoadFlowValidation not avaialable");
             fail();
         }
-        // TODO receive import parameters for the test
         Properties iparams = importParams0 == null ? new Properties() : importParams0;
         iparams.put("storeCgmesModelAsNetworkExtension", "true");
         // Ensure properties are stored as strings
@@ -84,7 +88,8 @@ public class LoadFlowTester {
         }
     }
 
-    private void testLoadFlow0(TestGridModel gm, LoadFlowValidation loadFlowValidation, Properties iparams) throws IOException {
+    private void testLoadFlow0(TestGridModel gm, LoadFlowValidation loadFlowValidation, Properties iparams)
+        throws IOException {
         CgmesImport i = new CgmesImport();
         ReadOnlyDataSource ds = gm.dataSource();
         Network network = i.importData(ds, iparams);
@@ -109,12 +114,12 @@ public class LoadFlowTester {
         String name1 = gm.name().replace('/', '-');
         Path working = Files.createTempDirectory("temp-loadflow-validation-" + name1 + "-");
         return new LoadFlowValidation.Builder()
-                .workingDirectory(working)
-                .writeNetworksInputsResults(true)
-                // Assume all test cases are solved
-                .validateInitialState(true)
-                .compareWithInitialState(true)
-                .build();
+            .workingDirectory(working)
+            .writeNetworksInputsResults(true)
+            // Assume all test cases are solved
+            .validateInitialState(true)
+            .compareWithInitialState(true)
+            .build();
     }
 
     private final List<String> tripleStoreImplementations;
