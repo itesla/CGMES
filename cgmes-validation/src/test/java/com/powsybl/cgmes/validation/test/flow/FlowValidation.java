@@ -75,7 +75,11 @@ public class FlowValidation {
         Comparator<Map.Entry<String, ValidationData>> byBalance = (
                 Entry<String, ValidationData> o1,
                 Entry<String, ValidationData> o2) -> {
-            return Double.compare(o1.getValue().balance, o2.getValue().balance);
+            int cp = Double.compare(o1.getValue().balance, o2.getValue().balance);
+            if (cp == 0) {
+                return Integer.compare(o1.getKey().length(), o2.getKey().length());
+            }
+            return cp;
         };
 
         Map<String, ValidationData> sortedMappingConfigurationData = mappingConfigurationData
