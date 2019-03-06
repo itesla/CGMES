@@ -1,7 +1,10 @@
 package com.powsybl.cgmes.validation.test;
 
+import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.PrintStream;
@@ -28,8 +31,16 @@ public class LimitsSummary {
         forEquipment = Collections.emptyList();
         limitTypesDifferentSubclass = Collections.emptyMap();
         limitTypesDifferentSubclassCount = Collections.emptyMap();
+        eqClassNumObjects = Collections.emptyMap();
+        countsByEqClassAndLimitType = Collections.emptyMap();
     }
 
+    // We want to know:
+    // Which models use limits defined using Apparent Power values.
+    // How many equipment receive these limits
+    // (as a % of the total # of equipment in the class).
+    // How many equipment have both Apparent Power and Current limit values for the
+    // same type of limit (say PATL given as both an Apparent Power and a Current)
     public LimitsSummary(CgmesModel cgmes) {
         PropertyBags limits = cgmes.operationalLimits();
         forTerminals = summary(() -> limits.stream().filter(l -> l.containsKey("Terminal")), cgmes);
@@ -41,8 +52,7 @@ public class LimitsSummary {
         Map<String, Set<LimitType>> els = limits.stream()
             .collect(groupingBy(l -> equipmentId(l, cgmes),
                 mapping(LimitType::new, toSet())));
-        // Then select the equipment that has multiple subclasses for the same limit
-        // type
+        // Select the equipment that has multiple subclasses for the same limit type
         els.forEach((id, ls) -> {
             if (ls.size() > 1) {
                 Map<String, Set<String>> lts = ls.stream()
@@ -57,6 +67,22 @@ public class LimitsSummary {
                 }
             }
         });
+
+        // Group by Equipment Class, then by LimitType,
+        // count unique EquipmentId
+        countsByEqClassAndLimitType = limits.stream()
+            .collect(
+                groupingBy(
+                    l -> equipmentClass(l, cgmes),
+                    groupingBy(LimitType::new,
+                        Collectors.collectingAndThen(
+                            Collectors.mapping(l -> equipmentId(l, cgmes), Collectors.toSet()),
+                            Set::size))));
+
+        eqClassNumObjects = cgmes.numObjectsByType().stream()
+            .collect(toMap(
+                p -> p.getLocal("Type"),
+                p -> p.asInt("numObjects")));
     }
 
     public List<Limits> forTerminals() {
@@ -65,6 +91,10 @@ public class LimitsSummary {
 
     public List<Limits> forEquipment() {
         return forEquipment;
+    }
+
+    public Map<String, Integer> eqClassNumObjects() {
+        return eqClassNumObjects;
     }
 
     public boolean hasEquipmentWithSameLimitTypeAndDifferentSubclasses() {
@@ -81,6 +111,10 @@ public class LimitsSummary {
 
     public int sameLimitTypeAndDifferentSubclassesCount(Map<String, Set<String>> ls) {
         return limitTypesDifferentSubclassCount.get(ls);
+    }
+
+    public Map<String, Map<LimitType, Integer>> countsByEqClassAndLimitType() {
+        return countsByEqClassAndLimitType;
     }
 
     public void report(PrintStream p) {
@@ -103,16 +137,16 @@ public class LimitsSummary {
     private List<Limits> summary(Supplier<Stream<PropertyBag>> limits, CgmesModel cgmes) {
         Set<String> equipmentClasses = limits.get()
             .map(l -> equipmentClass(l, cgmes))
-            .collect(Collectors.toSet());
+            .collect(toSet());
         return equipmentClasses.stream()
             .map(equipmentClass -> {
                 Supplier<Stream<PropertyBag>> classLimits = () -> limits.get()
                     .filter(l -> equipmentClass(l, cgmes).equals(equipmentClass));
                 Map<LimitType, Long> types = classLimits.get()
                     .map(l -> new LimitType(l))
-                    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+                    .collect(groupingBy(Function.identity(), counting()));
                 return new Limits(equipmentClass, classLimits.get().count(), types);
-            }).collect(Collectors.toList());
+            }).collect(toList());
     }
 
     private static String equipmentClass(PropertyBag limit, CgmesModel cgmes) {
@@ -183,4 +217,6 @@ public class LimitsSummary {
     private final List<Limits> forEquipment;
     private final Map<Map<String, Set<String>>, String> limitTypesDifferentSubclass;
     private final Map<Map<String, Set<String>>, Integer> limitTypesDifferentSubclassCount;
+    private final Map<String, Integer> eqClassNumObjects;
+    private final Map<String, Map<LimitType, Integer>> countsByEqClassAndLimitType;
 }

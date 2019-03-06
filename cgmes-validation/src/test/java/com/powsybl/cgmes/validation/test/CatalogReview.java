@@ -120,15 +120,36 @@ public class CatalogReview extends TestBase {
             }
         });
         reportLimits(outputFilename, limits, mass);
+        reportLimitUseByEqClass(limits);
         reportLimitAnomalies(limits);
         reportWrong(wrong);
     }
 
+    private void reportLimitUseByEqClass(Map<Path, LimitsSummary> limits) {
+        System.err.println("Use of Limit Types by Equipment Class");
+        limits.forEach((p, l) -> {
+            System.err.println(modelName(p));
+            l.countsByEqClassAndLimitType().forEach((eqclass, ls) -> {
+                long numObjectsClass = l.eqClassNumObjects().get(eqclass);
+                System.err.printf("    %6d %s%n", numObjectsClass, eqclass);
+                ls.forEach((type, numLimits) -> {
+                    System.err.printf("        %6d %5.1f%% %s%n", numLimits, 100.0 * numLimits / numObjectsClass, type);
+                });
+            });
+        });
+    }
+
     private void reportLimitAnomalies(Map<Path, LimitsSummary> limits) {
-        System.err.println("Anomalies");
-        System.err.println("Different subclasses for the same limit Type");
-        System.err.println("    model");
-        System.err.println("        number of equipment, sample equipment Id, type with different subclasses");
+        boolean found = limits.values().stream()
+            .filter(LimitsSummary::hasEquipmentWithSameLimitTypeAndDifferentSubclasses)
+            .findAny()
+            .isPresent();
+        if (found) {
+            System.err.println("Anomalies");
+            System.err.println("Different subclasses for the same limit Type");
+            System.err.println("    model");
+            System.err.println("        number of equipment, sample equipment Id, type with different subclasses");
+        }
         limits.forEach((p, l) -> {
             if (l.hasEquipmentWithSameLimitTypeAndDifferentSubclasses()) {
                 System.err.println(modelName(p));
