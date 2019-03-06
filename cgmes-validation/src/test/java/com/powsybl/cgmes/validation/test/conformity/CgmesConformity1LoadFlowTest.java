@@ -129,23 +129,6 @@ public class CgmesConformity1LoadFlowTest {
     }
 
     @Test
-    public void microGridType4BE() throws IOException {
-        TestGridModel t = catalog.microGridType4BE();
-        LoadFlowValidation validation = new LoadFlowValidation.Builder()
-            .workingDirectory(working.resolve(t.name()))
-            .writeNetworksInputsResults(true)
-            .validateInitialState(true)
-            .specificCompatibility(true)
-            .maxBusesFailInitialState(1)
-            // TODO _3a3b27be does not have reactive margins as synchronous machine
-            // properties
-            // But it has a reactive capability curve
-            .maxGeneratorsFailInitialState(1)
-            .build();
-        tester.testLoadFlow(t, validation);
-    }
-
-    @Test
     public void miniBusBranch() throws IOException {
         TestGridModel t = catalog.miniBusBranch();
         LoadFlowValidation validation = new LoadFlowValidation.Builder()
