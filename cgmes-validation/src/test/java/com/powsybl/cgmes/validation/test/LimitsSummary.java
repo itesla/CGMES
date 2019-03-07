@@ -33,6 +33,7 @@ public class LimitsSummary {
         limitTypesDifferentSubclassCount = Collections.emptyMap();
         eqClassNumObjects = Collections.emptyMap();
         countsByEqClassAndLimitType = Collections.emptyMap();
+        countsByEqClassAndLimitTypeAndTerminal = Collections.emptyMap();
     }
 
     // We want to know:
@@ -79,6 +80,16 @@ public class LimitsSummary {
                             Collectors.mapping(l -> equipmentId(l, cgmes), Collectors.toSet()),
                             Set::size))));
 
+        countsByEqClassAndLimitTypeAndTerminal = limits.stream()
+            .collect(
+                groupingBy(
+                    l -> equipmentClass(l, cgmes),
+                    groupingBy(LimitType::new,
+                        groupingBy(l -> l.containsKey("Terminal") ? "Terminal" : "Equipment",
+                            Collectors.collectingAndThen(
+                                Collectors.mapping(l -> equipmentId(l, cgmes), Collectors.toSet()),
+                                Set::size)))));
+
         eqClassNumObjects = cgmes.numObjectsByType().stream()
             .collect(toMap(
                 p -> p.getLocal("Type"),
@@ -115,6 +126,10 @@ public class LimitsSummary {
 
     public Map<String, Map<LimitType, Integer>> countsByEqClassAndLimitType() {
         return countsByEqClassAndLimitType;
+    }
+
+    public Map<String, Map<LimitType, Map<String, Integer>>> countsByEqClassAndLimitTypeAndTerminal() {
+        return countsByEqClassAndLimitTypeAndTerminal;
     }
 
     public void report(PrintStream p) {
@@ -219,4 +234,5 @@ public class LimitsSummary {
     private final Map<Map<String, Set<String>>, Integer> limitTypesDifferentSubclassCount;
     private final Map<String, Integer> eqClassNumObjects;
     private final Map<String, Map<LimitType, Integer>> countsByEqClassAndLimitType;
+    private final Map<String, Map<LimitType, Map<String, Integer>>> countsByEqClassAndLimitTypeAndTerminal;
 }

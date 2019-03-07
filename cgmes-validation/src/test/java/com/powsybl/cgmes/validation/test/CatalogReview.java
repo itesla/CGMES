@@ -121,6 +121,7 @@ public class CatalogReview extends TestBase {
         });
         reportLimits(outputFilename, limits, mass);
         reportLimitUseByEqClass(limits);
+        reportLimitUseByEqClass3(limits);
         reportLimitAnomalies(limits);
         reportWrong(wrong);
     }
@@ -134,6 +135,26 @@ public class CatalogReview extends TestBase {
                 System.err.printf("    %6d %s%n", numObjectsClass, eqclass);
                 ls.forEach((type, numLimits) -> {
                     System.err.printf("        %6d %5.1f%% %s%n", numLimits, 100.0 * numLimits / numObjectsClass, type);
+                });
+            });
+        });
+    }
+
+    private void reportLimitUseByEqClass3(Map<Path, LimitsSummary> limits) {
+        System.err.println("Use of Limit Types by Equipment Class 3");
+        limits.forEach((p, l) -> {
+            System.err.println(modelName(p));
+            l.countsByEqClassAndLimitTypeAndTerminal().forEach((eqclass, ls) -> {
+                long numObjectsClass = l.eqClassNumObjects().get(eqclass);
+                System.err.printf("    %6d %s%n", numObjectsClass, eqclass);
+                ls.forEach((type, tels) -> {
+                    System.err.printf("           %s%n", type);
+                    tels.forEach((te, numLimits) -> {
+                        System.err.printf("               %6d %5.1f%% %s%n",
+                            numLimits,
+                            100.0 * numLimits / numObjectsClass,
+                            te);
+                    });
                 });
             });
         });
