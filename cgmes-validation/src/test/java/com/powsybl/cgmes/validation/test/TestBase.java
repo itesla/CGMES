@@ -38,20 +38,20 @@ import com.powsybl.loadflow.validation.ValidationType;
 
 public class TestBase {
 
-    public TestBase(String sdata) {
-        this.data = Paths.get(sdata);
+    public TestBase(String dataRootFoldername) {
+        this.rootDataFolder = Paths.get(dataRootFoldername);
     }
 
     public Network convert(String rpath) {
-        return convert(this.data.resolve(rpath), null);
+        return convert(this.rootDataFolder.resolve(rpath), null);
     }
 
     public Network convert(String rpath, Properties params) {
-        return convert(this.data.resolve(rpath), params);
+        return convert(this.rootDataFolder.resolve(rpath), params);
     }
 
     public Network convert(String rpath, Properties params, String rboundaries) {
-        return convert(this.data.resolve(rpath), params, this.data.resolve(rboundaries));
+        return convert(this.rootDataFolder.resolve(rpath), params, this.rootDataFolder.resolve(rboundaries));
     }
 
     public Network convert(Path path) {
@@ -237,5 +237,5 @@ public class TestBase {
         return true;
     }
 
-    protected final Path data;
+    protected final Path rootDataFolder;
 }
