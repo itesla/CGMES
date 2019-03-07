@@ -1,5 +1,7 @@
 package com.powsybl.cgmes.validation.test.flow;
 
+import java.nio.file.Paths;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -22,41 +24,41 @@ public class CgmesFlowValidationTool implements Tool {
 
             @Override
             public String getDescription() {
-                return "validates all networks in a path";
+                return "Inferes interpretations of CGMES models found in a catalog";
             }
 
             @Override
             public String getName() {
-                return "flow-validation";
+                return "cgmes-model-interpretation";
             }
 
             @Override
             public Options getOptions() {
                 Options options = new Options();
                 options.addOption(Option.builder().longOpt(INPUT_PATH)
-                        .desc("the input path")
-                        .hasArg()
-                        .argName("INPUT_PATH")
-                        .required()
-                        .build());
+                    .desc("the input path")
+                    .hasArg()
+                    .argName("INPUT_PATH")
+                    .required()
+                    .build());
                 options.addOption(Option.builder().longOpt(INPUT_PATTERN)
-                        .desc("pattern to the input files")
-                        .hasArg()
-                        .argName("INPUT_PATTERN")
-                        .required()
-                        .build());
+                    .desc("pattern to the input files")
+                    .hasArg()
+                    .argName("INPUT_PATTERN")
+                    .required()
+                    .build());
                 options.addOption(Option.builder().longOpt(OUTPUT_PATH)
-                        .desc("the output path")
-                        .hasArg()
-                        .argName("OUTPUT_PATH")
-                        .required()
-                        .build());
+                    .desc("the output path")
+                    .hasArg()
+                    .argName("OUTPUT_PATH")
+                    .required()
+                    .build());
                 return options;
             }
 
             @Override
             public String getTheme() {
-                return "Flows validation";
+                return "Data conversion";
             }
 
             @Override
@@ -72,9 +74,8 @@ public class CgmesFlowValidationTool implements Tool {
         String inputPattern = line.getOptionValue(INPUT_PATTERN);
         String outputPath = line.getOptionValue(OUTPUT_PATH);
 
-        CgmesFlowValidation cgmesFlowValidation = new CgmesFlowValidation(inputPath);
-        cgmesFlowValidation.setReportPath(outputPath);
-        cgmesFlowValidation.reviewAll(inputPattern);
+        CgmesModelsInterpretation cgmesFlowValidation = new CgmesModelsInterpretation(inputPath);
+        new InterpretationsReport(Paths.get(outputPath)).report(cgmesFlowValidation.reviewAll(inputPattern));
     }
 
 }

@@ -1,0 +1,5 @@
+#!/bin/bash
+CATALOG=$1
+PATTERN=$2
+EXEC_ARGS="flow-validation --input-path ${CATALOG} --input-pattern ${PATTERN} --output-path ${CATALOG}"
+mvn exec:java --projects cgmes-validation -Dexec.mainClass=com.powsybl.tools.Main -Dexec.classpathScope=test -Dexec.args="${EXEC_ARGS}"

@@ -1,16 +1,23 @@
 package com.powsybl.cgmes.validation.test.flow;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CgmesFlowValidationTest {
 
+    private static final String CATALOG_PATH = "/Users/zamarrenolm/works/RTE/data";
+
     @BeforeClass
     public static void setUp() throws IOException {
-        cgmesFlowValidation = new CgmesFlowValidation("\\cgmes-csi\\IOP\\CGMES_IOP_20190116");
-        cgmesFlowValidation.setReportPath("\\cgmes-csi\\IOP\\CGMES_IOP_20190116");
+        cgmesFlowValidation = new CgmesModelsInterpretation(CATALOG_PATH);
+    }
+
+    @Test
+    public void reviewAst() throws IOException {
+        new InterpretationsReport(Paths.get(CATALOG_PATH)).report(cgmesFlowValidation.reviewAll("glob:**ast*/*zip"));
     }
 
     @Test
@@ -33,5 +40,5 @@ public class CgmesFlowValidationTest {
         cgmesFlowValidation.reviewAll("glob:**BD*BusBranch**1130*zip");
     }
 
-    static CgmesFlowValidation cgmesFlowValidation;
+    static CgmesModelsInterpretation cgmesFlowValidation;
 }

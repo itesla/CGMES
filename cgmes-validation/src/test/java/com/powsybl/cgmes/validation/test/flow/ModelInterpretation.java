@@ -23,21 +23,22 @@ import org.slf4j.LoggerFactory;
 import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.triplestore.api.PropertyBag;
 
-public class FlowValidation {
+public class ModelInterpretation {
 
     private static final double BALANCE_TOLERANCE = 1.0;
-    private static final int    SHOW_NODES = 5;
+    private static final int SHOW_NODES = 5;
 
-    public FlowValidation(CgmesModel m) {
+    public ModelInterpretation(CgmesModel m, String name) {
+        modelName = name;
         inputModel = new PrepareModel(m);
         modelReport = new StringBuilder();
         bestError = Double.MAX_VALUE;
     }
 
-    public void modelValidation(String modelname) throws IOException {
+    public void interpret() throws IOException {
         inputModel.loadModel();
         Map<String, ValidationData> mappingConfigurationData = calculateAllMappingConfigurationBalances();
-        generateModelReport(modelname, mappingConfigurationData);
+        generateModelReport(modelName, mappingConfigurationData);
     }
 
     public void testBalances(String modelname) throws IOException {
@@ -49,8 +50,11 @@ public class FlowValidation {
         this.inputModel = inputModel;
     }
 
-    public String getReport() {
-        return modelReport.toString();
+    public InterpretationResult getInterpretation() {
+        InterpretationResult r = new InterpretationResult();
+        r.error = bestError;
+        r.report = modelReport.toString();
+        return r;
     }
 
     public double getBestError() {
@@ -67,17 +71,18 @@ public class FlowValidation {
         configs.add("T2x_yshunt_split.T3x_yshunt_split.Line_ratio0_on");
         configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on");
         configs.add("T2x_yshunt_split.T3x_yshunt_split.T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on");
-        configs.add("T2x_yshunt_split.T3x_yshunt_split.T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.Line_ratio0_on");
+        configs.add(
+            "T2x_yshunt_split.T3x_yshunt_split.T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.Line_ratio0_on");
         configs.add("T3x_ratio0_outside");
 
     }
 
     private void generateModelReport(String model,
-            Map<String, ValidationData> mappingConfigurationData) {
+        Map<String, ValidationData> mappingConfigurationData) {
 
         Comparator<Map.Entry<String, ValidationData>> byBalance = (
-                Entry<String, ValidationData> o1,
-                Entry<String, ValidationData> o2) -> {
+            Entry<String, ValidationData> o1,
+            Entry<String, ValidationData> o2) -> {
             int cp = Double.compare(o1.getValue().balance, o2.getValue().balance);
             if (cp == 0) {
                 return Integer.compare(o1.getKey().length(), o2.getKey().length());
@@ -86,11 +91,11 @@ public class FlowValidation {
         };
 
         Map<String, ValidationData> sortedMappingConfigurationData = mappingConfigurationData
-                .entrySet().stream()
-                .sorted(byBalance)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
-                    throw new AssertionError();
-                }, LinkedHashMap::new));
+            .entrySet().stream()
+            .sorted(byBalance)
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
+                throw new AssertionError();
+            }, LinkedHashMap::new));
 
         ValidationData bestConfig = sortedMappingConfigurationData.values().iterator().next();
         bestError = bestConfig.balance;
@@ -98,18 +103,18 @@ public class FlowValidation {
         StringBuilder modelReportBuilder = new StringBuilder();
         DateTimeFormatter fmt = DateTimeFormat.forPattern("HH:mm");
         modelReportBuilder.append(String.format("----> model %s time %s", model,
-                fmt.print(inputModel.getCgmes().scenarioTime())));
+            fmt.print(inputModel.getCgmes().scenarioTime())));
         modelReportBuilder.append(System.getProperty("line.separator"));
         sortedMappingConfigurationData.keySet()
-                .forEach(mappingConfiguration -> validationReport(model, mappingConfiguration,
-                        mappingConfigurationData.get(mappingConfiguration), modelReportBuilder));
+            .forEach(mappingConfiguration -> validationReport(model, mappingConfiguration,
+                mappingConfigurationData.get(mappingConfiguration), modelReportBuilder));
         modelReport.append(modelReportBuilder.toString());
     }
 
     private void validationReport(String model, String mappingConfiguration,
-            ValidationData validationData, StringBuilder modelReportBuilder) {
+        ValidationData validationData, StringBuilder modelReportBuilder) {
         validationReportHeaderSection(model, mappingConfiguration, validationData,
-                modelReportBuilder);
+            modelReportBuilder);
         validationReportBalanceSection(validationData, modelReportBuilder);
         validationReportNonBadNodesSection(validationData, modelReportBuilder);
         validationReportBadVoltageNodesSection(validationData, modelReportBuilder);
@@ -117,14 +122,14 @@ public class FlowValidation {
     }
 
     private void validationReportHeaderSection(String model, String mappingConfiguration,
-            ValidationData validationData, StringBuilder modelReportBuilder) {
+        ValidationData validationData, StringBuilder modelReportBuilder) {
         LOG.debug("----> config {}", mappingConfiguration);
         modelReportBuilder.append(String.format("----> config %s", mappingConfiguration));
         modelReportBuilder.append(System.getProperty("line.separator"));
     }
 
     private void validationReportBalanceSection(ValidationData validationData,
-            StringBuilder modelReportBuilder) {
+        StringBuilder modelReportBuilder) {
 
         long notCalculatedNodes = validationData.balanceData.entrySet().stream().filter(entry -> {
             return !entry.getValue().asBoolean("calculated", false) && !entry.getValue().asBoolean("isolated", false);
@@ -135,21 +140,21 @@ public class FlowValidation {
             return pb.asBoolean("calculated", false) && !pb.asBoolean("badVoltage", false);
         }).filter(pb -> {
             return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
+                + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
         }).count();
 
         long badVoltageNodes = validationData.balanceData.values().stream().filter(pb -> {
             return pb.asBoolean("calculated", false) && pb.asBoolean("badVoltage", false);
         }).filter(pb -> {
             return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
+                + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
         }).count();
 
         long okNodes = validationData.balanceData.values().stream().filter(pb -> {
             return pb.asBoolean("calculated", false);
         }).filter(pb -> {
             return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) <= BALANCE_TOLERANCE;
+                + Math.abs(pb.asDouble("balanceQ"))) <= BALANCE_TOLERANCE;
         }).count();
 
         long isolatedNodes = validationData.balanceData.values().stream().filter(pb -> {
@@ -160,61 +165,62 @@ public class FlowValidation {
             return pb.asBoolean("calculated", false) && pb.asBoolean("badVoltage", false);
         }).filter(pb -> {
             return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
+                + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
         }).map(pb -> {
             return Math.abs(pb.asDouble("balanceP"))
-                            + Math.abs(pb.asDouble("balanceQ"));
+                + Math.abs(pb.asDouble("balanceQ"));
         }).mapToDouble(Double::doubleValue).sum();
 
         double badNodesError = validationData.balanceData.values().stream().filter(pb -> {
             return pb.asBoolean("calculated", false) && !pb.asBoolean("badVoltage", false);
         }).filter(pb -> {
             return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
+                + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
         }).map(pb -> {
             return Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ"));
         }).mapToDouble(Double::doubleValue).sum();
 
         LOG.debug(
-                "total error {} total nodes {} isolated nodes {} notCalculated nodes {} ok nodes {} bad error {} bad nodes {} pct {} badVoltage error {} badVoltage nodes {} pct {}",
-                validationData.balance, totalNodes, isolatedNodes, notCalculatedNodes, okNodes, badNodesError, badNodes,
-                Long.valueOf(badNodes).doubleValue()
-                        / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
-                badVoltageNodesError, badVoltageNodes,
-                Long.valueOf(badVoltageNodes).doubleValue()
-                        / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0);
+            "total error {} total nodes {} isolated nodes {} notCalculated nodes {} ok nodes {} bad error {} bad nodes {} pct {} badVoltage error {} badVoltage nodes {} pct {}",
+            validationData.balance, totalNodes, isolatedNodes, notCalculatedNodes, okNodes, badNodesError, badNodes,
+            Long.valueOf(badNodes).doubleValue()
+                / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
+            badVoltageNodesError, badVoltageNodes,
+            Long.valueOf(badVoltageNodes).doubleValue()
+                / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0);
         modelReportBuilder.append(String.format(
-                "total error %f total nodes %d isolated nodes %d notCalculated nodes %d ok nodes %d bad error %f bad nodes %d pct %f badVoltage error %f badVoltage nodes %d pct %f",
-                validationData.balance, totalNodes, isolatedNodes, notCalculatedNodes, okNodes, badNodesError, badNodes,
-                Long.valueOf(badNodes).doubleValue()
-                        / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
-                badVoltageNodesError, badVoltageNodes,
-                Long.valueOf(badVoltageNodes).doubleValue()
-                        / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0));
+            "total error %f total nodes %d isolated nodes %d notCalculated nodes %d ok nodes %d bad error %f bad nodes %d pct %f badVoltage error %f badVoltage nodes %d pct %f",
+            validationData.balance, totalNodes, isolatedNodes, notCalculatedNodes, okNodes, badNodesError, badNodes,
+            Long.valueOf(badNodes).doubleValue()
+                / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
+            badVoltageNodesError, badVoltageNodes,
+            Long.valueOf(badVoltageNodes).doubleValue()
+                / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0));
         modelReportBuilder.append(System.getProperty("line.separator"));
     }
 
     private void validationReportNonBadNodesSection(ValidationData validationData,
-            StringBuilder modelReportBuilder) {
+        StringBuilder modelReportBuilder) {
         boolean showOnlyBadVoltageNodes = false;
         validationReportNodesSection(validationData, modelReportBuilder, showOnlyBadVoltageNodes);
     }
 
     private void validationReportBadVoltageNodesSection(ValidationData validationData,
-            StringBuilder modelReportBuilder) {
+        StringBuilder modelReportBuilder) {
         boolean showOnlyBadVoltageNodes = true;
         validationReportNodesSection(validationData, modelReportBuilder, showOnlyBadVoltageNodes);
     }
 
     private void validationReportNodesSection(ValidationData validationData,
-            StringBuilder modelReportBuilder, boolean showOnlyBadVoltageNodes) {
+        StringBuilder modelReportBuilder, boolean showOnlyBadVoltageNodes) {
         validationData.balanceData.keySet().stream().filter(nodes -> {
             PropertyBag pb = validationData.balanceData.get(nodes);
             double nodeBalanceP = pb.asDouble("balanceP");
             double nodeBalanceQ = pb.asDouble("balanceQ");
             boolean calculatedNode = pb.asBoolean("calculated", false);
             boolean badVoltage = pb.asBoolean("badVoltage", false);
-            boolean badVoltageNode = calculatedNode && badVoltage && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
+            boolean badVoltageNode = calculatedNode && badVoltage
+                && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
             return !showOnlyBadVoltageNodes && !badVoltageNode || showOnlyBadVoltageNodes && badVoltageNode;
         }).limit(SHOW_NODES).forEach(nodes -> {
             PropertyBag pb = validationData.balanceData.get(nodes);
@@ -227,45 +233,47 @@ public class FlowValidation {
             int t2xs = pb.asInt("t2x");
             int t3xs = pb.asInt("t3x");
             boolean okNode = calculatedNode && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) <= BALANCE_TOLERANCE;
-            boolean badNode = calculatedNode && !badVoltage && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
-            boolean badVoltageNode = calculatedNode && badVoltage && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
+            boolean badNode = calculatedNode && !badVoltage
+                && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
+            boolean badVoltageNode = calculatedNode && badVoltage
+                && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
             LOG.debug(
-                    "id {} isolated {} calculated {} ok {} bad {} badVoltage {} balance {} {} lines {} t2xs {} t3xs {} nodes {}",
-                    nodes.iterator().next(), isolatedNode, calculatedNode, okNode, badNode, badVoltageNode, nodeBalanceP,
-                    nodeBalanceQ, lines, t2xs, t3xs, nodes);
+                "id {} isolated {} calculated {} ok {} bad {} badVoltage {} balance {} {} lines {} t2xs {} t3xs {} nodes {}",
+                nodes.iterator().next(), isolatedNode, calculatedNode, okNode, badNode, badVoltageNode, nodeBalanceP,
+                nodeBalanceQ, lines, t2xs, t3xs, nodes);
             modelReportBuilder.append(String.format(
-                    "id %s isolated %b calculated %b ok %b bad %b badVoltage %b balance %f %f lines %d t2xs %d t3xs %d nodes %s",
-                    nodes.iterator().next(), isolatedNode, calculatedNode, okNode, badNode, badVoltageNode, nodeBalanceP,
-                    nodeBalanceQ, lines, t2xs, t3xs, nodes));
+                "id %s isolated %b calculated %b ok %b bad %b badVoltage %b balance %f %f lines %d t2xs %d t3xs %d nodes %s",
+                nodes.iterator().next(), isolatedNode, calculatedNode, okNode, badNode, badVoltageNode, nodeBalanceP,
+                nodeBalanceQ, lines, t2xs, t3xs, nodes));
             modelReportBuilder.append(System.getProperty("line.separator"));
         });
     }
 
     private void validationReportModelCodeSection(ValidationData validationData,
-            StringBuilder modelReportBuilder) {
+        StringBuilder modelReportBuilder) {
         Map<String, Triple<Integer, Integer, Integer>> sortedByModelCodeReport = new TreeMap<String, Triple<Integer, Integer, Integer>>(
-                new Comparator<String>() {
-                    @Override
-                    public int compare(String s1, String s2) {
-                        if (s1.length() == s2.length()) {
-                            return s1.compareTo(s2);
-                        }
-                        return Integer.compare(s1.length(), s2.length());
+            new Comparator<String>() {
+                @Override
+                public int compare(String s1, String s2) {
+                    if (s1.length() == s2.length()) {
+                        return s1.compareTo(s2);
                     }
-                });
+                    return Integer.compare(s1.length(), s2.length());
+                }
+            });
 
         sortedByModelCodeReport.putAll(validationData.modelCodeData);
         sortedByModelCodeReport.keySet().forEach(code -> {
             LOG.debug("total {} calculated {} ok {} code {} --- {}",
-                    sortedByModelCodeReport.get(code).getLeft(),
-                    sortedByModelCodeReport.get(code).getMiddle(),
-                    sortedByModelCodeReport.get(code).getRight(),
-                    code, evaluateCode((String) code));
+                sortedByModelCodeReport.get(code).getLeft(),
+                sortedByModelCodeReport.get(code).getMiddle(),
+                sortedByModelCodeReport.get(code).getRight(),
+                code, evaluateCode((String) code));
             modelReportBuilder.append(String.format("total %d calculated %d ok %d code %s --- %s",
-                    sortedByModelCodeReport.get(code).getLeft(),
-                    sortedByModelCodeReport.get(code).getMiddle(),
-                    sortedByModelCodeReport.get(code).getRight(),
-                    code, evaluateCode((String) code)));
+                sortedByModelCodeReport.get(code).getLeft(),
+                sortedByModelCodeReport.get(code).getMiddle(),
+                sortedByModelCodeReport.get(code).getRight(),
+                code, evaluateCode((String) code)));
             modelReportBuilder.append(System.getProperty("line.separator"));
         });
     }
@@ -288,7 +296,7 @@ public class FlowValidation {
         ValidationData validationData = new ValidationData();
         Map<List<String>, PropertyBag> balanceData = new HashMap<>();
         List<String> pn = new ArrayList<>(
-                Arrays.asList("balanceP", "balanceQ", "calculated", "line", "t2x", "t3x"));
+            Arrays.asList("balanceP", "balanceQ", "calculated", "line", "t2x", "t3x"));
 
         inputModel.getJoinedNodes().forEach(nodes -> {
             Map<String, Integer> nodeModelCodeData = new HashMap<>();
@@ -300,25 +308,25 @@ public class FlowValidation {
                 calculateJoinedNodeBalance(config, nodes, nodeBalanceData, nodeModelCodeData);
             }
             writeToModelCodeData(validationData.modelCodeData, nodeModelCodeData,
-                    nodeBalanceData);
+                nodeBalanceData);
             writeToBalanceData(pn, balanceData, nodes, nodeBalanceData);
         });
 
         Comparator<Map.Entry<List<String>, PropertyBag>> byBalance = (
-                Entry<List<String>, PropertyBag> o1,
-                Entry<List<String>, PropertyBag> o2) -> {
+            Entry<List<String>, PropertyBag> o1,
+            Entry<List<String>, PropertyBag> o2) -> {
             return Double.compare(
-                    Math.abs(o1.getValue().asDouble("balanceP", 0.0))
-                            + Math.abs(o1.getValue().asDouble("balanceQ", 0.0)),
-                    Math.abs(o2.getValue().asDouble("balanceP", 0.0))
-                            + Math.abs(o2.getValue().asDouble("balanceQ", 0.0)));
+                Math.abs(o1.getValue().asDouble("balanceP", 0.0))
+                    + Math.abs(o1.getValue().asDouble("balanceQ", 0.0)),
+                Math.abs(o2.getValue().asDouble("balanceP", 0.0))
+                    + Math.abs(o2.getValue().asDouble("balanceQ", 0.0)));
         };
 
         validationData.balanceData = balanceData.entrySet().stream()
-                .sorted(byBalance.reversed())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
-                    throw new AssertionError();
-                }, LinkedHashMap::new));
+            .sorted(byBalance.reversed())
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
+                throw new AssertionError();
+            }, LinkedHashMap::new));
 
         double totalError = validationData.balanceData.values().stream().filter(pb -> {
             return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false);
@@ -332,8 +340,8 @@ public class FlowValidation {
     }
 
     private void calculateJoinedNodeBalance(String config, List<String> nodes,
-            PropertyBag nodeBalanceData,
-            Map<String, Integer> nodeModelCodeReport) {
+        PropertyBag nodeBalanceData,
+        Map<String, Integer> nodeModelCodeReport) {
         nodes.forEach(n -> {
             if (n == null) {
                 LOG.warn("Node null");
@@ -350,10 +358,10 @@ public class FlowValidation {
                     PropertyBag line = inputModel.getLineParameters(id);
                     if (line != null) {
                         PropertyBag node1 = inputModel
-                                .getNodeParameters(line.get("terminal1"));
+                            .getNodeParameters(line.get("terminal1"));
                         Objects.requireNonNull(node1, "node1 null in line");
                         PropertyBag node2 = inputModel
-                                .getNodeParameters(line.get("terminal2"));
+                            .getNodeParameters(line.get("terminal2"));
                         Objects.requireNonNull(node2, "node2 null in line");
                         calcFlow.calcFlowLine(n, node1, node2, line, config);
                         isLine = true;
@@ -361,27 +369,27 @@ public class FlowValidation {
                     PropertyBag transformer = inputModel.getTransformerParameters(id);
                     if (transformer != null) {
                         PropertyBag node1 = inputModel
-                                .getNodeParameters(transformer.get("terminal1"));
+                            .getNodeParameters(transformer.get("terminal1"));
                         Objects.requireNonNull(node1, "node1 null in transformer");
                         PropertyBag node2 = inputModel
-                                .getNodeParameters(transformer.get("terminal2"));
+                            .getNodeParameters(transformer.get("terminal2"));
                         Objects.requireNonNull(node2, "node2 null in transformer");
                         PropertyBag node3 = inputModel
-                                .getNodeParameters(transformer.get("terminal3"));
+                            .getNodeParameters(transformer.get("terminal3"));
                         if (node3 == null) {
                             calcFlow.calcFlowT2x(n, node1, node2, transformer, config);
                             isT2x = true;
                         } else {
                             calcFlow.calcFlowT3x(n, node1, node2, node3, transformer,
-                                    config);
+                                config);
                             isT3x = true;
                         }
                     }
 
                     writeToNodeModelCodeData(nodeModelCodeReport,
-                            calcFlow.getModelCode());
+                        calcFlow.getModelCode());
                     writeToNodeBalanceData(nodeBalanceData, calcFlow, isLine, isT2x,
-                            isT3x);
+                        isT3x);
                 });
             }
 
@@ -390,7 +398,7 @@ public class FlowValidation {
     }
 
     private void addNodeInjectionToJoinedBusBalance(PropertyBag node,
-            PropertyBag nodeBalanceData) {
+        PropertyBag nodeBalanceData) {
         double p = node.asDouble("p");
         double q = node.asDouble("q");
         double nodeBalanceP = nodeBalanceData.asDouble("balanceP");
@@ -419,21 +427,21 @@ public class FlowValidation {
     }
 
     private void writeToNodeBalanceData(PropertyBag nodeBalanceData, CalcFlow calcFlow,
-            boolean isLine, boolean isT2x, boolean isT3x) {
+        boolean isLine, boolean isT2x, boolean isT3x) {
         if (calcFlow.getCalculated()) {
             double balanceP = nodeBalanceData.asDouble("balanceP");
             double balanceQ = nodeBalanceData.asDouble("balanceQ");
             nodeBalanceData.put("balanceP",
-                    Double.toString(balanceP + calcFlow.getP()));
+                Double.toString(balanceP + calcFlow.getP()));
             nodeBalanceData.put("balanceQ",
-                    Double.toString(balanceQ + calcFlow.getQ()));
+                Double.toString(balanceQ + calcFlow.getQ()));
             if (calcFlow.getBadVoltage()) {
                 nodeBalanceData.put("badVoltage",
-                        Boolean.toString(calcFlow.getBadVoltage()));
+                    Boolean.toString(calcFlow.getBadVoltage()));
             }
         } else {
             nodeBalanceData.put("calculated",
-                    Boolean.toString(calcFlow.getCalculated()));
+                Boolean.toString(calcFlow.getCalculated()));
         }
         if (isLine) {
             int lines = nodeBalanceData.asInt("line");
@@ -461,8 +469,8 @@ public class FlowValidation {
     }
 
     private void writeToBalanceData(List<String> pn,
-            Map<List<String>, PropertyBag> balanceData, List<String> nodes,
-            PropertyBag nodeBalanceData) {
+        Map<List<String>, PropertyBag> balanceData, List<String> nodes,
+        PropertyBag nodeBalanceData) {
         boolean calculatedNodes = nodeBalanceData.asBoolean("calculated", true);
         boolean isolatedNodes = nodeBalanceData.asBoolean("isolated", true);
         boolean badVoltageNodes = nodeBalanceData.asBoolean("badVoltage", true);
@@ -491,8 +499,8 @@ public class FlowValidation {
     }
 
     private void writeToModelCodeData(
-            Map<String, Triple<Integer, Integer, Integer>> modelCodeData,
-            Map<String, Integer> nodeModelCodeData, PropertyBag nodeBalanceData) {
+        Map<String, Triple<Integer, Integer, Integer>> modelCodeData,
+        Map<String, Integer> nodeModelCodeData, PropertyBag nodeBalanceData) {
 
         nodeModelCodeData.keySet().forEach(code -> {
             int totalCode = nodeModelCodeData.get(code);
@@ -510,14 +518,14 @@ public class FlowValidation {
             if (calculatedNodes && !isolatedNodes) {
                 if (Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) <= BALANCE_TOLERANCE) {
                     value = new ImmutableTriple<Integer, Integer, Integer>(total + totalCode,
-                            calculated + totalCode, ok + totalCode);
+                        calculated + totalCode, ok + totalCode);
                 } else {
                     value = new ImmutableTriple<Integer, Integer, Integer>(total + totalCode,
-                            calculated + totalCode, ok);
+                        calculated + totalCode, ok);
                 }
             } else {
                 value = new ImmutableTriple<Integer, Integer, Integer>(total + totalCode,
-                        calculated, ok);
+                    calculated, ok);
             }
             modelCodeData.put(code, value);
         });
@@ -582,8 +590,8 @@ public class FlowValidation {
     }
 
     class ValidationData {
-        double                                         balance;
-        Map<List<String>, PropertyBag>                 balanceData;
+        double balance;
+        Map<List<String>, PropertyBag> balanceData;
         Map<String, Triple<Integer, Integer, Integer>> modelCodeData;
 
         ValidationData() {
@@ -593,11 +601,12 @@ public class FlowValidation {
         }
     }
 
-    private PrepareModel        inputModel;
-    private double              bestError;
-    private StringBuilder       modelReport;
+    private final String modelName;
+    private PrepareModel inputModel;
+    private double bestError;
+    private StringBuilder modelReport;
 
-    private static final Logger LOG               = LoggerFactory
-            .getLogger(FlowValidation.class);
+    private static final Logger LOG = LoggerFactory
+        .getLogger(ModelInterpretation.class);
 
 }

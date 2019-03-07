@@ -87,10 +87,10 @@ public class TestKronAdmittance {
     }
 
     private Map<String, List<String>> equipmentsInNodeModel(
-            Map<String, PropertyBag> lineParameters) {
+        Map<String, PropertyBag> lineParameters) {
         Map<String, List<String>> equipmentsInNode = new HashMap<>();
         propertyNames = new ArrayList<>(Arrays.asList("r", "x", "bch", "terminal1", "terminal2",
-                "connected1", "connected2"));
+            "connected1", "connected2"));
 
         lineParameters.keySet().forEach(id -> {
             PropertyBag line = lineParameters.get(id);
@@ -398,59 +398,59 @@ public class TestKronAdmittance {
 
     @Test
     public void fullConnectLineModelTest() throws IOException {
-        FlowValidation flowValidation = new FlowValidation(cgmes);
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
         flowValidation.setInputModel(testLineModel(true));
         flowValidation.testBalances("FullConnectLineModel");
-        String report = flowValidation.getReport();
+        String report = flowValidation.getInterpretation().report;
         System.out.print(report);
     }
 
     @Test
     public void kronAntennaLineModelTest() throws IOException {
-        FlowValidation flowValidation = new FlowValidation(cgmes);
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
         flowValidation.setInputModel(testLineModel(false));
         flowValidation.testBalances("KronAntennaLineModel");
-        String report = flowValidation.getReport();
+        String report = flowValidation.getInterpretation().report;
         System.out.print(report);
     }
 
     @Test
     public void fullConnectT2xModelTest() throws IOException {
-        FlowValidation flowValidation = new FlowValidation(cgmes);
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
         flowValidation.setInputModel(testT2xModel(true));
         flowValidation.testBalances("FullConnectT2xModel");
-        String report = flowValidation.getReport();
+        String report = flowValidation.getInterpretation().report;
         System.out.print(report);
     }
 
     @Test
     public void kronAntennaT2xModelTest() throws IOException {
-        FlowValidation flowValidation = new FlowValidation(cgmes);
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
         flowValidation.setInputModel(testT2xModel(false));
         flowValidation.testBalances("KronAntennaT2xModel");
-        String report = flowValidation.getReport();
+        String report = flowValidation.getInterpretation().report;
         System.out.print(report);
     }
 
     @Test
     public void fullConnectT3xModelTest() throws IOException {
-        FlowValidation flowValidation = new FlowValidation(cgmes);
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
         flowValidation.setInputModel(testT3xModel(true));
         flowValidation.testBalances("FullConnectT3xModel");
-        String report = flowValidation.getReport();
+        String report = flowValidation.getInterpretation().report;
         System.out.print(report);
     }
 
     @Test
     public void kronAntennaT3xModelTest() throws IOException {
-        FlowValidation flowValidation = new FlowValidation(cgmes);
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
         flowValidation.setInputModel(testT3xModel(false));
         flowValidation.testBalances("KronAntennaT3xModel");
-        String report = flowValidation.getReport();
+        String report = flowValidation.getInterpretation().report;
         System.out.print(report);
     }
 
-    public static final String  CIM_16_NAMESPACE = "http://iec.ch/TC57/2013/CIM-schema-cim16#";
-    private static CgmesModel   cgmes;
+    public static final String CIM_16_NAMESPACE = "http://iec.ch/TC57/2013/CIM-schema-cim16#";
+    private static CgmesModel cgmes;
     private static List<String> propertyNames;
 }
