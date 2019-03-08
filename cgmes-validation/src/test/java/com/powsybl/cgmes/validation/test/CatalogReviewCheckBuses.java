@@ -11,8 +11,8 @@ import com.powsybl.iidm.network.Network;
 
 public class CatalogReviewCheckBuses extends CatalogReview {
 
-    public CatalogReviewCheckBuses(String dataRootPathname, String boundaryPathname) {
-        super(dataRootPathname, boundaryPathname);
+    public CatalogReviewCheckBuses(CatalogLocation location) {
+        super(location);
     }
 
     public void reviewAll(String pattern) throws IOException {
@@ -20,7 +20,7 @@ public class CatalogReviewCheckBuses extends CatalogReview {
         Map<Path, Exception> wrong = reviewAll(pattern, p -> {
             Network network = convert(p);
             ResultsCheckBuses r = new ResultsCheckBuses(network);
-            r.checkBuses = checkBuses(network, r.errors);
+            r.checkBuses = TestHelpers.checkBuses(network, r.errors);
             // intermediate results should be processed/compressed/summarized
             // so we keep use of memory "relatively" low
             // here, we are not doing any post-processing of the checkBuses results

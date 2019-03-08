@@ -10,14 +10,10 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import com.powsybl.cgmes.model.CgmesModel;
-import com.powsybl.cgmes.model.triplestore.CgmesModelTripleStore;
-import com.powsybl.triplestore.api.PropertyBags;
+public class CatalogReview extends Catalog {
 
-public class CatalogReview extends TestBase {
-
-    public CatalogReview(String dataRootPathname, String boundaryPathname) {
-        super(dataRootPathname, boundaryPathname);
+    public CatalogReview(CatalogLocation location) {
+        super(location);
     }
 
     protected Map<Path, Exception> reviewAll(String pattern, Consumer<Path> consumer) throws IOException {
@@ -35,7 +31,7 @@ public class CatalogReview extends TestBase {
 
         // What could possibly go wrong
         Map<Path, Exception> wrong = new HashMap<>();
-        try (Stream<Path> paths = Files.walk(this.dataRoot)) {
+        try (Stream<Path> paths = Files.walk(location.dataRoot())) {
             paths.filter(pathMatcher::matches).forEach(path -> {
                 try {
                     System.err.println(path);
@@ -54,38 +50,6 @@ public class CatalogReview extends TestBase {
 
     public void setDryRun(boolean d) {
         dryRun = d;
-    }
-
-    public String modelName(Path p) {
-        // Identify the model using the portion of path relative to data root
-        return p.subpath(this.dataRoot.getNameCount(), p.getNameCount()).toString();
-    }
-
-    public String tsoName(Path p) {
-        String sp = p.toString();
-        int i = sp.indexOf("_1D_") + 4;
-        int j = sp.indexOf("_", i);
-        if (j > i) {
-            return sp.substring(i, j);
-        } else {
-            return sp.substring(i);
-        }
-    }
-
-    public String country(Path p) {
-        String sp = p.toString();
-        int i = sp.lastIndexOf("_");
-        return sp.substring(i + 1, i + 3);
-    }
-
-    protected String mas(CgmesModel cgmes) {
-        PropertyBags models = ((CgmesModelTripleStore) cgmes).namedQuery("modelIds");
-        return models.stream()
-            .filter(m -> m.containsKey("modelingAuthoritySet"))
-            .map(m -> m.get("modelingAuthoritySet"))
-            .filter(mas -> !mas.contains("tscnet.eu"))
-            .findFirst()
-            .orElse("-");
     }
 
     protected void reportWrong(Map<Path, Exception> wrong) {
