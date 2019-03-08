@@ -1,4 +1,4 @@
-package com.powsybl.cgmes.validation.test.flow;
+package com.powsybl.cgmes.model.interpretation;
 
 import java.nio.file.Paths;
 
@@ -12,7 +12,7 @@ import com.powsybl.tools.Tool;
 import com.powsybl.tools.ToolRunningContext;
 
 @AutoService(Tool.class)
-public class CgmesFlowValidationTool implements Tool {
+public class CgmesModelInterpretationTool implements Tool {
 
     private static final String INPUT_PATH = "input-path";
     private static final String INPUT_PATTERN = "input-pattern";

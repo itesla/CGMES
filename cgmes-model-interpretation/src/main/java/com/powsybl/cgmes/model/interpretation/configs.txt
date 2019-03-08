@@ -1,0 +1,33 @@
+        configs.add("default");
+        configs.add("T2x_yshunt_split.T3x_yshunt_split"); // APG
+        configs.add("T2x_yshunt_split.T2x_ratio0_end1"); // EMS
+        configs.add("T2x_ratio0_rtc.T2x_ptc2_tabular_negate_on"); // RTE
+        configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on"); // NGET
+        configs.add("T2x_yshunt_split"); // ELES
+        configs.add("T2x_ratio0_end1"); // CGES, ok
+        configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.T2x_yshunt_split.T3x_yshunt_split"); // Tennet
+        configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.T2x_yshunt_split.T3x_yshunt_split.Line_ratio0_on"); // Elia, tiene ratio0 en las lineas quedan bastantes nodos con error en la activa.
+        configs.add("T3x_ratio0_outside"); // Swissgrid
+        configs.add("T2x_yshunt_split.T3x_yshunt_split.Line_ratio0_on"); // Terna
+
+        // Configuraciones repetidas. Informan de la mejor configuracion de cada modelo
+        //configs.add("T2x_yshunt_split.T3x_yshunt_split"); // 50Hz lineas z0 x=0.2 en 400
+        //configs.add("T2x_clock_on.T3x_clock_on_inside.T2x_pac2_negate_on.T2x_yshunt_split.T3x_yshunt_split"); // Tennet r/2 corrige algunos errores
+        //configs.add("T2x_yshunt_split.T3x_yshunt_split"); // TTG lineas proximas a z0
+        //configs.add("T2x_yshunt_split.T3x_yshunt_split"); // Elering algunas baterias deberian tener 0 sections
+        //configs.add("T2x_yshunt_split.T3x_yshunt_split"); // CEPS Hay nodos de 1 T2x donde el flujo del T2x es 303 y la inyeccion del generador 150
+        //configs.add("T2x_yshunt_split.T3x_yshunt_split.T2x_ratio0_end2"); // REE no hay manera de acertar el end del ratio0
+        //configs.add("T2x_yshunt_split.T3x_yshunt_split"); // Terna. Dos errores en activa y reactiva. Analizados posiblemente parametros incorrectos
+        // TRANSELEC, solo 10:30. Da error (lineas con nodo no informado)
+        // OST solo 10:30 ok
+        // TEIAS Errores en el balance de nodos donde solo inciden lineas. Errores pequeños en algunos nodos
+        // Fingrid Z0 con r = 0.01 y x = 0.01, Lineas que terminan en barras sin equipos (antenas) con elevado flujo por las lineas.
+        // SEPS, ok, solo dos bad nodes que se corresponden con un T2x entre ellos donde no se obtiene el flujo esperado
+        // REN ok hay buses con errores menores en reactiva. Son topologias de generador y linea donde los valores obtenidos coinciden con los informados
+        // IPTO, lineas en la frontera con una inyeccion en el nodo frontera y un flujo que no balancea
+        // LITGRID lineas en antena
+        // MEPSO default ok
+        // transnetBW. bad nodes 44 de 69 ok. Muchos nodos con error pequeño.
+        // Energinet. bad nodos 6, con errores grandes en activa y reactiva en buses con solo un T2x
+        // MAVIR Errores grandes en activa y reactiva que se dan en nodos con una sola linea.
+        // NoSBiH. ok

@@ -1,4 +1,4 @@
-package com.powsybl.cgmes.validation.test.flow;
+package com.powsybl.cgmes.model.interpretation;
 
 import java.io.IOException;
 import java.util.ArrayList;

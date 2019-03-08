@@ -1,4 +1,4 @@
-package com.powsybl.cgmes.validation.test.flow;
+package com.powsybl.cgmes.model.interpretation.test;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -7,15 +7,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.powsybl.cgmes.model.CgmesModel;
+import com.powsybl.cgmes.model.interpretation.InterpretationResult;
+import com.powsybl.cgmes.model.interpretation.ModelInterpretation;
+import com.powsybl.cgmes.model.interpretation.PrepareModel;
 import com.powsybl.cgmes.model.triplestore.CgmesModelTripleStore;
 import com.powsybl.triplestore.api.PropertyBag;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
 public class TestKronAdmittance {
+
+    public static final String CIM_16_NAMESPACE = "http://iec.ch/TC57/2013/CIM-schema-cim16#";
+    private static final double BALANCE_TOLERANCE = 1.0;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -398,59 +405,84 @@ public class TestKronAdmittance {
 
     @Test
     public void fullConnectLineModelTest() throws IOException {
-        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes);
         flowValidation.setInputModel(testLineModel(true));
-        flowValidation.testBalances("FullConnectLineModel");
-        String report = flowValidation.getInterpretation().report;
-        System.out.print(report);
+        flowValidation.interpret();
+        InterpretationResult interpretation = flowValidation.getInterpretation();
+        Assert.assertTrue(interpretation.error < BALANCE_TOLERANCE);
     }
 
     @Test
     public void kronAntennaLineModelTest() throws IOException {
-        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes);
         flowValidation.setInputModel(testLineModel(false));
-        flowValidation.testBalances("KronAntennaLineModel");
-        String report = flowValidation.getInterpretation().report;
-        System.out.print(report);
+        flowValidation.interpret();
+        InterpretationResult interpretation = flowValidation.getInterpretation();
+        Assert.assertTrue(interpretation.error < BALANCE_TOLERANCE);
+        interpretation.validationDataForAllModelMapping.values().forEach(validationData -> {
+            Assert.assertEquals(0, getBadNodes(validationData.getBalanceData()));
+        });
     }
 
     @Test
     public void fullConnectT2xModelTest() throws IOException {
-        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes);
         flowValidation.setInputModel(testT2xModel(true));
-        flowValidation.testBalances("FullConnectT2xModel");
-        String report = flowValidation.getInterpretation().report;
-        System.out.print(report);
+        flowValidation.interpret();
+        InterpretationResult interpretation = flowValidation.getInterpretation();
+        Assert.assertTrue(interpretation.error < BALANCE_TOLERANCE);
+        interpretation.validationDataForAllModelMapping.values().forEach(validationData -> {
+            Assert.assertEquals(0, getBadNodes(validationData.getBalanceData()));
+        });
     }
 
     @Test
     public void kronAntennaT2xModelTest() throws IOException {
-        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes);
         flowValidation.setInputModel(testT2xModel(false));
-        flowValidation.testBalances("KronAntennaT2xModel");
-        String report = flowValidation.getInterpretation().report;
-        System.out.print(report);
+        flowValidation.interpret();
+        InterpretationResult interpretation = flowValidation.getInterpretation();
+        Assert.assertTrue(interpretation.error < BALANCE_TOLERANCE);
+        interpretation.validationDataForAllModelMapping.values().forEach(validationData -> {
+            Assert.assertEquals(0, getBadNodes(validationData.getBalanceData()));
+        });
     }
 
     @Test
     public void fullConnectT3xModelTest() throws IOException {
-        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes);
         flowValidation.setInputModel(testT3xModel(true));
-        flowValidation.testBalances("FullConnectT3xModel");
-        String report = flowValidation.getInterpretation().report;
-        System.out.print(report);
+        flowValidation.interpret();
+        InterpretationResult interpretation = flowValidation.getInterpretation();
+        Assert.assertTrue(interpretation.error < BALANCE_TOLERANCE);
+        interpretation.validationDataForAllModelMapping.values().forEach(validationData -> {
+            Assert.assertEquals(0, getBadNodes(validationData.getBalanceData()));
+        });
     }
 
     @Test
     public void kronAntennaT3xModelTest() throws IOException {
-        ModelInterpretation flowValidation = new ModelInterpretation(cgmes, "TODO");
+        ModelInterpretation flowValidation = new ModelInterpretation(cgmes);
         flowValidation.setInputModel(testT3xModel(false));
-        flowValidation.testBalances("KronAntennaT3xModel");
-        String report = flowValidation.getInterpretation().report;
-        System.out.print(report);
+        flowValidation.interpret();
+        InterpretationResult interpretation = flowValidation.getInterpretation();
+        Assert.assertTrue(interpretation.error < BALANCE_TOLERANCE);
+        interpretation.validationDataForAllModelMapping.values().forEach(validationData -> {
+            Assert.assertEquals(0, getBadNodes(validationData.getBalanceData()));
+        });
     }
 
-    public static final String CIM_16_NAMESPACE = "http://iec.ch/TC57/2013/CIM-schema-cim16#";
+    private long getBadNodes(Map<List<String>, PropertyBag> balanceData) {
+        long badNodes = balanceData.values().stream().filter(pb -> {
+            return pb.asBoolean("calculated", false) && !pb.asBoolean("badVoltage", false);
+        }).filter(pb -> {
+            return (Math.abs(pb.asDouble("balanceP"))
+                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
+        }).count();
+
+        return badNodes;
+    }
+
     private static CgmesModel cgmes;
     private static List<String> propertyNames;
 }

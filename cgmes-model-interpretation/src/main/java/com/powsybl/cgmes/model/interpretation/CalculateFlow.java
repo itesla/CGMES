@@ -1,4 +1,4 @@
-package com.powsybl.cgmes.validation.test.flow;
+package com.powsybl.cgmes.model.interpretation;
 
 import org.apache.commons.math3.complex.Complex;
 import org.slf4j.Logger;
@@ -6,19 +6,46 @@ import org.slf4j.LoggerFactory;
 
 import com.powsybl.triplestore.api.PropertyBag;
 
-public class CalcFlow {
+public class CalculateFlow {
 
-    public CalcFlow(PrepareModel inputModel) {
+    public CalculateFlow(PrepareModel inputModel) {
         this.inputModel = inputModel;
         this.p = 0.0;
         this.q = 0.0;
         this.calculated = false;
         this.badVoltage = false;
-        this.modelCode = "";
     }
 
-    public void calcFlowT2x(String n, PropertyBag node1, PropertyBag node2,
-            PropertyBag transformer, String config) {
+    public void calculateFlowLine(String n, PropertyBag node1, PropertyBag node2, PropertyBag line,
+            CgmesEquipmentModelMapping config) {
+        double v1 = node1.asDouble("v");
+        double nominalV1 = node1.asDouble("nominalV");
+        double angleDegrees1 = node1.asDouble("angle");
+        double v2 = node2.asDouble("v");
+        double nominalV2 = node2.asDouble("nominalV");
+        double angleDegrees2 = node2.asDouble("angle");
+        Boolean connected1 = line.asBoolean("connected1", false);
+        Boolean connected2 = line.asBoolean("connected2", false);
+
+        // The admittance and model code can always be calculated
+        LineAdmittanceMatrix admittanceMatrix = new LineAdmittanceMatrix(line, config);
+        admittanceMatrix.calculate(nominalV1, nominalV2);
+        equipmentModel = new DetectedEquipmentModel(admittanceMatrix.branchModel);
+
+        String nEnd1 = line.get("terminal1");
+        String nEnd2 = line.get("terminal2");
+        if (connected1 && connected2) {
+            calculateBothEndsFlow(n, nEnd1, nEnd2, v1, angleDegrees1, v2, angleDegrees2,
+                    admittanceMatrix);
+        } else if (connected1) {
+            calculateEndFromFlow(n, nEnd1, v1, angleDegrees1, admittanceMatrix);
+        } else if (connected2) {
+            calculateEndToFlow(n, nEnd2, v2, angleDegrees2, admittanceMatrix);
+        }
+    }
+
+    public void calculateFlowT2x(String n, PropertyBag node1, PropertyBag node2,
+            PropertyBag transformer, CgmesEquipmentModelMapping config) {
         double v1 = node1.asDouble("v");
         double angleDegrees1 = node1.asDouble("angle");
         double v2 = node2.asDouble("v");
@@ -27,9 +54,9 @@ public class CalcFlow {
         Boolean connected2 = transformer.asBoolean("connected2", false);
 
         // The admittance and the model code can always be calculated
-        T2xAdmittanceMatrix admittanceMatrix = new T2xAdmittanceMatrix(inputModel.getCgmes());
-        admittanceMatrix.calculate(transformer, config);
-        modelCode = admittanceMatrix.getModelCode();
+        T2xAdmittanceMatrix admittanceMatrix = new T2xAdmittanceMatrix(inputModel.getCgmes(), transformer, config);
+        admittanceMatrix.calculate();
+        equipmentModel = new DetectedEquipmentModel(admittanceMatrix.branchModel);
 
         String nEnd1 = transformer.get("terminal1");
         String nEnd2 = transformer.get("terminal2");
@@ -43,8 +70,8 @@ public class CalcFlow {
         }
     }
 
-    public void calcFlowT3x(String n, PropertyBag node1, PropertyBag node2, PropertyBag node3,
-            PropertyBag transformer, String config) {
+    public void calculateFlowT3x(String n, PropertyBag node1, PropertyBag node2, PropertyBag node3,
+            PropertyBag transformer, CgmesEquipmentModelMapping config) {
         double r1 = transformer.asDouble("r1");
         double x1 = transformer.asDouble("x1");
         double r2 = transformer.asDouble("r2");
@@ -62,11 +89,12 @@ public class CalcFlow {
         Boolean connected3 = transformer.asBoolean("connected3", false);
 
         // The admittance and model code can always be calculated
-        T3xAdmittanceMatrix admittanceMatrix = new T3xAdmittanceMatrix(inputModel.getCgmes());
-        admittanceMatrix.calculate(transformer, config);
-        modelCode = admittanceMatrix.getModelCode();
+        T3xAdmittanceMatrix admittanceMatrix = new T3xAdmittanceMatrix(inputModel.getCgmes(), transformer, config);
+        admittanceMatrix.calculate();
+        equipmentModel = new DetectedEquipmentModel(admittanceMatrix.end1.branchModel,
+                admittanceMatrix.end2.branchModel, admittanceMatrix.end3.branchModel);
 
-        if (!calcFlowT3xIsOk(r1, x1, r2, x2, r3, x3)) {
+        if (!calculateFlowT3xIsOk(r1, x1, r2, x2, r3, x3)) {
             return;
         }
 
@@ -94,36 +122,8 @@ public class CalcFlow {
         }
     }
 
-    public void calcFlowLine(String n, PropertyBag node1, PropertyBag node2, PropertyBag line,
-            String config) {
-        double v1 = node1.asDouble("v");
-        double nominalV1 = node1.asDouble("nominalV");
-        double angleDegrees1 = node1.asDouble("angle");
-        double v2 = node2.asDouble("v");
-        double nominalV2 = node2.asDouble("nominalV");
-        double angleDegrees2 = node2.asDouble("angle");
-        Boolean connected1 = line.asBoolean("connected1", false);
-        Boolean connected2 = line.asBoolean("connected2", false);
-
-        // The admittance and model code can always be calculated
-        LineAdmittanceMatrix admittanceMatrix = new LineAdmittanceMatrix(inputModel.getCgmes());
-        admittanceMatrix.calculate(line, nominalV1, nominalV2, config);
-        modelCode = admittanceMatrix.getModelCode();
-
-        String nEnd1 = line.get("terminal1");
-        String nEnd2 = line.get("terminal2");
-        if (connected1 && connected2) {
-            calculateBothEndsFlow(n, nEnd1, nEnd2, v1, angleDegrees1, v2, angleDegrees2,
-                    admittanceMatrix);
-        } else if (connected1) {
-            calculateEndFromFlow(n, nEnd1, v1, angleDegrees1, admittanceMatrix);
-        } else if (connected2) {
-            calculateEndToFlow(n, nEnd2, v2, angleDegrees2, admittanceMatrix);
-        }
-    }
-
     private void calculateEndFromFlow(String n, String nEnd1, double v1, double angleDegrees1,
-            AdmittanceMatrix admittanceMatrix) {
+            AbstractAdmittanceMatrix admittanceMatrix) {
         if (v1 == 0.0) {
             return;
         }
@@ -131,8 +131,8 @@ public class CalcFlow {
         Complex vf = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
 
         if (nEnd1.equals(n)) {
-            Complex ysh = kronAntenna(admittanceMatrix.getYff(), admittanceMatrix.getYft(),
-                    admittanceMatrix.getYtf(), admittanceMatrix.getYtt(), false);
+            Complex ysh = kronAntenna(admittanceMatrix.yff, admittanceMatrix.yft,
+                    admittanceMatrix.ytf, admittanceMatrix.ytt, false);
             p = ysh.getReal() * vf.abs() * vf.abs();
             q = -ysh.getImaginary() * vf.abs() * vf.abs();
         } else {
@@ -144,7 +144,7 @@ public class CalcFlow {
     }
 
     private void calculateEndToFlow(String n, String nEnd2, double v2, double angleDegrees2,
-            AdmittanceMatrix admittanceMatrix) {
+            AbstractAdmittanceMatrix admittanceMatrix) {
         if (v2 == 0.0) {
             return;
         }
@@ -152,8 +152,8 @@ public class CalcFlow {
         Complex vt = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
 
         if (nEnd2.equals(n)) {
-            Complex ysh = kronAntenna(admittanceMatrix.getYff(), admittanceMatrix.getYft(),
-                    admittanceMatrix.getYtf(), admittanceMatrix.getYtt(), true);
+            Complex ysh = kronAntenna(admittanceMatrix.yff, admittanceMatrix.yft,
+                    admittanceMatrix.ytf, admittanceMatrix.ytt, true);
             p = ysh.getReal() * vt.abs() * vt.abs();
             q = -ysh.getImaginary() * vt.abs() * vt.abs();
         } else {
@@ -166,7 +166,7 @@ public class CalcFlow {
 
     private void calculateBothEndsFlow(String n, String nEnd1, String nEnd2, double v1,
             double angleDegrees1,
-            double v2, double angleDegrees2, AdmittanceMatrix admittanceMatrix) {
+            double v2, double angleDegrees2, AbstractAdmittanceMatrix admittanceMatrix) {
         if (v1 == 0.0 || v2 == 0.0) {
             return;
         }
@@ -175,8 +175,8 @@ public class CalcFlow {
         Complex vf = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
         Complex vt = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
 
-        flowBothEnds(admittanceMatrix.getYff(), admittanceMatrix.getYft(),
-                admittanceMatrix.getYtf(), admittanceMatrix.getYtt(), vf, vt);
+        flowBothEnds(admittanceMatrix.yff, admittanceMatrix.yft,
+                admittanceMatrix.ytf, admittanceMatrix.ytt, vf, vt);
 
         if (nEnd1.equals(n)) {
             p = sft.getReal();
@@ -201,12 +201,12 @@ public class CalcFlow {
         double angle1 = Math.toRadians(angleDegrees1);
         Complex vf1 = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
 
-        Complex ysh = calculateEndShunt(admittanceMatrix.getYff1(), admittanceMatrix.getYft1(),
-                admittanceMatrix.getYtf1(), admittanceMatrix.getYtt1(),
-                admittanceMatrix.getYff2(), admittanceMatrix.getYft2(),
-                admittanceMatrix.getYtf2(), admittanceMatrix.getYtt2(),
-                admittanceMatrix.getYff3(), admittanceMatrix.getYft3(),
-                admittanceMatrix.getYtf3(), admittanceMatrix.getYtt3());
+        Complex ysh = calculateEndShunt(admittanceMatrix.end1.yff, admittanceMatrix.end1.yft,
+                admittanceMatrix.end1.ytf, admittanceMatrix.end1.ytt,
+                admittanceMatrix.end2.yff, admittanceMatrix.end2.yft,
+                admittanceMatrix.end2.ytf, admittanceMatrix.end2.ytt,
+                admittanceMatrix.end3.yff, admittanceMatrix.end3.yft,
+                admittanceMatrix.end3.ytf, admittanceMatrix.end3.ytt);
 
         if (nEnd1.equals(n)) {
             p = ysh.getReal() * vf1.abs() * vf1.abs();
@@ -227,12 +227,12 @@ public class CalcFlow {
         double angle2 = Math.toRadians(angleDegrees2);
         Complex vf2 = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
 
-        Complex ysh = calculateEndShunt(admittanceMatrix.getYff2(), admittanceMatrix.getYft2(),
-                admittanceMatrix.getYtf2(), admittanceMatrix.getYtt2(),
-                admittanceMatrix.getYff1(), admittanceMatrix.getYft1(),
-                admittanceMatrix.getYtf1(), admittanceMatrix.getYtt1(),
-                admittanceMatrix.getYff3(), admittanceMatrix.getYft3(),
-                admittanceMatrix.getYtf3(), admittanceMatrix.getYtt3());
+        Complex ysh = calculateEndShunt(admittanceMatrix.end2.yff, admittanceMatrix.end2.yft,
+                admittanceMatrix.end2.ytf, admittanceMatrix.end2.ytt,
+                admittanceMatrix.end1.yff, admittanceMatrix.end1.yft,
+                admittanceMatrix.end1.ytf, admittanceMatrix.end1.ytt,
+                admittanceMatrix.end3.yff, admittanceMatrix.end3.yft,
+                admittanceMatrix.end3.ytf, admittanceMatrix.end3.ytt);
 
         if (nEnd2.equals(n)) {
             p = ysh.getReal() * vf2.abs() * vf2.abs();
@@ -253,12 +253,12 @@ public class CalcFlow {
         double angle3 = Math.toRadians(angleDegrees3);
         Complex vf3 = new Complex(v3 * Math.cos(angle3), v3 * Math.sin(angle3));
 
-        Complex ysh = calculateEndShunt(admittanceMatrix.getYff3(), admittanceMatrix.getYft3(),
-                admittanceMatrix.getYtf3(), admittanceMatrix.getYtt3(),
-                admittanceMatrix.getYff1(), admittanceMatrix.getYft1(),
-                admittanceMatrix.getYtf1(), admittanceMatrix.getYtt1(),
-                admittanceMatrix.getYff2(), admittanceMatrix.getYft2(),
-                admittanceMatrix.getYtf2(), admittanceMatrix.getYtt2());
+        Complex ysh = calculateEndShunt(admittanceMatrix.end3.yff, admittanceMatrix.end3.yft,
+                admittanceMatrix.end3.ytf, admittanceMatrix.end3.ytt,
+                admittanceMatrix.end1.yff, admittanceMatrix.end1.yft,
+                admittanceMatrix.end1.ytf, admittanceMatrix.end1.ytt,
+                admittanceMatrix.end2.yff, admittanceMatrix.end2.yft,
+                admittanceMatrix.end2.ytf, admittanceMatrix.end2.ytt);
 
         if (nEnd3.equals(n)) {
             p = ysh.getReal() * vf3.abs() * vf3.abs();
@@ -282,13 +282,13 @@ public class CalcFlow {
         Complex vf1 = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
         Complex vf2 = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
 
-        KronChainAdmittance admittance = calculate2EndsAdmittance(admittanceMatrix.getYff1(),
-                admittanceMatrix.getYft1(),
-                admittanceMatrix.getYtf1(), admittanceMatrix.getYtt1(),
-                admittanceMatrix.getYff2(), admittanceMatrix.getYft2(),
-                admittanceMatrix.getYtf2(), admittanceMatrix.getYtt2(),
-                admittanceMatrix.getYff3(), admittanceMatrix.getYft3(),
-                admittanceMatrix.getYtf3(), admittanceMatrix.getYtt3());
+        KronChainAdmittance admittance = calculate2EndsAdmittance(admittanceMatrix.end1.yff,
+                admittanceMatrix.end1.yft,
+                admittanceMatrix.end1.ytf, admittanceMatrix.end1.ytt,
+                admittanceMatrix.end2.yff, admittanceMatrix.end2.yft,
+                admittanceMatrix.end2.ytf, admittanceMatrix.end2.ytt,
+                admittanceMatrix.end3.yff, admittanceMatrix.end3.yft,
+                admittanceMatrix.end3.ytf, admittanceMatrix.end3.ytt);
 
         flowBothEnds(admittance.yff, admittance.yft,
                 admittance.ytf, admittance.ytt, vf1, vf2);
@@ -318,13 +318,13 @@ public class CalcFlow {
         Complex vf1 = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
         Complex vf3 = new Complex(v3 * Math.cos(angle3), v3 * Math.sin(angle3));
 
-        KronChainAdmittance admittance = calculate2EndsAdmittance(admittanceMatrix.getYff1(),
-                admittanceMatrix.getYft1(),
-                admittanceMatrix.getYtf1(), admittanceMatrix.getYtt1(),
-                admittanceMatrix.getYff3(), admittanceMatrix.getYft3(),
-                admittanceMatrix.getYtf3(), admittanceMatrix.getYtt3(),
-                admittanceMatrix.getYff2(), admittanceMatrix.getYft2(),
-                admittanceMatrix.getYtf2(), admittanceMatrix.getYtt2());
+        KronChainAdmittance admittance = calculate2EndsAdmittance(admittanceMatrix.end1.yff,
+                admittanceMatrix.end1.yft,
+                admittanceMatrix.end1.ytf, admittanceMatrix.end1.ytt,
+                admittanceMatrix.end3.yff, admittanceMatrix.end3.yft,
+                admittanceMatrix.end3.ytf, admittanceMatrix.end3.ytt,
+                admittanceMatrix.end2.yff, admittanceMatrix.end2.yft,
+                admittanceMatrix.end2.ytf, admittanceMatrix.end2.ytt);
 
         flowBothEnds(admittance.yff, admittance.yft,
                 admittance.ytf, admittance.ytt, vf1, vf3);
@@ -354,13 +354,13 @@ public class CalcFlow {
         Complex vf2 = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
         Complex vf3 = new Complex(v3 * Math.cos(angle3), v3 * Math.sin(angle3));
 
-        KronChainAdmittance admittance = calculate2EndsAdmittance(admittanceMatrix.getYff2(),
-                admittanceMatrix.getYft2(),
-                admittanceMatrix.getYtf2(), admittanceMatrix.getYtt2(),
-                admittanceMatrix.getYff3(), admittanceMatrix.getYft3(),
-                admittanceMatrix.getYtf3(), admittanceMatrix.getYtt3(),
-                admittanceMatrix.getYff1(), admittanceMatrix.getYft1(),
-                admittanceMatrix.getYtf1(), admittanceMatrix.getYtt1());
+        KronChainAdmittance admittance = calculate2EndsAdmittance(admittanceMatrix.end2.yff,
+                admittanceMatrix.end2.yft,
+                admittanceMatrix.end2.ytf, admittanceMatrix.end2.ytt,
+                admittanceMatrix.end3.yff, admittanceMatrix.end3.yft,
+                admittanceMatrix.end3.ytf, admittanceMatrix.end3.ytt,
+                admittanceMatrix.end1.yff, admittanceMatrix.end1.yft,
+                admittanceMatrix.end1.ytf, admittanceMatrix.end1.ytt);
 
         flowBothEnds(admittance.yff, admittance.yft,
                 admittance.ytf, admittance.ytt, vf2, vf3);
@@ -394,25 +394,25 @@ public class CalcFlow {
         Complex vf2 = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
         Complex vf3 = new Complex(v3 * Math.cos(angle3), v3 * Math.sin(angle3));
 
-        Complex v0 = admittanceMatrix.getYtf1().multiply(vf1)
-                .add(admittanceMatrix.getYtf2().multiply(vf2))
-                .add(admittanceMatrix.getYtf3().multiply(vf3))
-                .negate().divide(admittanceMatrix.getYtt1().add(admittanceMatrix.getYtt2())
-                        .add(admittanceMatrix.getYtt3()));
+        Complex v0 = admittanceMatrix.end1.ytf.multiply(vf1)
+                .add(admittanceMatrix.end2.ytf.multiply(vf2))
+                .add(admittanceMatrix.end3.ytf.multiply(vf3))
+                .negate().divide(admittanceMatrix.end1.ytt.add(admittanceMatrix.end2.ytt)
+                        .add(admittanceMatrix.end3.ytt));
 
         if (nEnd1.equals(n)) {
-            flowBothEnds(admittanceMatrix.getYff1(), admittanceMatrix.getYft1(),
-                    admittanceMatrix.getYtf1(), admittanceMatrix.getYtt1(), vf1, v0);
+            flowBothEnds(admittanceMatrix.end1.yff, admittanceMatrix.end1.yft,
+                    admittanceMatrix.end1.ytf, admittanceMatrix.end1.ytt, vf1, v0);
             p = sft.getReal();
             q = sft.getImaginary();
         } else if (nEnd2.equals(n)) {
-            flowBothEnds(admittanceMatrix.getYff2(), admittanceMatrix.getYft2(),
-                    admittanceMatrix.getYtf2(), admittanceMatrix.getYtt2(), vf2, v0);
+            flowBothEnds(admittanceMatrix.end2.yff, admittanceMatrix.end2.yft,
+                    admittanceMatrix.end2.ytf, admittanceMatrix.end2.ytt, vf2, v0);
             p = sft.getReal();
             q = sft.getImaginary();
         } else if (nEnd3.equals(n)) {
-            flowBothEnds(admittanceMatrix.getYff3(), admittanceMatrix.getYft3(),
-                    admittanceMatrix.getYtf3(), admittanceMatrix.getYtt3(), vf3, v0);
+            flowBothEnds(admittanceMatrix.end3.yff, admittanceMatrix.end3.yft,
+                    admittanceMatrix.end3.ytf, admittanceMatrix.end3.ytt, vf3, v0);
             p = sft.getReal();
             q = sft.getImaginary();
         } else {
@@ -476,8 +476,7 @@ public class CalcFlow {
         stf = itf.conjugate().multiply(vt);
     }
 
-    private boolean calcFlowT3xIsOk(double r1, double x1, double r2, double x2,
-            double r3, double x3) {
+    private boolean calculateFlowT3xIsOk(double r1, double x1, double r2, double x2, double r3, double x3) {
         if (r1 == 0.0 && x1 == 0.0 || r2 == 0.0 && x2 == 0.0 || r3 == 0.0 && x3 == 0.0) {
             return false;
         }
@@ -501,10 +500,6 @@ public class CalcFlow {
         return q;
     }
 
-    public String getModelCode() {
-        return modelCode;
-    }
-
     public boolean getCalculated() {
         return calculated;
     }
@@ -513,21 +508,25 @@ public class CalcFlow {
         return badVoltage;
     }
 
-    class KronChainAdmittance {
+    public DetectedEquipmentModel getEquipmentModel() {
+        return equipmentModel;
+    }
+
+    static class KronChainAdmittance {
         Complex yff;
         Complex yft;
         Complex ytf;
         Complex ytt;
     }
 
-    private double              p;
-    private double              q;
-    private String              modelCode;
-    private boolean             calculated;
-    private boolean             badVoltage;
-    private Complex             sft;
-    private Complex             stf;
-    private PrepareModel        inputModel;
-    private static final Logger LOG = LoggerFactory
-            .getLogger(CalcFlow.class);
+    private double                 p;
+    private double                 q;
+    private boolean                calculated;
+    private boolean                badVoltage;
+    private DetectedEquipmentModel equipmentModel;
+    private Complex                sft;
+    private Complex                stf;
+    private PrepareModel           inputModel;
+    private static final Logger    LOG = LoggerFactory
+            .getLogger(CalculateFlow.class);
 }
