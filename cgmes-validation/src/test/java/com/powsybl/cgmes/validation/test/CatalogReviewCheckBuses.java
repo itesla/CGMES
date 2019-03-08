@@ -11,8 +11,8 @@ import com.powsybl.iidm.network.Network;
 
 public class CatalogReviewCheckBuses extends CatalogReview {
 
-    public CatalogReviewCheckBuses(String dataRootFoldername) {
-        super(dataRootFoldername);
+    public CatalogReviewCheckBuses(String dataRootPathname, String boundaryPathname) {
+        super(dataRootPathname, boundaryPathname);
     }
 
     public void reviewAll(String pattern) throws IOException {

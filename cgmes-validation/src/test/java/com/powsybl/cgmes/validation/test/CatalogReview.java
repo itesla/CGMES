@@ -16,8 +16,8 @@ import com.powsybl.triplestore.api.PropertyBags;
 
 public class CatalogReview extends TestBase {
 
-    public CatalogReview(String dataRootFoldername) {
-        super(dataRootFoldername);
+    public CatalogReview(String dataRootPathname, String boundaryPathname) {
+        super(dataRootPathname, boundaryPathname);
     }
 
     protected Map<Path, Exception> reviewAll(String pattern, Consumer<Path> consumer) throws IOException {
@@ -35,7 +35,7 @@ public class CatalogReview extends TestBase {
 
         // What could possibly go wrong
         Map<Path, Exception> wrong = new HashMap<>();
-        try (Stream<Path> paths = Files.walk(this.rootDataFolder)) {
+        try (Stream<Path> paths = Files.walk(this.dataRoot)) {
             paths.filter(pathMatcher::matches).forEach(path -> {
                 try {
                     System.err.println(path);
@@ -58,7 +58,7 @@ public class CatalogReview extends TestBase {
 
     public String modelName(Path p) {
         // Identify the model using the portion of path relative to data root
-        return p.subpath(this.rootDataFolder.getNameCount(), p.getNameCount()).toString();
+        return p.subpath(this.dataRoot.getNameCount(), p.getNameCount()).toString();
     }
 
     public String tsoName(Path p) {

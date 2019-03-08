@@ -83,7 +83,7 @@ public class CgmesConformity1LoadFlowTest {
                 // properties
                 // But it has a reactive capability curve
                 .maxGeneratorsFailInitialState(1)
-                // TODO boundaries are missing, do not compare with initial state
+                // TODO boundary is missing, do not compare with initial state
                 .compareWithInitialState(false)
                 .build();
         Properties importParams = new Properties();

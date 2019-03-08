@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.math3.complex.Complex;
@@ -38,20 +39,22 @@ import com.powsybl.loadflow.validation.ValidationType;
 
 public class TestBase {
 
-    public TestBase(String dataRootFoldername) {
-        this.rootDataFolder = Paths.get(dataRootFoldername);
+    public TestBase(String dataRootPathname) {
+        this(dataRootPathname, null);
+    }
+
+    public TestBase(String dataRootPathname, String boundaryPathname) {
+        Objects.requireNonNull(dataRootPathname);
+        this.dataRoot = Paths.get(dataRootPathname);
+        this.boundary = boundaryPathname != null ? Paths.get(boundaryPathname) : null;
     }
 
     public Network convert(String rpath) {
-        return convert(this.rootDataFolder.resolve(rpath), null);
+        return convert(this.dataRoot.resolve(rpath), null);
     }
 
     public Network convert(String rpath, Properties params) {
-        return convert(this.rootDataFolder.resolve(rpath), params);
-    }
-
-    public Network convert(String rpath, Properties params, String rboundaries) {
-        return convert(this.rootDataFolder.resolve(rpath), params, this.rootDataFolder.resolve(rboundaries));
+        return convert(this.dataRoot.resolve(rpath), params);
     }
 
     public Network convert(Path path) {
@@ -59,22 +62,22 @@ public class TestBase {
     }
 
     public Network convert(Path path, Properties params) {
-        return convert(path, params, null);
+        return convert(path, params, boundary);
     }
 
-    public Network convert(Path path, Properties params0, Path boundaries) {
+    public Network convert(Path path, Properties params0, Path boundary) {
         Properties params = new Properties();
         if (params0 != null) {
             params.putAll(params0);
         }
-        if (boundaries != null) {
-            params.put("useTheseBoundaries", dataSource(boundaries));
+        if (boundary != null) {
+            params.put("xxxxFIXMExxxPathnameForDataBoundary", boundary.toString());
             throw new PowsyblException("Explicit boundaries not available");
         }
         Network network = Importers.importData("CGMES",
-                dataSource(path),
-                params,
-                LocalComputationManager.getDefault());
+            dataSource(path),
+            params,
+            LocalComputationManager.getDefault());
         return network;
     }
 
@@ -82,7 +85,6 @@ public class TestBase {
         if (!Files.exists(path)) {
             fail();
         }
-
         String spath = path.toString();
         if (Files.isDirectory(path)) {
             String basename = spath.substring(spath.lastIndexOf('/') + 1);
@@ -108,11 +110,11 @@ public class TestBase {
         boolean applyXCorrection = false;
         double z0Threshold = 1e-6;
         LoadFlowResultsCompletion lf = new LoadFlowResultsCompletion(
-                new LoadFlowResultsCompletionParameters(
-                        epsilonX,
-                        applyXCorrection,
-                        z0Threshold),
-                lfp);
+            new LoadFlowResultsCompletionParameters(
+                epsilonX,
+                applyXCorrection,
+                z0Threshold),
+            lfp);
         lf.run(network, null);
         return network;
     }
@@ -159,13 +161,13 @@ public class TestBase {
             try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
                 Path working = validationWorking(fs);
                 boolean r = ValidationType.BUSES.check(
-                        network,
-                        validationConfig(fs, lfp, threshold),
-                        working);
+                    network,
+                    validationConfig(fs, lfp, threshold),
+                    working);
                 if (errors != null) {
                     List<String> lines = Files.readAllLines(
-                            ValidationType.BUSES.getOutputFile(working),
-                            Charset.defaultCharset());
+                        ValidationType.BUSES.getOutputFile(working),
+                        Charset.defaultCharset());
                     // Check header matches expected contents
                     assertEquals("id;incomingP;incomingQ;loadP;loadQ", lines.get(1));
                     // Skip title and header
@@ -237,5 +239,6 @@ public class TestBase {
         return true;
     }
 
-    protected final Path rootDataFolder;
+    protected final Path dataRoot;
+    protected final Path boundary;
 }

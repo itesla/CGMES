@@ -20,8 +20,8 @@ import com.powsybl.iidm.network.Network;
 
 public class CatalogReviewLimits extends CatalogReview {
 
-    public CatalogReviewLimits(String sdata) {
-        super(sdata);
+    public CatalogReviewLimits(String dataRootPathname, String boundaryPathname) {
+        super(dataRootPathname, boundaryPathname);
     }
 
     public void reviewAll(String pattern, String outputFilename) throws IOException {

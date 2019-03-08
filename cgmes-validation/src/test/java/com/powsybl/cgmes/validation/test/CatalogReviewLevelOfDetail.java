@@ -13,8 +13,8 @@ import com.powsybl.cgmes.conversion.CgmesModelExtension;
 
 public class CatalogReviewLevelOfDetail extends CatalogReview {
 
-    public CatalogReviewLevelOfDetail(String dataRootFoldername) {
-        super(dataRootFoldername);
+    public CatalogReviewLevelOfDetail(String dataRootPathname, String boundaryPathname) {
+        super(dataRootPathname, boundaryPathname);
     }
 
     public void reviewAll(String pattern) throws IOException {
