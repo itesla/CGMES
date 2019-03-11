@@ -426,7 +426,7 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
             double rtc3a, double ptc3a, double rtc1A, double ptc1A, double rtc2A, double ptc2A,
             double rtc3A, double ptc3A) {
         T3xRatioPhaseData ratioPhaseData = new T3xRatioPhaseData();
-        if (config.isT3xRatioInside()) {
+        if (config.isT3xRatioPhaseInside()) {
             ratioPhaseData.end1.a2 = rtc1a * ptc1a;
             ratioPhaseData.end1.angle2 = rtc1A + ptc1A;
             ratioPhaseData.end2.a2 = rtc2a * ptc2a;

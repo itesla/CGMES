@@ -86,12 +86,12 @@ class CgmesEquipmentModelMapping {
         this.t3xRatio0Inside = t3xRatio0Inside;
     }
 
-    public boolean isT3xRatioInside() {
-        return t3xRatioInside;
+    public boolean isT3xRatioPhaseInside() {
+        return t3xRatioPhaseInside;
     }
 
-    public void setT3xRatioInside(boolean t3xRatioInside) {
-        this.t3xRatioInside = t3xRatioInside;
+    public void setT3xRatioPhaseInside(boolean t3xRatioInside) {
+        this.t3xRatioPhaseInside = t3xRatioInside;
     }
 
     public T3xDistribution getT3xYShunt() {
@@ -167,7 +167,7 @@ class CgmesEquipmentModelMapping {
         if (!t3xRatio0Inside) {
             configuration.append("T3x_ratio0_outside.");
         }
-        if (t3xRatioInside) {
+        if (t3xRatioPhaseInside) {
             configuration.append("T3x_ratio_inside.");
         }
         switch (t3xYShunt) {
@@ -199,7 +199,7 @@ class CgmesEquipmentModelMapping {
     boolean            t2xPhaseAngleClock = false;
     boolean            t2xPac2Negate      = false;
     boolean            t3xRatio0Inside    = true;
-    boolean            t3xRatioInside     = false;
+    boolean            t3xRatioPhaseInside     = false;
     T3xDistribution    t3xYShunt          = T3xDistribution.OUTSIDE;
     T3xPhaseAngleClock t3xPhaseAngleClock = T3xPhaseAngleClock.OFF;
 }

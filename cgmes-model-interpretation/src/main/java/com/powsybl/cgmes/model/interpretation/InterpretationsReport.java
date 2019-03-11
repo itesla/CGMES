@@ -48,7 +48,7 @@ public class InterpretationsReport {
         LocalDateTime dateTime = LocalDateTime.now();
         String formattedDateTime = dateTime.format(formatter);
         try (BufferedWriter w = Files.newBufferedWriter(
-                output.resolve("AutomatedCGMESValidationReport." + formattedDateTime), StandardCharsets.UTF_8)) {
+                output.resolve("CGMESModelInterpretationReport." + formattedDateTime), StandardCharsets.UTF_8)) {
             interpretations.entrySet().forEach(e -> {
                 try {
                     w.write(generateModelReport(e.getKey(), e.getValue()));
@@ -89,29 +89,29 @@ public class InterpretationsReport {
         modelReportBuilder.append(String.format("----> MODEL %s ", model));
         modelReportBuilder.append(System.getProperty("line.separator"));
         sortedMappingConfigurationData.keySet()
-                .forEach(mappingConfiguration -> validationReport(model, mappingConfiguration,
+                .forEach(mappingConfiguration -> interpretationReport(model, mappingConfiguration,
                         mappingConfigurationData.get(mappingConfiguration), modelReportBuilder));
         return modelReportBuilder.toString();
     }
 
-    private void validationReport(String model, CgmesEquipmentModelMapping mappingConfiguration,
+    private void interpretationReport(String model, CgmesEquipmentModelMapping mappingConfiguration,
             ValidationData validationData, StringBuilder modelReportBuilder) {
-        validationReportHeaderSection(model, mappingConfiguration, validationData,
+        interpretationReportHeaderSection(model, mappingConfiguration, validationData,
                 modelReportBuilder);
-        validationReportBalanceSection(validationData, modelReportBuilder);
-        validationReportNonBadVoltageNodesSection(validationData, modelReportBuilder);
-        validationReportBadVoltageNodesSection(validationData, modelReportBuilder);
-        validationReportModelSection(validationData, modelReportBuilder);
+        interpretationReportBalanceSection(validationData, modelReportBuilder);
+        interpretationReportNonBadVoltageNodesSection(validationData, modelReportBuilder);
+        interpretationReportBadVoltageNodesSection(validationData, modelReportBuilder);
+        interpretationReportModelSection(validationData, modelReportBuilder);
     }
 
-    private void validationReportHeaderSection(String model, CgmesEquipmentModelMapping mappingConfiguration,
+    private void interpretationReportHeaderSection(String model, CgmesEquipmentModelMapping mappingConfiguration,
             ValidationData validationData, StringBuilder modelReportBuilder) {
         LOG.debug("----> MAPPING CONFIG {}", mappingConfiguration);
         modelReportBuilder.append(String.format("----> config %s", mappingConfiguration.toString()));
         modelReportBuilder.append(System.getProperty("line.separator"));
     }
 
-    private void validationReportBalanceSection(ValidationData validationData,
+    private void interpretationReportBalanceSection(ValidationData validationData,
             StringBuilder modelReportBuilder) {
 
         long notCalculatedNodes = validationData.balanceData.entrySet().stream().filter(entry -> {
@@ -164,7 +164,7 @@ public class InterpretationsReport {
         }).mapToDouble(Double::doubleValue).sum();
 
         LOG.debug(
-                "total error {} total nodes {} isolated nodes {} notCalculated nodes {} ok nodes {} bad error {} bad nodes {} pct {} badVoltage error {} badVoltage nodes {} pct {}",
+                "total error {} total nodes {} isolated nodes {} non-calculated nodes {} ok nodes {} bad error {} bad nodes {} pct {} badVoltage error {} badVoltage nodes {} pct {}",
                 validationData.balance, totalNodes, isolatedNodes, notCalculatedNodes, okNodes, badNodesError, badNodes,
                 Long.valueOf(badNodes).doubleValue()
                         / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
@@ -172,7 +172,7 @@ public class InterpretationsReport {
                 Long.valueOf(badVoltageNodes).doubleValue()
                         / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0);
         modelReportBuilder.append(String.format(
-                "BALANCE --- total error %f total nodes %d isolated nodes %d notCalculated nodes %d ok nodes %d bad error %f bad nodes %d pct %f badVoltage error %f badVoltage nodes %d pct %f",
+                "BALANCE --- total error %f total nodes %d isolated nodes %d non-calculated nodes %d ok nodes %d bad error %f bad nodes %d pct %f badVoltage error %f badVoltage nodes %d pct %f",
                 validationData.balance, totalNodes, isolatedNodes, notCalculatedNodes, okNodes, badNodesError, badNodes,
                 Long.valueOf(badNodes).doubleValue()
                         / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
@@ -182,19 +182,19 @@ public class InterpretationsReport {
         modelReportBuilder.append(System.getProperty("line.separator"));
     }
 
-    private void validationReportNonBadVoltageNodesSection(ValidationData validationData,
+    private void interpretationReportNonBadVoltageNodesSection(ValidationData validationData,
             StringBuilder modelReportBuilder) {
         boolean showOnlyBadVoltageNodes = false;
-        validationReportNodesSection("NODES", validationData, modelReportBuilder, showOnlyBadVoltageNodes);
+        interpretationReportNodesSection("NODES", validationData, modelReportBuilder, showOnlyBadVoltageNodes);
     }
 
-    private void validationReportBadVoltageNodesSection(ValidationData validationData,
+    private void interpretationReportBadVoltageNodesSection(ValidationData validationData,
             StringBuilder modelReportBuilder) {
         boolean showOnlyBadVoltageNodes = true;
-        validationReportNodesSection("BAD VOLTAGE", validationData, modelReportBuilder, showOnlyBadVoltageNodes);
+        interpretationReportNodesSection("BAD VOLTAGE", validationData, modelReportBuilder, showOnlyBadVoltageNodes);
     }
 
-    private void validationReportNodesSection(String prefix, ValidationData validationData,
+    private void interpretationReportNodesSection(String prefix, ValidationData validationData,
             StringBuilder modelReportBuilder, boolean showOnlyBadVoltageNodes) {
         validationData.balanceData.keySet().stream().filter(nodes -> {
             PropertyBag pb = validationData.balanceData.get(nodes);
@@ -234,7 +234,7 @@ public class InterpretationsReport {
         });
     }
 
-    private void validationReportModelSection(ValidationData validationData,
+    private void interpretationReportModelSection(ValidationData validationData,
             StringBuilder modelReportBuilder) {
         Map<String, DetectedEquipmentModel> sortedByModelReport = new TreeMap<String, DetectedEquipmentModel>(
                 new Comparator<String>() {
