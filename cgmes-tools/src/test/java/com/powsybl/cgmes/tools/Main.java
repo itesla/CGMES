@@ -1,11 +1,11 @@
-package com.powsybl.cgmes.tools;
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+package com.powsybl.cgmes.tools;
 
 import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.cgmes.model.CgmesModelFactory;
@@ -14,7 +14,13 @@ import com.powsybl.commons.datasource.DataSourceUtil;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.triplestore.api.PropertyBags;
 
-public final class Main {
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+
+final class Main {
 
     private Main() {
     }
@@ -29,19 +35,25 @@ public final class Main {
         String action = null;
         String actionParam = null;
         for (int k = 0; k < args.length; k++) {
-            if (args[k].equals("--path")) {
-                path = Paths.get(args[k + 1]);
-            } else if (args[k].equals("--basename")) {
-                basename = args[k + 1];
-            } else if (args[k].equals("--compression")) {
-                compressionExtension = CompressionFormat.valueOf(args[k + 1].toUpperCase());
-            } else if (args[k].equals("--tripleStore")) {
-                tripleStoreImplementation = args[k + 1];
-            } else if (args[k].equals("--action")) {
-                action = args[k + 1];
-                if (k + 2 < args.length) {
-                    actionParam = args[k + 2];
-                }
+            switch (args[k]) {
+                case "--path":
+                    path = Paths.get(args[k + 1]);
+                    break;
+                case "--basename":
+                    basename = args[k + 1];
+                    break;
+                case "--compression":
+                    compressionExtension = CompressionFormat.valueOf(args[k + 1].toUpperCase());
+                    break;
+                case "--tripleStore":
+                    tripleStoreImplementation = args[k + 1];
+                    break;
+                case "--action":
+                    action = args[k + 1];
+                    if (k + 2 < args.length) {
+                        actionParam = args[k + 2];
+                    }
+                    break;
             }
         }
         Objects.requireNonNull(path, "path");
@@ -78,10 +90,8 @@ public final class Main {
                 String valueProperty = "value";
                 // Pivot all properties except ...
                 List<String> notPivotable = Arrays.asList("graph", "type", idProperty, keyProperty, valueProperty);
-                List<String> pivotPropertyNames = ot.pluckLocals("attribute").stream()
-                        .filter(p -> !notPivotable.contains(p))
-                        .collect(Collectors.toSet())
-                        .stream().collect(Collectors.toList());
+                List<String> pivotPropertyNames = ot.pluckLocals("attribute");
+                pivotPropertyNames.removeIf(notPivotable::contains);
                 PropertyBags ot1 = ot.pivotLocalNames(idProperty, keyProperty, pivotPropertyNames, valueProperty);
                 output(ot1.tabulateLocals());
             }

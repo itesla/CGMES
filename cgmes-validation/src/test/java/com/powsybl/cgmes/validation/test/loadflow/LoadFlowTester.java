@@ -1,16 +1,11 @@
-package com.powsybl.cgmes.validation.test.loadflow;
-
-/*
- * #%L
- * CGMES conversion
- * %%
- * Copyright (C) 2017 - 2018 RTE (http://rte-france.com)
- * %%
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- * #L%
  */
+
+package com.powsybl.cgmes.validation.test.loadflow;
 
 import static org.junit.Assert.fail;
 
@@ -56,10 +51,15 @@ public class LoadFlowTester {
     }
 
     public void testLoadFlow(TestGridModel gm) throws IOException {
-        testLoadFlow(gm, this.loadFlowValidation);
+        testLoadFlow(gm, this.loadFlowValidation, null);
     }
 
     public void testLoadFlow(TestGridModel gm, LoadFlowValidation loadFlowValidation0) throws IOException {
+        testLoadFlow(gm, loadFlowValidation0, null);
+    }
+
+    public void testLoadFlow(TestGridModel gm, LoadFlowValidation loadFlowValidation0, Properties importParams0)
+        throws IOException {
         if (gm.dataSource().getBaseName().isEmpty()) {
             LOG.error("Test grid model does not exist ? {}", gm.name());
             fail();
@@ -72,9 +72,7 @@ public class LoadFlowTester {
             LOG.error("LoadFlowValidation not avaialable");
             fail();
         }
-        // TODO receive import parameters for the test
-        Properties importParams = null;
-        Properties iparams = importParams == null ? new Properties() : importParams;
+        Properties iparams = importParams0 == null ? new Properties() : importParams0;
         iparams.put("storeCgmesModelAsNetworkExtension", "true");
         // Ensure properties are stored as strings
         // (getProperty returns null if the property exists but is not a string)
@@ -86,12 +84,12 @@ public class LoadFlowTester {
         for (String impl : tripleStoreImplementations) {
             LOG.info("testLoadFlow {} {}", gm.name(), impl);
             iparams.put("powsyblTripleStore", impl);
-            testLoadFlow(gm, loadFlowValidation, iparams);
+            testLoadFlow0(gm, loadFlowValidation, iparams);
         }
     }
 
-    public void testLoadFlow(TestGridModel gm, LoadFlowValidation loadFlowValidation, Properties iparams)
-            throws IOException {
+    private void testLoadFlow0(TestGridModel gm, LoadFlowValidation loadFlowValidation, Properties iparams)
+        throws IOException {
         CgmesImport i = new CgmesImport();
         ReadOnlyDataSource ds = gm.dataSource();
         Network network = i.importData(ds, iparams);
@@ -116,12 +114,12 @@ public class LoadFlowTester {
         String name1 = gm.name().replace('/', '-');
         Path working = Files.createTempDirectory("temp-loadflow-validation-" + name1 + "-");
         return new LoadFlowValidation.Builder()
-                .workingDirectory(working)
-                .writeNetworksInputsResults(true)
-                // Assume all test cases are solved
-                .validateInitialState(true)
-                .compareWithInitialState(true)
-                .build();
+            .workingDirectory(working)
+            .writeNetworksInputsResults(true)
+            // Assume all test cases are solved
+            .validateInitialState(true)
+            .compareWithInitialState(true)
+            .build();
     }
 
     private final List<String> tripleStoreImplementations;

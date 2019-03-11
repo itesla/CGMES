@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.conformity;
 
 import static org.junit.Assert.assertEquals;
@@ -5,6 +12,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Properties;
 
 /*
  * #%L
@@ -54,6 +62,8 @@ public class CgmesConformity1LoadFlowTest {
                 .writeNetworksInputsResults(true)
                 .validateInitialState(true)
                 .specificCompatibility(true)
+                // Threshold raised from 0.1 to 0.3 after 3wtx
+                .threshold(0.3)
                 // PP_Brussels 110 kV has huge mismatch due to phase shifter
                 // If we use the given SV tap position (16) mismatch is > 850 MW in P
                 // If we use starting step for steady state (10) mismatch in P, Q are < 1.4 MVA
@@ -73,26 +83,28 @@ public class CgmesConformity1LoadFlowTest {
                 // properties
                 // But it has a reactive capability curve
                 .maxGeneratorsFailInitialState(1)
-                // TODO boundaries are missing, do not compare with initial state
+                // TODO boundary is missing, do not compare with initial state
                 .compareWithInitialState(false)
                 .build();
-        tester.testLoadFlow(t, validation);
+        Properties importParams = new Properties();
+        importParams.put("considerPhaseAngleClock", "false");
+        tester.testLoadFlow(t, validation, importParams);
     }
 
     @Test
     public void microGridBaseCaseNL() throws IOException {
         TestGridModel t = catalog.microGridBaseCaseNL();
         LoadFlowValidation validation = new LoadFlowValidation.Builder()
-                .workingDirectory(working.resolve(t.name()))
-                .writeNetworksInputsResults(true)
-                .validateInitialState(true)
-                .specificCompatibility(true)
-                // But two generators have Q out of allowed interval (1dc9afba and 2844585c)
-                // In both cases Q = -26.68 when [Qmin, Qmax] = [0, 200]
-                .maxGeneratorsFailInitialState(2)
-                .compareWithInitialState(true)
-                .maxGeneratorsFailComputedState(2)
-                .build();
+            .workingDirectory(working.resolve(t.name()))
+            .writeNetworksInputsResults(true)
+            .validateInitialState(true)
+            .specificCompatibility(true)
+            // But two generators have Q out of allowed interval (1dc9afba and 2844585c)
+            // In both cases Q = -26.68 when [Qmin, Qmax] = [0, 200]
+            .maxGeneratorsFailInitialState(2)
+            .compareWithInitialState(true)
+            .maxGeneratorsFailComputedState(2)
+            .build();
         tester.testLoadFlow(t, validation);
     }
 
@@ -100,19 +112,19 @@ public class CgmesConformity1LoadFlowTest {
     public void microGridBaseCaseAssembled() throws IOException {
         TestGridModel t = catalog.microGridBaseCaseAssembled();
         LoadFlowValidation validation = new LoadFlowValidation.Builder()
-                .workingDirectory(working.resolve(t.name()))
-                .writeNetworksInputsResults(true)
-                .validateInitialState(true)
-                .specificCompatibility(true)
-                // Validation considerations from microNL and microBE apply here
-                .changeSignForPhaseTapChange(true)
-                .threshold(1.2)
-                .maxBusesFailInitialState(1)
-                .maxGeneratorsFailInitialState(3)
-                .compareWithInitialState(true)
-                .maxBusesFailComputedState(1)
-                .maxGeneratorsFailComputedState(3)
-                .build();
+            .workingDirectory(working.resolve(t.name()))
+            .writeNetworksInputsResults(true)
+            .validateInitialState(true)
+            .specificCompatibility(true)
+            // Validation considerations from microNL and microBE apply here
+            .changeSignForPhaseTapChange(true)
+            .threshold(1.2)
+            .maxBusesFailInitialState(1)
+            .maxGeneratorsFailInitialState(3)
+            .compareWithInitialState(true)
+            .maxBusesFailComputedState(1)
+            .maxGeneratorsFailComputedState(3)
+            .build();
         tester.testLoadFlow(t, validation);
     }
 
@@ -120,11 +132,11 @@ public class CgmesConformity1LoadFlowTest {
     public void miniBusBranch() throws IOException {
         TestGridModel t = catalog.miniBusBranch();
         LoadFlowValidation validation = new LoadFlowValidation.Builder()
-                .workingDirectory(working.resolve(t.name()))
-                .writeNetworksInputsResults(true)
-                .validateInitialState(true)
-                .compareWithInitialState(false)
-                .build();
+            .workingDirectory(working.resolve(t.name()))
+            .writeNetworksInputsResults(true)
+            .validateInitialState(true)
+            .compareWithInitialState(false)
+            .build();
         tester.testLoadFlow(t, validation);
     }
 
@@ -132,11 +144,11 @@ public class CgmesConformity1LoadFlowTest {
     public void miniNodeBreaker() throws IOException {
         TestGridModel t = catalog.miniNodeBreaker();
         LoadFlowValidation validation = new LoadFlowValidation.Builder()
-                .workingDirectory(working.resolve(t.name()))
-                .writeNetworksInputsResults(true)
-                .validateInitialState(true)
-                .compareWithInitialState(false)
-                .build();
+            .workingDirectory(working.resolve(t.name()))
+            .writeNetworksInputsResults(true)
+            .validateInitialState(true)
+            .compareWithInitialState(false)
+            .build();
         tester.testLoadFlow(t, validation);
     }
 
@@ -155,13 +167,13 @@ public class CgmesConformity1LoadFlowTest {
 
         TestGridModel t = catalog.smallBusBranch();
         LoadFlowValidation validation = new LoadFlowValidation.Builder()
-                .workingDirectory(working.resolve(t.name()))
-                .writeNetworksInputsResults(true)
-                .validateInitialState(true)
-                .threshold(0.1711)
-                .specificCompatibility(true)
-                .compareWithInitialState(true)
-                .build();
+            .workingDirectory(working.resolve(t.name()))
+            .writeNetworksInputsResults(true)
+            .validateInitialState(true)
+            .threshold(0.1711)
+            .specificCompatibility(true)
+            .compareWithInitialState(true)
+            .build();
         tester.testLoadFlow(t, validation);
     }
 
@@ -170,30 +182,30 @@ public class CgmesConformity1LoadFlowTest {
         // Same considerations made for bus-branch model apply here
         TestGridModel t = catalog.smallNodeBreaker();
         LoadFlowValidation validation = new LoadFlowValidation.Builder()
-                .workingDirectory(working.resolve(t.name()))
-                .writeNetworksInputsResults(true)
-                .validateInitialState(true)
-                .threshold(0.1711)
-                .specificCompatibility(true)
-                .compareWithInitialState(true)
-                .build();
+            .workingDirectory(working.resolve(t.name()))
+            .writeNetworksInputsResults(true)
+            .validateInitialState(true)
+            .threshold(0.1711)
+            .specificCompatibility(true)
+            .compareWithInitialState(true)
+            .build();
         tester.testLoadFlow(t, validation);
     }
 
     @Test
     public void smallGridNodeBreakerDL() {
         Network network = Importers.importData("CGMES",
-                catalog.smallNodeBreaker().dataSource(),
-                null,
-                LocalComputationManager.getDefault());
+            catalog.smallNodeBreaker().dataSource(),
+            null,
+            LocalComputationManager.getDefault());
         CgmesModelTripleStore cgmes = (CgmesModelTripleStore) network
-                .getExtension(CgmesModelExtension.class)
-                .getCgmesModel();
+            .getExtension(CgmesModelExtension.class)
+            .getCgmesModel();
         PropertyBags ds = cgmes.query(
-                "SELECT * WHERE { "
-                        + "?Diagram a cim:Diagram ; "
-                        + "cim:IdentifiedObject.name ?name ; "
-                        + "cim:Diagram.orientation ?orientation }");
+            "SELECT * WHERE { "
+                + "?Diagram a cim:Diagram ; "
+                + "cim:IdentifiedObject.name ?name ; "
+                + "cim:Diagram.orientation ?orientation }");
         assertEquals("_bcd073b6-227c-4a1d-923d-20a01b5ffe12", ds.get(0).getId("Diagram"));
         assertEquals("Diagram1", ds.get(0).getLocal("name"));
         assertEquals("OrientationKind.negative", ds.get(0).getLocal("orientation"));

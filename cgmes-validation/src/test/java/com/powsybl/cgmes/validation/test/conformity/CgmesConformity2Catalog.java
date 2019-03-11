@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.conformity;
 
 import java.nio.file.Path;
@@ -7,7 +14,7 @@ import com.powsybl.cgmes.model.test.TestGridModel;
 import com.powsybl.cgmes.validation.test.TestGridModelPath;
 import com.powsybl.commons.datasource.CompressionFormat;
 
-public class CgmesConformity2Catalog {
+class CgmesConformity2Catalog {
 
     public TestGridModel entsoeExplicitLoadFlow() {
         return new TestGridModelPath(

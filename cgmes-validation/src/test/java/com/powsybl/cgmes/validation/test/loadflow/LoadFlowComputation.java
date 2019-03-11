@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2017, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.cgmes.validation.test.loadflow;
 
 import java.io.IOException;
@@ -29,7 +36,7 @@ public class LoadFlowComputation {
     public enum LoadFlowEngine {
         HADES(HADES_CLASS_NAME), HELM(HELM_CLASS_NAME), MOCK(MOCK_CLASS_NAME);
 
-        private LoadFlowEngine(String className) {
+        LoadFlowEngine(String className) {
             this.className = className;
         }
 
@@ -45,8 +52,11 @@ public class LoadFlowComputation {
     }
 
     public LoadFlowComputation(LoadFlowEngine engine) {
-        Objects.requireNonNull(engine);
-        this.loadFlowFactory = loadFlowFactory(engine);
+        if (engine == null) {
+            this.loadFlowFactory = defaultFactory();
+        } else {
+            this.loadFlowFactory = loadFlowFactory(engine);
+        }
     }
 
     public boolean available() {
@@ -102,6 +112,7 @@ public class LoadFlowComputation {
     }
 
     private static LoadFlowFactory loadFlowFactory(LoadFlowEngine engine) {
+        Objects.requireNonNull(engine);
         LOG.info("Explicitly available LoadFlow engines  : {}",
                 Arrays.toString(LoadFlowEngine.values()));
         LOG.info("Selected LoadFlow engine               : {}", engine);
@@ -110,8 +121,7 @@ public class LoadFlowComputation {
             Class<? extends LoadFlowFactory> loadFlowFactoryClass;
             loadFlowFactoryClass = Class.forName(engine.className())
                     .asSubclass(LoadFlowFactory.class);
-            LoadFlowFactory loadFlowFactory = loadFlowFactoryClass.newInstance();
-            return loadFlowFactory;
+            return loadFlowFactoryClass.newInstance();
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException x) {
             LOG.error("Can not setup LoadFlowFactory {} for engine {}, error {}",
                     engine.className(), engine, x);
