@@ -30,6 +30,7 @@ public class CgmesModelsInterpretation extends Catalog {
                 interpretations.put(modelName(p), modelInterpretation.getInterpretation());
             } catch (Exception x) {
                 exceptions.put(modelName(p), x);
+                LOG.warn(x.getMessage());
             }
         });
         return interpretations;

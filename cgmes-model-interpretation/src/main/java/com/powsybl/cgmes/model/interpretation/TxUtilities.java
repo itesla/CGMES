@@ -133,26 +133,48 @@ class TxUtilities {
         return tapChangerData;
     }
 
+    protected double getSymmetricalAlphaMax(String ptype, double stepMin,
+            double stepMax, double pns, double psvi, double stepPhaseShiftIncrement) {
+        double alphaMax = 0.0;
+        for (double step = stepMin; step <= stepMax; step++) {
+            TapChangerData tapChangerData = getSymmetricalPhaseTapChangerData(ptype, step, pns, psvi, stepPhaseShiftIncrement);
+            if (tapChangerData.rptcA > alphaMax) {
+                alphaMax = tapChangerData.rptcA;
+            }
+        }
+        return alphaMax;
+    }
+    
     protected TapChangerData getSymmetricalPhaseTapChangerData(String ptype, double pstep,
-            double pns,
-            double psvi, double stepPhaseShiftIncrement1) {
+            double pns, double psvi, double stepPhaseShiftIncrement) {
         TapChangerData tapChangerData = new TapChangerData();
         tapChangerData.rptca = 1.0;
         tapChangerData.rptcA = 0.0;
-        if (stepPhaseShiftIncrement1 != 0.0) {
+        if (stepPhaseShiftIncrement != 0.0) {
             tapChangerData.rptca = 1.0;
-            tapChangerData.rptcA = (pstep - pns) * stepPhaseShiftIncrement1;
+            tapChangerData.rptcA = (pstep - pns) * stepPhaseShiftIncrement;
         } else {
             double dy = (pstep - pns) * (psvi / 100.0);
             tapChangerData.rptca = 1.0;
-            tapChangerData.rptcA = Math.toDegrees(Math.atan2(dy, 1.0));
+            tapChangerData.rptcA = Math.toDegrees(2 * Math.asin(dy / 2));
         }
         return tapChangerData;
     }
 
+    protected double getAsymmetricalAlphaMax(String ptype, double stepMin,
+            double stepMax, double pns, double psvi, double pwca) {
+        double alphaMax = 0.0;
+        for (double step = stepMin; step <= stepMax; step++) {
+            TapChangerData tapChangerData = getAsymmetricalPhaseTapChangerData(ptype, step, pns, psvi, pwca);
+            if (tapChangerData.rptcA > alphaMax) {
+                alphaMax = tapChangerData.rptcA;
+            }
+        }
+        return alphaMax;
+    }
+    
     protected TapChangerData getAsymmetricalPhaseTapChangerData(String ptype, double pstep,
-            double pns,
-            double psvi, double pwca) {
+            double pns, double psvi, double pwca) {
         TapChangerData tapChangerData = new TapChangerData();
         tapChangerData.rptca = 1.0;
         tapChangerData.rptcA = 0.0;
@@ -163,7 +185,22 @@ class TxUtilities {
 
         return tapChangerData;
     }
+    
+    protected double getSymmetricalX(double xStepMin, double xStepMax, double alphaDegrees, double alphaMaxDegrees) {
+        double alpha = Math.toRadians(alphaDegrees);
+        double alphaMax = Math.toRadians(alphaMaxDegrees);
+        return xStepMin + (xStepMax - xStepMin) * Math.pow(Math.sin(alpha / 2) / Math.sin(alphaMax / 2), 2);
+    }
 
+    protected double getAsymmetricalX(double xStepMin, double xStepMax, double alphaDegrees, double alphaMaxDegrees, double pwcaDegrees) {
+        double alpha = Math.toRadians(alphaDegrees);
+        double alphaMax = Math.toRadians(alphaMaxDegrees);
+        double pwca = Math.toRadians(pwcaDegrees);
+        double numer = Math.sin(pwca) - Math.tan(alphaMax) * Math.cos(pwca);
+        double denom = Math.sin(pwca) - Math.tan(alpha) * Math.cos(pwca);
+        return xStepMin + (xStepMax - xStepMin) * Math.pow(Math.tan(alpha) / Math.tan(alphaMax) * numer / denom, 2);
+    }
+    
     protected double getPhaseAngleClock(int phaseAngleClock) {
         double phaseAngleClockDegree = 0.0;
         phaseAngleClockDegree += phaseAngleClock * 30.0;

@@ -53,6 +53,14 @@ public class ModelInterpretation {
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
+        config.setT2xRatio0(EndDistribution.END2);
+        configs.add(config);
+        
+        config = new CgmesEquipmentModelMapping();
+        config.setLineRatio0(true);
+        configs.add(config);
+        
+        config = new CgmesEquipmentModelMapping();
         config.setT2xYShunt(EndDistribution.SPLIT);
         configs.add(config);
 

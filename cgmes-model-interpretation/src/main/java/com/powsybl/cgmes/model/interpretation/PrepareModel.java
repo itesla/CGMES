@@ -212,7 +212,7 @@ public class PrepareModel {
     }
 
     private void getZ0T2xNodesAd(PropertyBags ends, Map<String, List<String>> nodes) {
-        if (ends.size() == 2) {
+        if (ends.size() != 2) {
             return;
         }
 
@@ -473,7 +473,6 @@ public class PrepareModel {
                 double x2 = end2.asDouble("x");
                 String nodeId1 = t1.topologicalNode();
                 String nodeId2 = t2.topologicalNode();
-
                 if (t1.connected() && t2.connected() && isZ0(r1 + r2, x1 + x2, nodeId1, nodeId2)) {
                     return;
                 }
@@ -572,6 +571,21 @@ public class PrepareModel {
             String phaseStep = pt.get("SVtapStep");
             String phaseWindingConnectionAngle = pt.get("windingConnectionAngle");
             String ptcType = pt.getLocal("phaseTapChangerType").toLowerCase();
+            if (pt.containsKey("xStepMin") && pt.containsKey("xStepMax")) {
+                String xStepMin = pt.get("xStepMin");
+                String xStepMax = pt.get("xStepMax");
+                if (isStepRangeConsistent(Double.parseDouble(xStepMin), Double.parseDouble(xStepMax))) {
+                    transformer.put("xStepMin" + endNumber, xStepMin);
+                    transformer.put("xStepMax" + endNumber, xStepMax);
+                }
+            } else if (pt.containsKey("xMin") && pt.containsKey("xMax")) {
+                String xStepMin = pt.get("xMin");
+                String xStepMax = pt.get("xMax");
+                if (isStepRangeConsistent(Double.parseDouble(xStepMin), Double.parseDouble(xStepMax))) {
+                    transformer.put("xStepMin" + endNumber, xStepMin);
+                    transformer.put("xStepMax" + endNumber, xStepMax);
+                }
+            }
             if (tableId != null) {
                 transformer.put("PhaseTapChangerTable" + endNumber, tableId);
             }
@@ -612,6 +626,11 @@ public class PrepareModel {
             List<String> idTransformers = equipmentsInNode.computeIfAbsent(nodeId, z -> new ArrayList<>());
             idTransformers.add(id);
         }
+    }
+    
+    private boolean isStepRangeConsistent(double xStepMin, double xStepMax) {
+        boolean isNonConsistent = xStepMin < 0 || xStepMax <= 0 || xStepMin > xStepMax;
+        return !isNonConsistent;
     }
 
     private boolean isZ0(double r, double x, String nodeId1, String nodeId2) {

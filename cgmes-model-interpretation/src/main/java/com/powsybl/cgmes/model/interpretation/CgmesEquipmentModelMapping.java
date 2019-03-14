@@ -3,7 +3,7 @@ package com.powsybl.cgmes.model.interpretation;
 class CgmesEquipmentModelMapping {
 
     enum EndDistribution {
-        END1, END2, SPLIT, RTC, END1_END2
+        END1, END2, SPLIT, RTC, END1_END2, X
     }
 
     enum T3xDistribution {
@@ -132,6 +132,9 @@ class CgmesEquipmentModelMapping {
             case END1:
                 configuration.append("T2x_ratio0_end1.");
                 break;
+            case END2:
+                configuration.append("T2x_ratio0_end2.");
+                break;
             case RTC:
                 configuration.append("T2x_ratio0_rtc.");
                 break;
@@ -147,7 +150,7 @@ class CgmesEquipmentModelMapping {
         if (t2xPtc2Negate) {
             configuration.append("T2x_ptc2_tabular_negate_on.");
         }
-        switch (t2xRatioPhase) {
+        switch (t2xYShunt) {
             case END2:
                 configuration.append("T2x_yshunt_end2.");
                 break;
@@ -186,20 +189,23 @@ class CgmesEquipmentModelMapping {
                 configuration.append("T3x_clock_on_outside.");
                 break;
         }
+        if (configuration.length() == 0) {
+            configuration.append("Default.");
+        }
         return configuration.toString();
 
     }
 
-    EndDistribution    lineBshunt         = EndDistribution.SPLIT;
-    boolean            lineRatio0         = false;
-    EndDistribution    t2xRatio0          = EndDistribution.END2;
-    EndDistribution    t2xRatioPhase      = EndDistribution.END1_END2;
-    boolean            t2xPtc2Negate      = false;
-    EndDistribution    t2xYShunt          = EndDistribution.END1;
-    boolean            t2xPhaseAngleClock = false;
-    boolean            t2xPac2Negate      = false;
-    boolean            t3xRatio0Inside    = true;
-    boolean            t3xRatioPhaseInside     = false;
-    T3xDistribution    t3xYShunt          = T3xDistribution.OUTSIDE;
-    T3xPhaseAngleClock t3xPhaseAngleClock = T3xPhaseAngleClock.OFF;
+    EndDistribution    lineBshunt          = EndDistribution.SPLIT;
+    boolean            lineRatio0          = false;
+    EndDistribution    t2xRatio0           = EndDistribution.X;
+    EndDistribution    t2xRatioPhase       = EndDistribution.END1_END2;
+    boolean            t2xPtc2Negate       = false;
+    EndDistribution    t2xYShunt           = EndDistribution.END1;
+    boolean            t2xPhaseAngleClock  = false;
+    boolean            t2xPac2Negate       = false;
+    boolean            t3xRatio0Inside     = true;
+    boolean            t3xRatioPhaseInside = false;
+    T3xDistribution    t3xYShunt           = T3xDistribution.OUTSIDE;
+    T3xPhaseAngleClock t3xPhaseAngleClock  = T3xPhaseAngleClock.OFF;
 }

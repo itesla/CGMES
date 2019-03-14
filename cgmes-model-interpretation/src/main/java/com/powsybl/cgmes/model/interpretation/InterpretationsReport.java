@@ -2,6 +2,8 @@ package com.powsybl.cgmes.model.interpretation;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -18,6 +21,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.powsybl.cgmes.model.interpretation.InterpretationResult.ValidationData;
+import com.powsybl.commons.io.table.Column;
+import com.powsybl.commons.io.table.CsvTableFormatterFactory;
+import com.powsybl.commons.io.table.TableFormatter;
+import com.powsybl.commons.io.table.TableFormatterConfig;
 import com.powsybl.triplestore.api.PropertyBag;
 
 public class InterpretationsReport {
@@ -89,17 +96,23 @@ public class InterpretationsReport {
         modelReportBuilder.append(String.format("----> MODEL %s ", model));
         modelReportBuilder.append(System.getProperty("line.separator"));
         sortedMappingConfigurationData.keySet()
-                .forEach(mappingConfiguration -> interpretationReport(model, mappingConfiguration,
-                        mappingConfigurationData.get(mappingConfiguration), modelReportBuilder));
+                .forEach(mappingConfiguration -> {
+                    try {
+                        interpretationReport(model, mappingConfiguration,
+                                mappingConfigurationData.get(mappingConfiguration), modelReportBuilder);
+                    } catch (IOException e) {
+                        // Ignored
+                    }
+                });
         return modelReportBuilder.toString();
     }
 
     private void interpretationReport(String model, CgmesEquipmentModelMapping mappingConfiguration,
-            ValidationData validationData, StringBuilder modelReportBuilder) {
+            ValidationData validationData, StringBuilder modelReportBuilder) throws IOException {
         interpretationReportHeaderSection(model, mappingConfiguration, validationData,
                 modelReportBuilder);
         interpretationReportBalanceSection(validationData, modelReportBuilder);
-        interpretationReportNonBadVoltageNodesSection(validationData, modelReportBuilder);
+        interpretationReportBadNodesSection(validationData, modelReportBuilder);
         interpretationReportBadVoltageNodesSection(validationData, modelReportBuilder);
         interpretationReportModelSection(validationData, modelReportBuilder);
     }
@@ -112,7 +125,7 @@ public class InterpretationsReport {
     }
 
     private void interpretationReportBalanceSection(ValidationData validationData,
-            StringBuilder modelReportBuilder) {
+            StringBuilder modelReportBuilder) throws IOException {
 
         long notCalculatedNodes = validationData.balanceData.entrySet().stream().filter(entry -> {
             return !entry.getValue().asBoolean("calculated", false) && !entry.getValue().asBoolean("isolated", false);
@@ -164,74 +177,125 @@ public class InterpretationsReport {
         }).mapToDouble(Double::doubleValue).sum();
 
         LOG.debug(
-                "total error {} total nodes {} isolated nodes {} non-calculated nodes {} ok nodes {} bad error {} bad nodes {} pct {} badVoltage error {} badVoltage nodes {} pct {}",
+                "BALANCE -- total error;total nodes;isolated nodes;non-calculated nodes;ok nodes;bad error;bad nodes;pct;badVoltage error;badVoltage nodes;pct");
+        LOG.debug("{};{};{};{};{};{};{};{};{};{};{}",
                 validationData.balance, totalNodes, isolatedNodes, notCalculatedNodes, okNodes, badNodesError, badNodes,
                 Long.valueOf(badNodes).doubleValue()
                         / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
                 badVoltageNodesError, badVoltageNodes,
                 Long.valueOf(badVoltageNodes).doubleValue()
                         / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0);
-        modelReportBuilder.append(String.format(
-                "BALANCE --- total error %f total nodes %d isolated nodes %d non-calculated nodes %d ok nodes %d bad error %f bad nodes %d pct %f badVoltage error %f badVoltage nodes %d pct %f",
-                validationData.balance, totalNodes, isolatedNodes, notCalculatedNodes, okNodes, badNodesError, badNodes,
-                Long.valueOf(badNodes).doubleValue()
-                        / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
-                badVoltageNodesError, badVoltageNodes,
-                Long.valueOf(badVoltageNodes).doubleValue()
-                        / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0));
-        modelReportBuilder.append(System.getProperty("line.separator"));
+
+        TableFormatterConfig config = new TableFormatterConfig(Locale.US, ',', "-", true, true);
+        CsvTableFormatterFactory factory = new CsvTableFormatterFactory();
+        Column[] columns = new Column[] {
+                new Column("total error"),
+                new Column("total nodes"),
+                new Column("isolated nodes"),
+                new Column("non-calculated node"),
+                new Column("ok nodes"),
+                new Column("bad error"),
+                new Column("bad nodes"),
+                new Column("pct"),
+                new Column("badVoltage error"),
+                new Column("badVoltage nodes"),
+                new Column("pct")
+        };
+        try (Writer writer = new StringWriter()) {
+            TableFormatter formatter = factory.create(writer, "BALANCE", config, columns);
+            try {
+                formatter
+                        .writeCell(validationData.balance)
+                        .writeCell((int)totalNodes)
+                        .writeCell((int)isolatedNodes)
+                        .writeCell((int)notCalculatedNodes)
+                        .writeCell((int)okNodes)
+                        .writeCell(badNodesError)
+                        .writeCell((int)badNodes)
+                        .writeCell(Long.valueOf(badNodes).doubleValue()
+                                / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0)
+                        .writeCell(badVoltageNodesError)
+                        .writeCell((int)badVoltageNodes)
+                        .writeCell(Long.valueOf(badVoltageNodes).doubleValue()
+                                / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0);
+            } catch (IOException x) {
+                // Ignored
+            }
+            modelReportBuilder.append(writer.toString());
+        }
     }
 
-    private void interpretationReportNonBadVoltageNodesSection(ValidationData validationData,
+    private void interpretationReportBadNodesSection(ValidationData validationData,
             StringBuilder modelReportBuilder) {
+        boolean showOnlyBadNodes = true;
         boolean showOnlyBadVoltageNodes = false;
-        interpretationReportNodesSection("NODES", validationData, modelReportBuilder, showOnlyBadVoltageNodes);
+        interpretationReportNodesSection("BAD NODES", validationData, modelReportBuilder, showOnlyBadVoltageNodes,
+                showOnlyBadNodes);
     }
 
     private void interpretationReportBadVoltageNodesSection(ValidationData validationData,
             StringBuilder modelReportBuilder) {
+        boolean showOnlyBadNodes = false;
         boolean showOnlyBadVoltageNodes = true;
-        interpretationReportNodesSection("BAD VOLTAGE", validationData, modelReportBuilder, showOnlyBadVoltageNodes);
+        interpretationReportNodesSection("BAD VOLTAGE NODES", validationData, modelReportBuilder,
+                showOnlyBadVoltageNodes,
+                showOnlyBadNodes);
     }
 
     private void interpretationReportNodesSection(String prefix, ValidationData validationData,
-            StringBuilder modelReportBuilder, boolean showOnlyBadVoltageNodes) {
-        validationData.balanceData.keySet().stream().filter(nodes -> {
-            PropertyBag pb = validationData.balanceData.get(nodes);
-            double nodeBalanceP = pb.asDouble("balanceP");
-            double nodeBalanceQ = pb.asDouble("balanceQ");
-            boolean calculatedNode = pb.asBoolean("calculated", false);
-            boolean badVoltage = pb.asBoolean("badVoltage", false);
-            boolean badVoltageNode = calculatedNode && badVoltage
-                    && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
-            return !showOnlyBadVoltageNodes && !badVoltageNode || showOnlyBadVoltageNodes && badVoltageNode;
-        }).limit(SHOW_NODES).forEach(nodes -> {
-            PropertyBag pb = validationData.balanceData.get(nodes);
-            double nodeBalanceP = pb.asDouble("balanceP");
-            double nodeBalanceQ = pb.asDouble("balanceQ");
-            boolean calculatedNode = pb.asBoolean("calculated", false);
-            boolean isolatedNode = pb.asBoolean("isolated", false);
-            boolean badVoltage = pb.asBoolean("badVoltage", false);
-            int lines = pb.asInt("line");
-            int t2xs = pb.asInt("t2x");
-            int t3xs = pb.asInt("t3x");
-            boolean okNode = calculatedNode && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) <= BALANCE_TOLERANCE;
-            boolean badNode = calculatedNode && !badVoltage
-                    && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
-            boolean badVoltageNode = calculatedNode && badVoltage
-                    && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
-            LOG.debug(
-                    "id {} isolated {} calculated {} ok {} bad {} badVoltage {} balance {} {} lines {} t2xs {} t3xs {} nodes {}",
-                    nodes.iterator().next(), isolatedNode, calculatedNode, okNode, badNode, badVoltageNode,
-                    nodeBalanceP,
-                    nodeBalanceQ, lines, t2xs, t3xs, nodes);
-            modelReportBuilder.append(String.format(
-                    "%s --- id %s isolated %b calculated %b ok %b bad %b badVoltage %b balance %f %f lines %d t2xs %d t3xs %d nodes %s",
-                    prefix, nodes.iterator().next(), isolatedNode, calculatedNode, okNode, badNode, badVoltageNode,
-                    nodeBalanceP,
-                    nodeBalanceQ, lines, t2xs, t3xs, nodes));
-            modelReportBuilder.append(System.getProperty("line.separator"));
-        });
+            StringBuilder modelReportBuilder, boolean showOnlyBadVoltageNodes,
+            boolean showOnlyBadNodes) {
+        LOG.debug("%s -- id;balanceP;balanceQ;lines;t2xs;t3xs;nodes", prefix);
+
+        TableFormatterConfig config = new TableFormatterConfig(Locale.US, ',', "-", true, true);
+        CsvTableFormatterFactory factory = new CsvTableFormatterFactory();
+        Column[] columns = new Column[] {
+                new Column("id"),
+                new Column("balanceP"),
+                new Column("balanceQ"),
+                new Column("lines"),
+                new Column("t2xs"),
+                new Column("t3xs"),
+                new Column("nodes")
+        };
+        try (Writer writer = new StringWriter()) {
+            TableFormatter formatter = factory.create(writer, prefix, config, columns);
+            validationData.balanceData.keySet().stream().filter(nodes -> {
+                PropertyBag pb = validationData.balanceData.get(nodes);
+                double nodeBalanceP = pb.asDouble("balanceP");
+                double nodeBalanceQ = pb.asDouble("balanceQ");
+                boolean calculatedNode = pb.asBoolean("calculated", false);
+                boolean badVoltage = pb.asBoolean("badVoltage", false);
+                boolean badError = calculatedNode
+                        && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
+                return showOnlyBadNodes && badError || showOnlyBadVoltageNodes && badVoltage && badError;
+            }).limit(SHOW_NODES).forEach(nodes -> {
+                PropertyBag pb = validationData.balanceData.get(nodes);
+                double nodeBalanceP = pb.asDouble("balanceP");
+                double nodeBalanceQ = pb.asDouble("balanceQ");
+                int lines = pb.asInt("line");
+                int t2xs = pb.asInt("t2x");
+                int t3xs = pb.asInt("t3x");
+                LOG.debug("{},{},{},{},{},{},{}", nodes.iterator().next(), nodeBalanceP, nodeBalanceQ, lines, t2xs,
+                        t3xs,
+                        nodes);
+                try {
+                    formatter
+                            .writeCell(nodes.iterator().next())
+                            .writeCell(nodeBalanceP)
+                            .writeCell(nodeBalanceQ)
+                            .writeCell(lines)
+                            .writeCell(t2xs)
+                            .writeCell(t3xs)
+                            .writeCell(nodes.toString());
+                } catch (IOException x) {
+                    // Ignored
+                }
+            });
+            modelReportBuilder.append(writer.toString());
+        } catch (IOException e) {
+            // Ignored
+        }
     }
 
     private void interpretationReportModelSection(ValidationData validationData,
@@ -247,22 +311,44 @@ public class InterpretationsReport {
                     }
                 });
 
+        LOG.debug("DETECTED MODEL -- code,total,calculated,ok,evaluationCode");
+        TableFormatterConfig config = new TableFormatterConfig(Locale.US, ',', "-", true, true);
+        CsvTableFormatterFactory factory = new CsvTableFormatterFactory();
+        Column[] columns = new Column[] {
+                new Column("code"),
+                new Column("total"),
+                new Column("calculated"),
+                new Column("ok"),
+                new Column("evaluationCode")
+        };
+        modelReportBuilder.append("DETECTED MODEL -- code,total,calculated,ok,evaluationCode");
+        modelReportBuilder.append(System.getProperty("line.separator"));
+
         sortedByModelReport.putAll(validationData.detectedModelData);
-        sortedByModelReport.keySet().forEach(model -> {
-            LOG.debug("total {} calculated {} ok {} model {} evaluation {}",
-                    sortedByModelReport.get(model).total,
-                    sortedByModelReport.get(model).calculated,
-                    sortedByModelReport.get(model).ok,
-                    sortedByModelReport.get(model).code(),
-                    sortedByModelReport.get(model).conversionCode());
-            modelReportBuilder.append(String.format("DETECTED MODEL --- total %d calculated %d ok %d model %s evaluation %s",
-                    sortedByModelReport.get(model).total,
-                    sortedByModelReport.get(model).calculated,
-                    sortedByModelReport.get(model).ok,
-                    sortedByModelReport.get(model).code(),
-                    sortedByModelReport.get(model).conversionCode()));
-            modelReportBuilder.append(System.getProperty("line.separator"));
-        });
+        try (Writer writer = new StringWriter()) {
+            TableFormatter formatter = factory.create(writer, "DETECTED MODEL", config, columns);
+            sortedByModelReport.keySet().forEach(model -> {
+                LOG.debug("{},{},{},{},{}",
+                        sortedByModelReport.get(model).code(),
+                        sortedByModelReport.get(model).total,
+                        sortedByModelReport.get(model).calculated,
+                        sortedByModelReport.get(model).ok,
+                        sortedByModelReport.get(model).conversionCode());
+                try {
+                    formatter
+                            .writeCell(sortedByModelReport.get(model).code())
+                            .writeCell(sortedByModelReport.get(model).total)
+                            .writeCell(sortedByModelReport.get(model).calculated)
+                            .writeCell(sortedByModelReport.get(model).ok)
+                            .writeCell(sortedByModelReport.get(model).conversionCode());
+                } catch (IOException x) {
+                    // Ignored
+                }
+            });
+            modelReportBuilder.append(writer.toString());
+        } catch (IOException e) {
+            // Ignored
+        }
     }
 
     private final Path  output;

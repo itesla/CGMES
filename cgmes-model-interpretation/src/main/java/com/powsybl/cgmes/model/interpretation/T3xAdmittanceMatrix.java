@@ -35,6 +35,8 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
         pstep1 = transformer.asDouble("pstep1", 0.0);
         pls1 = transformer.asDouble("pls1", 0.0);
         phs1 = transformer.asDouble("phs1", 0.0);
+        xStepMin1 = transformer.asDouble("xStepMin1", 0.0);
+        xStepMax1 = transformer.asDouble("xStepMax1", 0.0);
         r2 = transformer.asDouble("r2", 0.0);
         x2 = transformer.asDouble("x2", 0.0);
         b2 = transformer.asDouble("b2", 0.0);
@@ -51,6 +53,8 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
         pstep2 = transformer.asDouble("pstep2", 0.0);
         pls2 = transformer.asDouble("pls2", 0.0);
         phs2 = transformer.asDouble("phs2", 0.0);
+        xStepMin2 = transformer.asDouble("xStepMin2", 0.0);
+        xStepMax2 = transformer.asDouble("xStepMax2", 0.0);
         r3 = transformer.asDouble("r3", 0.0);
         x3 = transformer.asDouble("x3", 0.0);
         b3 = transformer.asDouble("b3", 0.0);
@@ -67,6 +71,8 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
         pstep3 = transformer.asDouble("pstep3", 0.0);
         pls3 = transformer.asDouble("pls3", 0.0);
         phs3 = transformer.asDouble("phs3", 0.0);
+        xStepMin3 = transformer.asDouble("xStepMin3", 0.0);
+        xStepMax3 = transformer.asDouble("xStepMax3", 0.0);
         pwca1 = transformer.asDouble("pwca1", 0.0);
         pwca2 = transformer.asDouble("pwca2", 0.0);
         pwca3 = transformer.asDouble("pwca3", 0.0);
@@ -141,6 +147,11 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
             ptc1a = tapChangerData.rptca;
             ptc1A = tapChangerData.rptcA;
 
+            if (xStepMax1 > 0) {
+                double alphaMax = utils.getAsymmetricalAlphaMax(ptype1, pls1, phs1, pns1, psvi1, pwca1);
+                x1 = utils.getAsymmetricalX(xStepMin1, xStepMax1, ptc1A, alphaMax, pwca1);
+            }
+
             pct1AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi1,
                     pls1, phs1);
 
@@ -150,12 +161,24 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
                     stepPhaseShiftIncrement1);
             ptc1a = tapChangerData.rptca;
             ptc1A = tapChangerData.rptcA;
+
+            if (xStepMax1 > 0) {
+                double alphaMax = utils.getSymmetricalAlphaMax(ptype1, pls1, phs1, pns1, psvi1,
+                        stepPhaseShiftIncrement1);
+                x1 = utils.getSymmetricalX(xStepMin1, xStepMax1, ptc1A, alphaMax);
+            }
         } else {
             TapChangerData tapChangerData = utils.getSymmetricalPhaseTapChangerData(ptype1, pstep1, pns1,
                     psvi1,
                     stepPhaseShiftIncrement1);
             ptc1a = tapChangerData.rptca;
             ptc1A = tapChangerData.rptcA;
+
+            if (xStepMax1 > 0) {
+                double alphaMax = utils.getSymmetricalAlphaMax(ptype1, pls1, phs1, pns1, psvi1,
+                        stepPhaseShiftIncrement1);
+                x1 = utils.getSymmetricalX(xStepMin1, xStepMax1, ptc1A, alphaMax);
+            }
         }
 
         // ratio end2
@@ -212,6 +235,11 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
             ptc2a = tapChangerData.rptca;
             ptc2A = tapChangerData.rptcA;
 
+            if (xStepMax2 > 0) {
+                double alphaMax = utils.getAsymmetricalAlphaMax(ptype2, pls2, phs2, pns2, psvi2, pwca2);
+                x2 = utils.getAsymmetricalX(xStepMin2, xStepMax2, ptc2A, alphaMax, pwca2);
+            }
+
             pct2AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi2,
                     pls2, phs2);
 
@@ -221,12 +249,24 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
                     stepPhaseShiftIncrement2);
             ptc2a = tapChangerData.rptca;
             ptc2A = tapChangerData.rptcA;
+
+            if (xStepMax2 > 0) {
+                double alphaMax = utils.getSymmetricalAlphaMax(ptype2, pls2, phs2, pns2, psvi2,
+                        stepPhaseShiftIncrement2);
+                x2 = utils.getSymmetricalX(xStepMin2, xStepMax2, ptc2A, alphaMax);
+            }
         } else {
             TapChangerData tapChangerData = utils.getSymmetricalPhaseTapChangerData(ptype2, pstep2, pns2,
                     psvi2,
                     stepPhaseShiftIncrement2);
             ptc2a = tapChangerData.rptca;
             ptc2A = tapChangerData.rptcA;
+
+            if (xStepMax2 > 0) {
+                double alphaMax = utils.getSymmetricalAlphaMax(ptype2, pls2, phs2, pns2, psvi2,
+                        stepPhaseShiftIncrement2);
+                x2 = utils.getSymmetricalX(xStepMin2, xStepMax2, ptc2A, alphaMax);
+            }
         }
 
         // ratio end3
@@ -283,6 +323,11 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
             ptc3a = tapChangerData.rptca;
             ptc3A = tapChangerData.rptcA;
 
+            if (xStepMax3 > 0) {
+                double alphaMax = utils.getAsymmetricalAlphaMax(ptype3, pls3, phs3, pns3, psvi3, pwca3);
+                x3 = utils.getSymmetricalX(xStepMin3, xStepMax3, ptc3A, alphaMax);
+            }
+
             pct3AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi3,
                     pls3, phs3);
 
@@ -292,12 +337,24 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
                     stepPhaseShiftIncrement3);
             ptc3a = tapChangerData.rptca;
             ptc3A = tapChangerData.rptcA;
+
+            if (xStepMax3 > 0) {
+                double alphaMax = utils.getSymmetricalAlphaMax(ptype3, pls3, phs3, pns3, psvi3,
+                        stepPhaseShiftIncrement3);
+                x3 = utils.getSymmetricalX(xStepMin3, xStepMax3, ptc3A, alphaMax);
+            }
         } else {
             TapChangerData tapChangerData = utils.getSymmetricalPhaseTapChangerData(ptype3, pstep3, pns3,
                     psvi3,
                     stepPhaseShiftIncrement3);
             ptc3a = tapChangerData.rptca;
             ptc3A = tapChangerData.rptcA;
+
+            if (xStepMax3 > 0) {
+                double alphaMax = utils.getSymmetricalAlphaMax(ptype3, pls3, phs3, pns3, psvi3,
+                        stepPhaseShiftIncrement3);
+                x3 = utils.getSymmetricalX(xStepMin3, xStepMax3, ptc3A, alphaMax);
+            }
         }
 
         T3xRatioPhaseData ratioPhaseData = getT3xRatioPhase(config, rtc1a, ptc1a, rtc2a, ptc2a,
@@ -564,6 +621,8 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
     private final double                     pstep1;
     private final double                     pls1;
     private final double                     phs1;
+    private final double                     xStepMin1;
+    private final double                     xStepMax1;
     private double                           r2;
     private double                           x2;
     private double                           b2;
@@ -580,6 +639,8 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
     private final double                     pstep2;
     private final double                     pls2;
     private final double                     phs2;
+    private final double                     xStepMin2;
+    private final double                     xStepMax2;
     private double                           r3;
     private double                           x3;
     private double                           b3;
@@ -596,6 +657,8 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
     private final double                     pstep3;
     private final double                     pls3;
     private final double                     phs3;
+    private final double                     xStepMin3;
+    private final double                     xStepMax3;
     private final double                     pwca1;
     private final double                     pwca2;
     private final double                     pwca3;

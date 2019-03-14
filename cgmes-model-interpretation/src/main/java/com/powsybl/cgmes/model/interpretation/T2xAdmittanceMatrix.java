@@ -34,6 +34,8 @@ public class T2xAdmittanceMatrix extends AbstractAdmittanceMatrix {
         pstep1 = transformer.asDouble("pstep1", 0.0);
         pls1 = transformer.asDouble("pls1", 0.0);
         phs1 = transformer.asDouble("phs1", 0.0);
+        xStepMin1 = transformer.asDouble("xStepMin1", 0.0);
+        xStepMax1 = transformer.asDouble("xStepMax1", 0.0);
         r2 = transformer.asDouble("r2", 0.0);
         x2 = transformer.asDouble("x2", 0.0);
         b2 = transformer.asDouble("b2", 0.0);
@@ -50,6 +52,8 @@ public class T2xAdmittanceMatrix extends AbstractAdmittanceMatrix {
         pstep2 = transformer.asDouble("pstep2", 0.0);
         pls2 = transformer.asDouble("pls2", 0.0);
         phs2 = transformer.asDouble("phs2", 0.0);
+        xStepMin2 = transformer.asDouble("xStepMin2", 0.0);
+        xStepMax2 = transformer.asDouble("xStepMax2", 0.0);
         pwca1 = transformer.asDouble("pwca1", 0.0);
         pwca2 = transformer.asDouble("pwca2", 0.0);
         stepPhaseShiftIncrement1 = transformer.asDouble("pspsi1", 0.0);
@@ -118,21 +122,36 @@ public class T2xAdmittanceMatrix extends AbstractAdmittanceMatrix {
             ptc1a = tapChangerData.rptca;
             ptc1A = tapChangerData.rptcA;
 
+            if (xStepMax1 > 0) {
+                double alphaMax = utils.getAsymmetricalAlphaMax(ptype1, pls1, phs1, pns1, psvi1, pwca1);
+                x1 = utils.getAsymmetricalX(xStepMin1, xStepMax1, ptc1A, alphaMax, pwca1);
+            }
+
             pct1AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi1,
                     pls1, phs1);
 
         } else if (utils.phaseTapChangerIsSymmetrical(ptype1)) {
             TapChangerData tapChangerData = utils.getSymmetricalPhaseTapChangerData(ptype1, pstep1, pns1,
-                    psvi1,
-                    stepPhaseShiftIncrement1);
+                    psvi1, stepPhaseShiftIncrement1);
             ptc1a = tapChangerData.rptca;
             ptc1A = tapChangerData.rptcA;
+
+            if (xStepMax1 > 0) {
+                double alphaMax = utils.getSymmetricalAlphaMax(ptype1, pls1, phs1, pns1, psvi1,
+                        stepPhaseShiftIncrement1);
+                x1 = utils.getSymmetricalX(xStepMin1, xStepMax1, ptc1A, alphaMax);
+            }
         } else {
             TapChangerData tapChangerData = utils.getSymmetricalPhaseTapChangerData(ptype1, pstep1, pns1,
-                    psvi1,
-                    stepPhaseShiftIncrement1);
+                    psvi1, stepPhaseShiftIncrement1);
             ptc1a = tapChangerData.rptca;
             ptc1A = tapChangerData.rptcA;
+
+            if (xStepMax1 > 0) {
+                double alphaMax = utils.getSymmetricalAlphaMax(ptype1, pls1, phs1, pns1, psvi1,
+                        stepPhaseShiftIncrement1);
+                x1 = utils.getSymmetricalX(xStepMin1, xStepMax1, ptc1A, alphaMax);
+            }
         }
 
         // ratio end2
@@ -191,21 +210,36 @@ public class T2xAdmittanceMatrix extends AbstractAdmittanceMatrix {
             ptc2a = tapChangerData.rptca;
             ptc2A = tapChangerData.rptcA;
 
+            if (xStepMax2 > 0) {
+                double alphaMax = utils.getAsymmetricalAlphaMax(ptype2, pls2, phs2, pns2, psvi2, pwca2);
+                x2 = utils.getAsymmetricalX(xStepMin2, xStepMax2, ptc2A, alphaMax, pwca2);
+            }
+
             pct2AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi2,
                     pls2, phs2);
 
         } else if (utils.phaseTapChangerIsSymmetrical(ptype2)) {
             TapChangerData tapChangerData = utils.getSymmetricalPhaseTapChangerData(ptype2, pstep2, pns2,
-                    psvi2,
-                    stepPhaseShiftIncrement2);
+                    psvi2, stepPhaseShiftIncrement2);
             ptc2a = tapChangerData.rptca;
             ptc2A = tapChangerData.rptcA;
+
+            if (xStepMax2 > 0) {
+                double alphaMax = utils.getSymmetricalAlphaMax(ptype2, pls2, phs2, pns2, psvi2,
+                        stepPhaseShiftIncrement2);
+                x2 = utils.getSymmetricalX(xStepMin2, xStepMax2, ptc2A, alphaMax);
+            }
         } else {
             TapChangerData tapChangerData = utils.getSymmetricalPhaseTapChangerData(ptype2, pstep2, pns2,
-                    psvi2,
-                    stepPhaseShiftIncrement2);
+                    psvi2, stepPhaseShiftIncrement2);
             ptc2a = tapChangerData.rptca;
             ptc2A = tapChangerData.rptcA;
+
+            if (xStepMax2 > 0) {
+                double alphaMax = utils.getSymmetricalAlphaMax(ptype2, pls2, phs2, pns2, psvi2,
+                        stepPhaseShiftIncrement2);
+                x2 = utils.getSymmetricalX(xStepMin2, xStepMax2, ptc2A, alphaMax);
+            }
         }
 
         RatioPhaseData ratioPhaseData = getT2xRatioPhase(config, rtc1a, ptc1a, rtc2a, ptc2a, rtc1A,
@@ -238,7 +272,7 @@ public class T2xAdmittanceMatrix extends AbstractAdmittanceMatrix {
         a1 *= a01;
         a2 *= a02;
 
-        //admittance
+        // admittance
         angle1 = Math.toRadians(angle1);
         angle2 = Math.toRadians(angle2);
         Complex aA1 = new Complex(a1 * Math.cos(angle1), a1 * Math.sin(angle1));
@@ -265,7 +299,16 @@ public class T2xAdmittanceMatrix extends AbstractAdmittanceMatrix {
                 break;
             case RTC:
                 if (rsvi1 != 0.0) {
-                    ratio0Data.a01 = ratedU1 / ratedU2; // JAM TODO Es necesario el if ?
+                    ratio0Data.a01 = ratedU1 / ratedU2;
+                    ratio0Data.a02 = ratedU2 / ratedU2;
+                } else {
+                    ratio0Data.a01 = ratedU1 / ratedU1;
+                    ratio0Data.a02 = ratedU2 / ratedU1;
+                }
+                break;
+            case X:
+                if (x1 == 0.0) {
+                    ratio0Data.a01 = ratedU1 / ratedU2;
                     ratio0Data.a02 = ratedU2 / ratedU2;
                 } else {
                     ratio0Data.a01 = ratedU1 / ratedU1;
@@ -413,6 +456,8 @@ public class T2xAdmittanceMatrix extends AbstractAdmittanceMatrix {
     private final double                     pstep1;
     private final double                     pls1;
     private final double                     phs1;
+    private final double                     xStepMin1;
+    private final double                     xStepMax1;
     private double                           r2;
     private double                           x2;
     private double                           b2;
@@ -429,6 +474,8 @@ public class T2xAdmittanceMatrix extends AbstractAdmittanceMatrix {
     private final double                     pstep2;
     private final double                     pls2;
     private final double                     phs2;
+    private final double                     xStepMin2;
+    private final double                     xStepMax2;
     private final double                     pwca1;
     private final double                     pwca2;
     private final double                     stepPhaseShiftIncrement1;
