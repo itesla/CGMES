@@ -9,7 +9,6 @@ import java.util.Properties;
 
 import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.cgmes.model.triplestore.CgmesModelTripleStore;
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.commons.datasource.FileDataSource;
 import com.powsybl.commons.datasource.ZipFileDataSource;
@@ -26,7 +25,7 @@ public class Catalog {
     }
 
     public Network convert(String rpath) {
-        return convert(location.dataRoot().resolve(rpath), null);
+        return convert(location.dataRoot().resolve(rpath), null, location.boundary());
     }
 
     public Network convert(String rpath, Properties params) {
@@ -34,7 +33,7 @@ public class Catalog {
     }
 
     public Network convert(Path path) {
-        return convert(path, null, null);
+        return convert(path, null, location.boundary());
     }
 
     public Network convert(Path path, Properties params) {
@@ -47,9 +46,7 @@ public class Catalog {
             params.putAll(params0);
         }
         if (boundary != null) {
-            params.put("xxxxFIXMExxxPathnameForDataBoundary", boundary.toString());
-            String msg = "Explicit boundaries not available " + boundary;
-            throw new PowsyblException(msg);
+            params.put("iidm.import.cgmes.boundary-location", boundary.toString());
         }
         Network network = Importers.importData("CGMES",
             dataSource(path),
