@@ -47,6 +47,7 @@
 	
 	<modules>
 		<module>cgmes-validation</module>
+		<module>cgmes-validation-csi</module>
 		<module>distribution-core-cgmes</module>
 		<module>cgmes-tools</module>
 	</modules>
