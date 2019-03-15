@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Properties;
 
 import com.powsybl.cgmes.model.CgmesModel;
+import com.powsybl.cgmes.model.CgmesModelFactory;
 import com.powsybl.cgmes.model.triplestore.CgmesModelTripleStore;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.commons.datasource.FileDataSource;
@@ -22,6 +23,10 @@ public class Catalog {
     public Catalog(CatalogLocation location) {
         Objects.requireNonNull(location);
         this.location = location;
+    }
+
+    public CgmesModel cgmes(Path path) {
+        return CgmesModelFactory.create(dataSource(path), "rdf4j");
     }
 
     public Network convert(String rpath) {

@@ -24,10 +24,8 @@ public class CatalogReviewLimits extends CatalogReview {
         super(location);
     }
 
-    public void reviewAll(String pattern, String outputFilename) throws IOException {
-        Map<Path, LimitsSummary> limits = new HashMap<>();
-        Map<Path, String> mass = new HashMap<>();
-        Map<Path, Exception> wrong = reviewAll(
+    public void reviewAll(String pattern) throws IOException {
+        reviewAll(
             pattern,
             p -> {
                 Network network = convert(p);
@@ -39,11 +37,13 @@ public class CatalogReviewLimits extends CatalogReview {
                 mass.put(p, "-");
                 limits.put(p, new LimitsSummary());
             });
+    }
+
+    public void report(String outputFilename) throws IOException {
         reportLimits(outputFilename, limits, mass);
         reportLimitUseByEqClass(limits);
         reportLimitUseByEqClass3(limits);
         reportLimitAnomalies(limits);
-        reportWrong(wrong);
     }
 
     private void reportLimitUseByEqClass(Map<Path, LimitsSummary> limits) {
@@ -161,4 +161,7 @@ public class CatalogReviewLimits extends CatalogReview {
             }
         }));
     }
+
+    private final Map<Path, LimitsSummary> limits = new HashMap<>();
+    private final Map<Path, String> mass = new HashMap<>();
 }
