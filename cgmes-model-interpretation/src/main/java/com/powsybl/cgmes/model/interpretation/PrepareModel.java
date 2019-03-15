@@ -627,7 +627,7 @@ public class PrepareModel {
             idTransformers.add(id);
         }
     }
-    
+
     private boolean isStepRangeConsistent(double xStepMin, double xStepMax) {
         boolean isNonConsistent = xStepMin < 0 || xStepMax <= 0 || xStepMin > xStepMax;
         return !isNonConsistent;

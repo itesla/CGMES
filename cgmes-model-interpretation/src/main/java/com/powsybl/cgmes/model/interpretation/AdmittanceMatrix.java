@@ -2,7 +2,7 @@ package com.powsybl.cgmes.model.interpretation;
 
 import org.apache.commons.math3.complex.Complex;
 
-abstract class AbstractAdmittanceMatrix {
+class AdmittanceMatrix {
 
     Complex     yff;
     Complex     yft;

@@ -51,7 +51,7 @@ public class InterpretationsReport {
     }
 
     private void dump(Map<String, InterpretationResult> interpretations) throws IOException {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         LocalDateTime dateTime = LocalDateTime.now();
         String formattedDateTime = dateTime.format(formatter);
         try (BufferedWriter w = Files.newBufferedWriter(
@@ -189,33 +189,33 @@ public class InterpretationsReport {
         TableFormatterConfig config = new TableFormatterConfig(Locale.US, ',', "-", true, true);
         CsvTableFormatterFactory factory = new CsvTableFormatterFactory();
         Column[] columns = new Column[] {
-                new Column("total error"),
-                new Column("total nodes"),
-                new Column("isolated nodes"),
-                new Column("non-calculated node"),
-                new Column("ok nodes"),
-                new Column("bad error"),
-                new Column("bad nodes"),
-                new Column("pct"),
-                new Column("badVoltage error"),
-                new Column("badVoltage nodes"),
-                new Column("pct")
+            new Column("total error"),
+            new Column("total nodes"),
+            new Column("isolated nodes"),
+            new Column("non-calculated node"),
+            new Column("ok nodes"),
+            new Column("bad error"),
+            new Column("bad nodes"),
+            new Column("pct"),
+            new Column("badVoltage error"),
+            new Column("badVoltage nodes"),
+            new Column("pct")
         };
         try (Writer writer = new StringWriter()) {
             TableFormatter formatter = factory.create(writer, "BALANCE", config, columns);
             try {
                 formatter
                         .writeCell(validationData.balance)
-                        .writeCell((int)totalNodes)
-                        .writeCell((int)isolatedNodes)
-                        .writeCell((int)notCalculatedNodes)
-                        .writeCell((int)okNodes)
+                        .writeCell((int) totalNodes)
+                        .writeCell((int) isolatedNodes)
+                        .writeCell((int) notCalculatedNodes)
+                        .writeCell((int) okNodes)
                         .writeCell(badNodesError)
-                        .writeCell((int)badNodes)
+                        .writeCell((int) badNodes)
                         .writeCell(Long.valueOf(badNodes).doubleValue()
                                 / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0)
                         .writeCell(badVoltageNodesError)
-                        .writeCell((int)badVoltageNodes)
+                        .writeCell((int) badVoltageNodes)
                         .writeCell(Long.valueOf(badVoltageNodes).doubleValue()
                                 / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0);
             } catch (IOException x) {
@@ -250,13 +250,13 @@ public class InterpretationsReport {
         TableFormatterConfig config = new TableFormatterConfig(Locale.US, ',', "-", true, true);
         CsvTableFormatterFactory factory = new CsvTableFormatterFactory();
         Column[] columns = new Column[] {
-                new Column("id"),
-                new Column("balanceP"),
-                new Column("balanceQ"),
-                new Column("lines"),
-                new Column("t2xs"),
-                new Column("t3xs"),
-                new Column("nodes")
+            new Column("id"),
+            new Column("balanceP"),
+            new Column("balanceQ"),
+            new Column("lines"),
+            new Column("t2xs"),
+            new Column("t3xs"),
+            new Column("nodes")
         };
         try (Writer writer = new StringWriter()) {
             TableFormatter formatter = factory.create(writer, prefix, config, columns);
@@ -268,7 +268,7 @@ public class InterpretationsReport {
                 boolean badVoltage = pb.asBoolean("badVoltage", false);
                 boolean badError = calculatedNode
                         && Math.abs(nodeBalanceP) + Math.abs(nodeBalanceQ) > BALANCE_TOLERANCE;
-                return showOnlyBadNodes && badError || showOnlyBadVoltageNodes && badVoltage && badError;
+                return showOnlyBadNodes && !badVoltage && badError || showOnlyBadVoltageNodes && badVoltage && badError;
             }).limit(SHOW_NODES).forEach(nodes -> {
                 PropertyBag pb = validationData.balanceData.get(nodes);
                 double nodeBalanceP = pb.asDouble("balanceP");
@@ -315,14 +315,12 @@ public class InterpretationsReport {
         TableFormatterConfig config = new TableFormatterConfig(Locale.US, ',', "-", true, true);
         CsvTableFormatterFactory factory = new CsvTableFormatterFactory();
         Column[] columns = new Column[] {
-                new Column("code"),
-                new Column("total"),
-                new Column("calculated"),
-                new Column("ok"),
-                new Column("evaluationCode")
+            new Column("code"),
+            new Column("total"),
+            new Column("calculated"),
+            new Column("ok"),
+            new Column("evaluationCode")
         };
-        modelReportBuilder.append("DETECTED MODEL -- code,total,calculated,ok,evaluationCode");
-        modelReportBuilder.append(System.getProperty("line.separator"));
 
         sortedByModelReport.putAll(validationData.detectedModelData);
         try (Writer writer = new StringWriter()) {

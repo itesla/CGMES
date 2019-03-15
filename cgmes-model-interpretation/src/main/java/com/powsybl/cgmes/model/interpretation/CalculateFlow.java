@@ -123,7 +123,7 @@ public class CalculateFlow {
     }
 
     private void calculateEndFromFlow(String n, String nEnd1, double v1, double angleDegrees1,
-            AbstractAdmittanceMatrix admittanceMatrix) {
+            AdmittanceMatrix admittanceMatrix) {
         if (v1 == 0.0) {
             return;
         }
@@ -144,7 +144,7 @@ public class CalculateFlow {
     }
 
     private void calculateEndToFlow(String n, String nEnd2, double v2, double angleDegrees2,
-            AbstractAdmittanceMatrix admittanceMatrix) {
+            AdmittanceMatrix admittanceMatrix) {
         if (v2 == 0.0) {
             return;
         }
@@ -166,7 +166,7 @@ public class CalculateFlow {
 
     private void calculateBothEndsFlow(String n, String nEnd1, String nEnd2, double v1,
             double angleDegrees1,
-            double v2, double angleDegrees2, AbstractAdmittanceMatrix admittanceMatrix) {
+            double v2, double angleDegrees2, AdmittanceMatrix admittanceMatrix) {
         if (v1 == 0.0 || v2 == 0.0) {
             return;
         }

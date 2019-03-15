@@ -5,7 +5,7 @@ import org.apache.commons.math3.complex.Complex;
 import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.EndDistribution;
 import com.powsybl.triplestore.api.PropertyBag;
 
-public class LineAdmittanceMatrix extends AbstractAdmittanceMatrix {
+public class LineAdmittanceMatrix extends AdmittanceMatrix {
 
     public LineAdmittanceMatrix(PropertyBag line, CgmesEquipmentModelMapping config) {
         super();

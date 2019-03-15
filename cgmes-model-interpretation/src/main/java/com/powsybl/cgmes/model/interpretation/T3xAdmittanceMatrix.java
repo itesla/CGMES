@@ -12,7 +12,7 @@ import com.powsybl.cgmes.model.interpretation.TxUtilities.TapChangerData;
 import com.powsybl.cgmes.model.interpretation.TxUtilities.YShuntData;
 import com.powsybl.triplestore.api.PropertyBag;
 
-public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
+public class T3xAdmittanceMatrix extends AdmittanceMatrix3 {
 
     public T3xAdmittanceMatrix(CgmesModel cgmes, PropertyBag transformer, CgmesEquipmentModelMapping config) {
         super();
@@ -93,7 +93,7 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
     public void calculate() {
 
         // ratio end1
-        boolean rct1TabularDifferentRatios = false;
+        boolean rtc1TabularDifferentRatios = false;
         double rtc1a = 1.0;
         double rtc1A = 0.0;
         if (utils.ratioTapChangerIsTabular(ratioTapChangerTable1)) {
@@ -109,7 +109,7 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
 
             t3xParametersCorrectionEnd1(xc, rc, bc, gc);
 
-            rct1TabularDifferentRatios = utils.getTabularRatioTapChangerDifferentRatios(
+            rtc1TabularDifferentRatios = utils.getTabularRatioTapChangerDifferentRatios(
                     ratioTapChangerTable1);
         } else {
             TapChangerData tapChangerData = utils.getRatioTapChangerData(rstep1, rns1, rsvi1);
@@ -118,9 +118,9 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
         }
 
         // phase end1
-        boolean pct1TabularDifferentRatios = false;
-        boolean pct1TabularDifferentAngles = false;
-        boolean pct1AsymmetricalDifferentRatios = false;
+        boolean ptc1TabularDifferentRatios = false;
+        boolean ptc1TabularDifferentAngles = false;
+        boolean ptc1AsymmetricalDifferentRatios = false;
         double ptc1a = 1.0;
         double ptc1A = 0.0;
         if (utils.phaseTapChangerIsTabular(ptype1, phaseTapChangerTable1)) {
@@ -136,9 +136,9 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
 
             t3xParametersCorrectionEnd1(xc, rc, bc, gc);
 
-            pct1TabularDifferentRatios = utils.getTabularPhaseTapChangerDifferentRatios(
+            ptc1TabularDifferentRatios = utils.getTabularPhaseTapChangerDifferentRatios(
                     phaseTapChangerTable1);
-            pct1TabularDifferentAngles = utils.getTabularPhaseTapChangerDifferentAngles(
+            ptc1TabularDifferentAngles = utils.getTabularPhaseTapChangerDifferentAngles(
                     phaseTapChangerTable1);
 
         } else if (utils.phaseTapChangerIsAsymmetrical(ptype1)) {
@@ -152,7 +152,7 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
                 x1 = utils.getAsymmetricalX(xStepMin1, xStepMax1, ptc1A, alphaMax, pwca1);
             }
 
-            pct1AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi1,
+            ptc1AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi1,
                     pls1, phs1);
 
         } else if (utils.phaseTapChangerIsSymmetrical(ptype1)) {
@@ -182,7 +182,7 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
         }
 
         // ratio end2
-        boolean rct2TabularDifferentRatios = false;
+        boolean rtc2TabularDifferentRatios = false;
         double rtc2a = 1.0;
         double rtc2A = 0.0;
         if (utils.ratioTapChangerIsTabular(ratioTapChangerTable2)) {
@@ -198,7 +198,7 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
 
             t3xParametersCorrectionEnd2(xc, rc, bc, gc);
 
-            rct2TabularDifferentRatios = utils.getTabularRatioTapChangerDifferentRatios(
+            rtc2TabularDifferentRatios = utils.getTabularRatioTapChangerDifferentRatios(
                     ratioTapChangerTable2);
         } else {
             TapChangerData tapChangerData = utils.getRatioTapChangerData(rstep2, rns2, rsvi2);
@@ -207,9 +207,9 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
         }
 
         // phase end2
-        boolean pct2TabularDifferentRatios = false;
-        boolean pct2TabularDifferentAngles = false;
-        boolean pct2AsymmetricalDifferentRatios = false;
+        boolean ptc2TabularDifferentRatios = false;
+        boolean ptc2TabularDifferentAngles = false;
+        boolean ptc2AsymmetricalDifferentRatios = false;
         double ptc2a = 1.0;
         double ptc2A = 0.0;
         if (utils.phaseTapChangerIsTabular(ptype2, phaseTapChangerTable2)) {
@@ -224,9 +224,9 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
 
             t3xParametersCorrectionEnd2(xc, rc, bc, gc);
 
-            pct2TabularDifferentRatios = utils.getTabularPhaseTapChangerDifferentRatios(
+            ptc2TabularDifferentRatios = utils.getTabularPhaseTapChangerDifferentRatios(
                     phaseTapChangerTable2);
-            pct2TabularDifferentAngles = utils.getTabularPhaseTapChangerDifferentAngles(
+            ptc2TabularDifferentAngles = utils.getTabularPhaseTapChangerDifferentAngles(
                     phaseTapChangerTable2);
 
         } else if (utils.phaseTapChangerIsAsymmetrical(ptype2)) {
@@ -240,7 +240,7 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
                 x2 = utils.getAsymmetricalX(xStepMin2, xStepMax2, ptc2A, alphaMax, pwca2);
             }
 
-            pct2AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi2,
+            ptc2AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi2,
                     pls2, phs2);
 
         } else if (utils.phaseTapChangerIsSymmetrical(ptype2)) {
@@ -270,7 +270,7 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
         }
 
         // ratio end3
-        boolean rct3TabularDifferentRatios = false;
+        boolean rtc3TabularDifferentRatios = false;
         double rtc3a = 1.0;
         double rtc3A = 0.0;
         if (utils.ratioTapChangerIsTabular(ratioTapChangerTable3)) {
@@ -286,7 +286,7 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
 
             t3xParametersCorrectionEnd3(xc, rc, bc, gc);
 
-            rct3TabularDifferentRatios = utils.getTabularRatioTapChangerDifferentRatios(
+            rtc3TabularDifferentRatios = utils.getTabularRatioTapChangerDifferentRatios(
                     ratioTapChangerTable3);
         } else {
             TapChangerData tapChangerData = utils.getRatioTapChangerData(rstep3, rns3, rsvi3);
@@ -295,9 +295,9 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
         }
 
         // phase end3
-        boolean pct3TabularDifferentRatios = false;
-        boolean pct3TabularDifferentAngles = false;
-        boolean pct3AsymmetricalDifferentRatios = false;
+        boolean ptc3TabularDifferentRatios = false;
+        boolean ptc3TabularDifferentAngles = false;
+        boolean ptc3AsymmetricalDifferentRatios = false;
         double ptc3a = 1.0;
         double ptc3A = 0.0;
         if (utils.phaseTapChangerIsTabular(ptype3, phaseTapChangerTable3)) {
@@ -312,9 +312,9 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
 
             t3xParametersCorrectionEnd3(xc, rc, bc, gc);
 
-            pct3TabularDifferentRatios = utils.getTabularPhaseTapChangerDifferentRatios(
+            ptc3TabularDifferentRatios = utils.getTabularPhaseTapChangerDifferentRatios(
                     phaseTapChangerTable3);
-            pct3TabularDifferentAngles = utils.getTabularPhaseTapChangerDifferentAngles(
+            ptc3TabularDifferentAngles = utils.getTabularPhaseTapChangerDifferentAngles(
                     phaseTapChangerTable3);
 
         } else if (utils.phaseTapChangerIsAsymmetrical(ptype3)) {
@@ -328,7 +328,7 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
                 x3 = utils.getSymmetricalX(xStepMin3, xStepMax3, ptc3A, alphaMax);
             }
 
-            pct3AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi3,
+            ptc3AsymmetricalDifferentRatios = utils.getAsymmetricalPhaseTapChangerDifferentRatios(psvi3,
                     pls3, phs3);
 
         } else if (utils.phaseTapChangerIsSymmetrical(ptype3)) {
@@ -357,9 +357,22 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
             }
         }
 
+        boolean tc1DifferentRatios = utils.getTxDifferentRatios(rsvi1, rls1, rhs1, rtc1TabularDifferentRatios,
+                ptc1TabularDifferentRatios, ptc1AsymmetricalDifferentRatios);
+        boolean tc2DifferentRatios = utils.getTxDifferentRatios(rsvi2, rls2, rhs2, rtc2TabularDifferentRatios,
+                ptc2TabularDifferentRatios, ptc2AsymmetricalDifferentRatios);
+        boolean tc3DifferentRatios = utils.getTxDifferentRatios(rsvi3, rls3, rhs3, rtc3TabularDifferentRatios,
+                ptc3TabularDifferentRatios, ptc3AsymmetricalDifferentRatios);
+        boolean ptc1DifferentAngles = utils.getTxDifferentAngles(psvi1, stepPhaseShiftIncrement1, pls1, phs1,
+                ptc1TabularDifferentAngles);
+        boolean ptc2DifferentAngles = utils.getTxDifferentAngles(psvi2, stepPhaseShiftIncrement2, pls2, phs2,
+                ptc2TabularDifferentAngles);
+        boolean ptc3DifferentAngles = utils.getTxDifferentAngles(psvi3, stepPhaseShiftIncrement3, pls3, phs3,
+                ptc3TabularDifferentAngles);
+
         T3xRatioPhaseData ratioPhaseData = getT3xRatioPhase(config, rtc1a, ptc1a, rtc2a, ptc2a,
-                rtc3a, ptc3a,
-                rtc1A, ptc1A, rtc2A, ptc2A, rtc3A, ptc3A);
+                rtc3a, ptc3a, rtc1A, ptc1A, rtc2A, ptc2A, rtc3A, ptc3A, tc1DifferentRatios, ptc1DifferentAngles,
+                tc2DifferentRatios, ptc2DifferentAngles, tc3DifferentRatios, ptc3DifferentAngles);
         double a11 = ratioPhaseData.end1.a1;
         double angle11 = ratioPhaseData.end1.angle1;
         double a12 = ratioPhaseData.end1.a2;
@@ -372,6 +385,18 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
         double angle31 = ratioPhaseData.end3.angle1;
         double a32 = ratioPhaseData.end3.a2;
         double angle32 = ratioPhaseData.end3.angle2;
+        boolean tc11DifferentRatios = ratioPhaseData.end1.tc1DifferentRatios;
+        boolean tc12DifferentRatios = ratioPhaseData.end1.tc2DifferentRatios;
+        boolean ptc11DifferentAngles = ratioPhaseData.end1.ptc1DifferentAngles;
+        boolean ptc12DifferentAngles = ratioPhaseData.end1.ptc2DifferentAngles;
+        boolean tc21DifferentRatios = ratioPhaseData.end2.tc1DifferentRatios;
+        boolean tc22DifferentRatios = ratioPhaseData.end2.tc2DifferentRatios;
+        boolean ptc21DifferentAngles = ratioPhaseData.end2.ptc1DifferentAngles;
+        boolean ptc22DifferentAngles = ratioPhaseData.end2.ptc2DifferentAngles;
+        boolean tc31DifferentRatios = ratioPhaseData.end3.tc1DifferentRatios;
+        boolean tc32DifferentRatios = ratioPhaseData.end3.tc2DifferentRatios;
+        boolean ptc31DifferentAngles = ratioPhaseData.end3.ptc1DifferentAngles;
+        boolean ptc32DifferentAngles = ratioPhaseData.end3.ptc2DifferentAngles;
 
         // yshunt
         T3xYShuntData yShuntData = getT3xYShunt(config);
@@ -391,20 +416,14 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
         angle31 += phaseAngleClockData.end3.angle1;
         angle32 += phaseAngleClockData.end3.angle2;
 
-        end1.branchModel = new DetectedBranchModel(ysh11, ysh12, a11, angle11, a12, angle12, rsvi1, rls1,
-                rhs1, rct1TabularDifferentRatios, pct1TabularDifferentRatios,
-                pct1AsymmetricalDifferentRatios, psvi1, stepPhaseShiftIncrement1, pls1, phs1,
-                pct1TabularDifferentAngles);
+        end1.branchModel = new DetectedBranchModel(ysh11, ysh12, a11, angle11, a12, angle12, tc11DifferentRatios,
+                ptc11DifferentAngles, tc12DifferentRatios, ptc12DifferentAngles);
 
-        end2.branchModel = new DetectedBranchModel(ysh21, ysh22, a21, angle21, a22, angle22, rsvi2, rls2,
-                rhs2, rct2TabularDifferentRatios, pct2TabularDifferentRatios,
-                pct2AsymmetricalDifferentRatios, psvi2, stepPhaseShiftIncrement2, pls2, phs2,
-                pct2TabularDifferentAngles);
+        end2.branchModel = new DetectedBranchModel(ysh21, ysh22, a21, angle21, a22, angle22, tc21DifferentRatios,
+                ptc21DifferentAngles, tc22DifferentRatios, ptc22DifferentAngles);
 
-        end3.branchModel = new DetectedBranchModel(ysh31, ysh32, a31, angle31, a32, angle32, rsvi3, rls3,
-                rhs3, rct3TabularDifferentRatios, pct3TabularDifferentRatios,
-                pct3AsymmetricalDifferentRatios, psvi3, stepPhaseShiftIncrement3, pls3, phs3,
-                pct3TabularDifferentAngles);
+        end3.branchModel = new DetectedBranchModel(ysh31, ysh32, a31, angle31, a32, angle32, tc31DifferentRatios,
+                ptc31DifferentAngles, tc32DifferentRatios, ptc32DifferentAngles);
 
         // add structural ratio after detected branch model
         double ratedU0 = 1.0;
@@ -478,26 +497,39 @@ public class T3xAdmittanceMatrix extends AbstractAdmittanceMatrix3 {
     }
 
     private T3xRatioPhaseData getT3xRatioPhase(CgmesEquipmentModelMapping config, double rtc1a, double ptc1a,
-            double rtc2a,
-            double ptc2a,
-            double rtc3a, double ptc3a, double rtc1A, double ptc1A, double rtc2A, double ptc2A,
-            double rtc3A, double ptc3A) {
+            double rtc2a, double ptc2a, double rtc3a, double ptc3a, double rtc1A, double ptc1A, double rtc2A,
+            double ptc2A, double rtc3A, double ptc3A, boolean tc1DifferentRatios, boolean ptc1DifferentAngles,
+            boolean tc2DifferentRatios, boolean ptc2DifferentAngles, boolean tc3DifferentRatios,
+            boolean ptc3DifferentAngles) {
         T3xRatioPhaseData ratioPhaseData = new T3xRatioPhaseData();
         if (config.isT3xRatioPhaseInside()) {
             ratioPhaseData.end1.a2 = rtc1a * ptc1a;
             ratioPhaseData.end1.angle2 = rtc1A + ptc1A;
+            ratioPhaseData.end1.tc2DifferentRatios = tc1DifferentRatios;
+            ratioPhaseData.end1.ptc2DifferentAngles = ptc1DifferentAngles;
             ratioPhaseData.end2.a2 = rtc2a * ptc2a;
             ratioPhaseData.end2.angle2 = rtc2A + ptc2A;
+            ratioPhaseData.end2.tc2DifferentRatios = tc2DifferentRatios;
+            ratioPhaseData.end2.ptc2DifferentAngles = ptc2DifferentAngles;
             ratioPhaseData.end3.a2 = rtc3a * ptc3a;
             ratioPhaseData.end3.angle2 = rtc3A + ptc3A;
+            ratioPhaseData.end3.tc2DifferentRatios = tc3DifferentRatios;
+            ratioPhaseData.end3.ptc2DifferentAngles = ptc3DifferentAngles;
         } else {
             ratioPhaseData.end1.a1 = rtc1a * ptc1a;
             ratioPhaseData.end1.angle1 = rtc1A + ptc1A;
+            ratioPhaseData.end1.tc1DifferentRatios = tc1DifferentRatios;
+            ratioPhaseData.end1.ptc1DifferentAngles = ptc1DifferentAngles;
             ratioPhaseData.end2.a1 = rtc2a * ptc2a;
             ratioPhaseData.end2.angle1 = rtc2A + ptc2A;
+            ratioPhaseData.end2.tc1DifferentRatios = tc2DifferentRatios;
+            ratioPhaseData.end2.ptc1DifferentAngles = ptc2DifferentAngles;
             ratioPhaseData.end3.a1 = rtc3a * ptc3a;
             ratioPhaseData.end3.angle1 = rtc3A + ptc3A;
+            ratioPhaseData.end3.tc1DifferentRatios = tc3DifferentRatios;
+            ratioPhaseData.end3.ptc1DifferentAngles = ptc3DifferentAngles;
         }
+
         return ratioPhaseData;
     }
 

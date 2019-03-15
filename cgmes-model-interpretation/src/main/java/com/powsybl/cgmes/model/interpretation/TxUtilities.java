@@ -137,14 +137,15 @@ class TxUtilities {
             double stepMax, double pns, double psvi, double stepPhaseShiftIncrement) {
         double alphaMax = 0.0;
         for (double step = stepMin; step <= stepMax; step++) {
-            TapChangerData tapChangerData = getSymmetricalPhaseTapChangerData(ptype, step, pns, psvi, stepPhaseShiftIncrement);
+            TapChangerData tapChangerData = getSymmetricalPhaseTapChangerData(ptype, step, pns, psvi,
+                    stepPhaseShiftIncrement);
             if (tapChangerData.rptcA > alphaMax) {
                 alphaMax = tapChangerData.rptcA;
             }
         }
         return alphaMax;
     }
-    
+
     protected TapChangerData getSymmetricalPhaseTapChangerData(String ptype, double pstep,
             double pns, double psvi, double stepPhaseShiftIncrement) {
         TapChangerData tapChangerData = new TapChangerData();
@@ -172,7 +173,7 @@ class TxUtilities {
         }
         return alphaMax;
     }
-    
+
     protected TapChangerData getAsymmetricalPhaseTapChangerData(String ptype, double pstep,
             double pns, double psvi, double pwca) {
         TapChangerData tapChangerData = new TapChangerData();
@@ -185,14 +186,15 @@ class TxUtilities {
 
         return tapChangerData;
     }
-    
+
     protected double getSymmetricalX(double xStepMin, double xStepMax, double alphaDegrees, double alphaMaxDegrees) {
         double alpha = Math.toRadians(alphaDegrees);
         double alphaMax = Math.toRadians(alphaMaxDegrees);
         return xStepMin + (xStepMax - xStepMin) * Math.pow(Math.sin(alpha / 2) / Math.sin(alphaMax / 2), 2);
     }
 
-    protected double getAsymmetricalX(double xStepMin, double xStepMax, double alphaDegrees, double alphaMaxDegrees, double pwcaDegrees) {
+    protected double getAsymmetricalX(double xStepMin, double xStepMax, double alphaDegrees, double alphaMaxDegrees,
+            double pwcaDegrees) {
         double alpha = Math.toRadians(alphaDegrees);
         double alphaMax = Math.toRadians(alphaMaxDegrees);
         double pwca = Math.toRadians(pwcaDegrees);
@@ -200,7 +202,7 @@ class TxUtilities {
         double denom = Math.sin(pwca) - Math.tan(alpha) * Math.cos(pwca);
         return xStepMin + (xStepMax - xStepMin) * Math.pow(Math.tan(alpha) / Math.tan(alphaMax) * numer / denom, 2);
     }
-    
+
     protected double getPhaseAngleClock(int phaseAngleClock) {
         double phaseAngleClockDegree = 0.0;
         phaseAngleClockDegree += phaseAngleClock * 30.0;
@@ -209,6 +211,25 @@ class TxUtilities {
             phaseAngleClockDegree -= 360.0;
         }
         return phaseAngleClockDegree;
+    }
+
+    protected boolean getTxDifferentRatios(double rsvi, double rls, double rhs, boolean rtcTabularDifferentRatios,
+            boolean ptcTabularDifferentRatios, boolean ptcAsymmetricalDifferentRatios) {
+        if (rsvi != 0 && rls != rhs) {
+            return true;
+        }
+        return rtcTabularDifferentRatios || ptcTabularDifferentRatios || ptcAsymmetricalDifferentRatios;
+    }
+
+    protected boolean getTxDifferentAngles(double psvi, double stepPhaseShiftIncrement, double pls, double phs,
+            boolean ptcTabularDifferentAngles) {
+        if (psvi != 0 && pls != phs) {
+            return true;
+        }
+        if (stepPhaseShiftIncrement != 0 && pls != phs) {
+            return true;
+        }
+        return ptcTabularDifferentAngles;
     }
 
     static class TapChangerData {
@@ -221,10 +242,14 @@ class TxUtilities {
     }
 
     static class RatioPhaseData {
-        double a1     = 1.0;
-        double angle1 = 0.0;
-        double a2     = 1.0;
-        double angle2 = 0.0;
+        double  a1                  = 1.0;
+        double  angle1              = 0.0;
+        double  a2                  = 1.0;
+        double  angle2              = 0.0;
+        boolean tc1DifferentRatios  = false;
+        boolean ptc1DifferentAngles = false;
+        boolean tc2DifferentRatios  = false;
+        boolean ptc2DifferentAngles = false;
     }
 
     static class YShuntData {
@@ -244,5 +269,5 @@ class TxUtilities {
 
     protected CgmesModel          cgmes;
     protected static final Logger LOG = LoggerFactory
-            .getLogger(AbstractAdmittanceMatrix.class);
+            .getLogger(AdmittanceMatrix.class);
 }

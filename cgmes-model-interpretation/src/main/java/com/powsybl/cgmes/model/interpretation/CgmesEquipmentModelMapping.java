@@ -132,8 +132,8 @@ class CgmesEquipmentModelMapping {
             case END1:
                 configuration.append("T2x_ratio0_end1.");
                 break;
-            case END2:
-                configuration.append("T2x_ratio0_end2.");
+            case X:
+                configuration.append("T2x_ratio0_x.");
                 break;
             case RTC:
                 configuration.append("T2x_ratio0_rtc.");
@@ -145,6 +145,9 @@ class CgmesEquipmentModelMapping {
                 break;
             case END2:
                 configuration.append("T2x_ratio_end2.");
+                break;
+            case X:
+                configuration.append("T2x_ratio_x.");
                 break;
         }
         if (t2xPtc2Negate) {
@@ -198,7 +201,7 @@ class CgmesEquipmentModelMapping {
 
     EndDistribution    lineBshunt          = EndDistribution.SPLIT;
     boolean            lineRatio0          = false;
-    EndDistribution    t2xRatio0           = EndDistribution.X;
+    EndDistribution    t2xRatio0           = EndDistribution.END2;
     EndDistribution    t2xRatioPhase       = EndDistribution.END1_END2;
     boolean            t2xPtc2Negate       = false;
     EndDistribution    t2xYShunt           = EndDistribution.END1;
