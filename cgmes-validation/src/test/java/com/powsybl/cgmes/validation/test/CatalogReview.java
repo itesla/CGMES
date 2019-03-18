@@ -16,11 +16,11 @@ public class CatalogReview extends Catalog {
         super(location);
     }
 
-    protected Map<Path, Exception> reviewAll(String pattern, Consumer<Path> consumer) throws IOException {
-        return reviewAll(pattern, consumer, null);
+    protected void reviewAll(String pattern, Consumer<Path> consumer) throws IOException {
+        reviewAll(pattern, consumer, null);
     }
 
-    protected Map<Path, Exception> reviewAll(String pattern, Consumer<Path> consumer, Consumer<Path> dryRunConsumer)
+    protected void reviewAll(String pattern, Consumer<Path> consumer, Consumer<Path> dryRunConsumer)
         throws IOException {
         // Review all files or folders that match a given pattern
 
@@ -29,8 +29,6 @@ public class CatalogReview extends Catalog {
         // a single "*" is any sequence of characters inside the same folder
         PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher(pattern);
 
-        // What could possibly go wrong
-        Map<Path, Exception> wrong = new HashMap<>();
         try (Stream<Path> paths = Files.walk(location.dataRoot())) {
             paths.filter(pathMatcher::matches).forEach(path -> {
                 try {
@@ -45,14 +43,13 @@ public class CatalogReview extends Catalog {
                 }
             });
         }
-        return wrong;
     }
 
     public void setDryRun(boolean d) {
         dryRun = d;
     }
 
-    protected void reportWrong(Map<Path, Exception> wrong) {
+    protected void reportWrong() {
         if (wrong.isEmpty()) {
             return;
         }
@@ -62,6 +59,8 @@ public class CatalogReview extends Catalog {
             .sorted()
             .forEach(p -> System.err.printf("    %s %s%n", modelName(p), wrong.get(p).getMessage()));
     }
+
+    protected final Map<Path, Exception> wrong = new HashMap<>();
 
     private boolean dryRun = false;
 }

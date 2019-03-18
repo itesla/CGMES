@@ -1,7 +1,6 @@
 package com.powsybl.cgmes.validation.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -12,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.math3.complex.Complex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -73,71 +74,68 @@ public final class TestHelpers {
 
     // Check buses
 
-    private static final double DEFAULT_CHECK_BUSES_THRESHOLD = 1.0;
+    public static final double THR_P = 0.2;
+    public static final double THR_Q = 1.0;
 
-    public static void assertCheckBuses(Network network) {
-        assertTrue(checkBuses(network, DEFAULT_CHECK_BUSES_THRESHOLD));
+    public static boolean checkBuses(Network network, double thresholdp, double thresholdq) {
+        return checkBuses(network, thresholdp, thresholdq, null);
     }
 
-    public static void assertCheckBuses(Network network, double threshold) {
-        assertTrue(checkBuses(network, threshold));
-    }
-
-    public static boolean checkBuses(Network network) {
-        return checkBuses(network, DEFAULT_CHECK_BUSES_THRESHOLD, null);
-    }
-
-    public static boolean checkBuses(Network network, double threshold) {
-        return checkBuses(network, threshold, null);
-    }
-
-    public static boolean checkBuses(Network network, Map<String, Complex> errors) {
-        return checkBuses(network, DEFAULT_CHECK_BUSES_THRESHOLD, errors);
-    }
-
-    public static boolean checkBuses(Network network, double threshold, Map<String, Complex> errors) {
+    public static boolean checkBuses(
+        Network network,
+        double thresholdp,
+        double thresholdq,
+        Map<String, Complex> errors) {
         LoadFlowParameters lfp = loadFlowParameters();
         computeMissingFlows(network, lfp);
         try {
             try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
                 Path working = validationWorking(fs);
-                boolean r = ValidationType.BUSES.check(
+                ValidationType.BUSES.check(
                     network,
-                    validationConfig(fs, lfp, threshold),
+                    validationConfig(fs, lfp, Math.min(thresholdp, thresholdq)),
                     working);
-                if (errors != null) {
-                    List<String> lines = Files.readAllLines(
-                        ValidationType.BUSES.getOutputFile(working),
-                        Charset.defaultCharset());
-                    // Check header matches expected contents
-                    assertEquals("id;incomingP;incomingQ;loadP;loadQ", lines.get(1));
-                    // Skip title and header
-                    lines.stream().skip(2).forEach(d -> {
-                        String[] fields = d.split(";");
-                        String id = fields[0];
-                        try {
-                            double incomingp = asDouble(fields[1]);
-                            double incomingq = asDouble(fields[2]);
-                            double loadp = asDouble(fields[3]);
-                            double loadq = asDouble(fields[4]);
-                            // Ignore invalid values
-                            if (valid(incomingp, incomingq, loadp, loadq)) {
-                                double errp = Math.abs(incomingp + loadp);
-                                double errq = Math.abs(incomingq + loadq);
-                                if (errp > threshold || errq > threshold) {
-                                    errors.put(id, new Complex(errp, errq));
-                                }
-                            }
-                        } catch (Exception x) {
-                            System.out.println("error " + x.getMessage());
-                        }
-                    });
-                }
-                return r;
+                return validationCheckResults(working, thresholdp, thresholdq, errors);
             }
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
+    }
+
+    private static boolean validationCheckResults(
+        Path working,
+        double thresholdp,
+        double thresholdq,
+        Map<String, Complex> errors) throws IOException {
+        boolean[] result = {true};
+        List<String> lines = Files.readAllLines(ValidationType.BUSES.getOutputFile(working), Charset.defaultCharset());
+        // Check header matches expected contents
+        assertEquals("id;incomingP;incomingQ;loadP;loadQ", lines.get(1));
+        // Skip title and header
+        lines.stream().skip(2).forEach(d -> {
+            String[] fields = d.split(";");
+            String id = fields[0];
+            try {
+                double incomingp = asDouble(fields[1]);
+                double incomingq = asDouble(fields[2]);
+                double loadp = asDouble(fields[3]);
+                double loadq = asDouble(fields[4]);
+                // Ignore invalid values
+                if (valid(incomingp, incomingq, loadp, loadq)) {
+                    double errp = Math.abs(incomingp + loadp);
+                    double errq = Math.abs(incomingq + loadq);
+                    if (errp > thresholdp || errq > thresholdq) {
+                        result[0] = false;
+                        if (errors != null) {
+                            errors.put(id, new Complex(errp, errq));
+                        }
+                    }
+                }
+            } catch (Exception x) {
+                LOG.error("Error in checkBuses {}", x);
+            }
+        });
+        return result[0];
     }
 
     public static ValidationConfig validationConfig(FileSystem fs, LoadFlowParameters lfp, double threshold) {
@@ -178,4 +176,6 @@ public final class TestHelpers {
         }
         return true;
     }
+
+    private static final Logger LOG = LoggerFactory.getLogger(TestHelpers.class);
 }

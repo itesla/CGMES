@@ -1,5 +1,9 @@
 package com.powsybl.cgmes.validation.test;
 
+import static com.powsybl.cgmes.validation.test.TestHelpers.THR_P;
+import static com.powsybl.cgmes.validation.test.TestHelpers.THR_Q;
+import static com.powsybl.cgmes.validation.test.TestHelpers.checkBuses;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -16,19 +20,16 @@ public class CatalogReviewCheckBuses extends CatalogReview {
     }
 
     public void reviewAll(String pattern) throws IOException {
-        Map<Path, ResultsCheckBuses> results = new HashMap<>();
-        Map<Path, Exception> wrong = reviewAll(pattern, p -> {
+        reviewAll(pattern, p -> {
             Network network = convert(p);
             ResultsCheckBuses r = new ResultsCheckBuses(network);
-            r.checkBuses = TestHelpers.checkBuses(network, r.errors);
+            r.checkBuses = checkBuses(network, THR_P, THR_Q, r.errors);
             // intermediate results should be processed/compressed/summarized
             // so we keep use of memory "relatively" low
             // here, we are not doing any post-processing of the checkBuses results
             // we are simply storing all the details
             results.put(p, r);
         });
-        reportCheckBuses(results);
-        reportWrong(wrong);
     }
 
     private static class ResultsCheckBuses {
@@ -42,7 +43,7 @@ public class CatalogReviewCheckBuses extends CatalogReview {
         private final int numBuses;
     }
 
-    private void reportCheckBuses(Map<Path, ResultsCheckBuses> results) {
+    public void report() {
         System.err.println("");
         System.err.println("Results");
         System.err.println("Results    size, pctok, errp, errq, check, path");
@@ -76,4 +77,6 @@ public class CatalogReviewCheckBuses extends CatalogReview {
     private void reportBusError(String id, Complex error) {
         System.err.printf("        %10.2f %10.2f %s%n", error.getReal(), error.getImaginary(), id);
     }
+
+    private final Map<Path, ResultsCheckBuses> results = new HashMap<>();
 }
