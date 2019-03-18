@@ -74,7 +74,7 @@ public final class TestHelpers {
 
     // Check buses
 
-    public static final double THR_P = 0.1;
+    public static final double THR_P = 0.2;
     public static final double THR_Q = 1.0;
 
     public static boolean checkBuses(Network network, double thresholdp, double thresholdq) {
@@ -95,7 +95,7 @@ public final class TestHelpers {
                     network,
                     validationConfig(fs, lfp, Math.min(thresholdp, thresholdq)),
                     working);
-                return validationCheckResults(working, thresholdq, thresholdq, errors);
+                return validationCheckResults(working, thresholdp, thresholdq, errors);
             }
         } catch (IOException x) {
             throw new RuntimeException(x);
