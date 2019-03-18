@@ -14,6 +14,9 @@ import com.powsybl.cgmes.model.test.TestGridModel;
 import com.powsybl.cgmes.validation.test.TestGridModelPath;
 import com.powsybl.commons.datasource.CompressionFormat;
 
+/**
+ * @author Luma Zamarreño <zamarrenolm at aia.es>
+ */
 class CgmesConformity2Catalog {
 
     public TestGridModel entsoeExplicitLoadFlow() {
