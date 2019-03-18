@@ -50,6 +50,7 @@
 		<module>cgmes-validation-csi</module>
 		<module>distribution-core-cgmes</module>
 		<module>cgmes-tools</module>
+		<module>cgmes-model-interpretation</module>
 	</modules>
 	
 	<properties>
