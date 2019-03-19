@@ -10,16 +10,19 @@ package com.powsybl.cgmes.model.interpretation;
 import org.apache.commons.math3.complex.Complex;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel
+ *         <demiguelm at aia.es>
  */
 class AdmittanceMatrix {
 
-    // XXX Luma Review Uniform naming. Should we use 11, 12, 21, 22 instead of ff, ft, tf, tt ???
-    Complex     yff;
-    Complex     yft;
-    Complex     ytf;
-    Complex     ytt;
-    
-    // XXX LUMA Review Why we put here a detected branch model ? This is not part of an admittance matrix
+    // XXX Luma Review Uniform naming. Should we use 11, 12, 21, 22 instead of ff,
+    // ft, tf, tt ???
+    Complex yff;
+    Complex yft;
+    Complex ytf;
+    Complex ytt;
+
+    // XXX LUMA Review Why we put here a detected branch model ? This is not part of
+    // an admittance matrix
     DetectedBranchModel branchModel;
 }

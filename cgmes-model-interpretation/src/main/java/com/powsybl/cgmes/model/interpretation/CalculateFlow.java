@@ -207,7 +207,7 @@ public class CalculateFlow {
     }
 
     // XXX LUMA Review Duplicated code smell: too many similar functions; for sure they could be rewritten reusing code!
-    
+
     // T3x flow calculations
     private void calculateEnd1Flow(String n, String nEnd1, double v1,
             double angleDegrees1, T3xAdmittanceMatrix admittanceMatrix) {

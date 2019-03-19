@@ -22,7 +22,7 @@ import com.powsybl.triplestore.api.PropertyBag;
  * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
  */
 // XXX LUMA Review Do not like the T2x abbreviation
-// XXX LUMA Review According to the attributes in the class, it is not an admittance matrix, is a 2-winding tx model, with all its data, and eventually it may calculate an admittanceMatrix 
+// XXX LUMA Review According to the attributes in the class, it is not an admittance matrix, is a 2-winding tx model, with all its data, and eventually it may calculate an admittanceMatrix
 public class T2xAdmittanceMatrix extends AdmittanceMatrix {
 
     public T2xAdmittanceMatrix(CgmesModel cgmes, PropertyBag transformer, CgmesEquipmentModelMapping config) {
