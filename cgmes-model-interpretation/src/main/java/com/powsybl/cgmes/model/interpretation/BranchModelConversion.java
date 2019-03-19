@@ -15,6 +15,8 @@ import com.powsybl.cgmes.model.interpretation.DetectedBranchModel.ChangerType;
 public class BranchModelConversion {
 
     enum ConversionType {
+        // XXX Luma Review Not clear the meaning of "OK", "KO", "CONVERSION"
+        // NO_CONVERSION_REQUIRED, CONVERSION_NOT_POSSIBLE, CONVERSION_REQUIRED ???
         OK, KO, CONVERSION
     }
 
@@ -42,6 +44,7 @@ public class BranchModelConversion {
 
         String model = detectedBranchModel1.code() + "." + detectedBranchModel2.code() + "."
                 + detectedBranchModel3.code();
+        // XXX Luma Checking an string for an exact length ???
         if (model.length() == 20) {
             String model1 = model.substring(0, 6);
             String model11 = model1.substring(0, 3);
@@ -79,6 +82,8 @@ public class BranchModelConversion {
                 }
             }
 
+            // XXX Luma Review What should we do with the evalModel ???
+            // If we remove evalModel, we also can get rid of previous local variables
             String evalModel = model11 + model12 + "." + model21 + model22 + "." + model31 + model32;
         }
     }

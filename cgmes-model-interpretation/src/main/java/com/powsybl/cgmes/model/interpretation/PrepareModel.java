@@ -28,6 +28,10 @@ import com.powsybl.triplestore.api.PropertyBags;
 /**
  * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
  */
+// XXX Luma Review Use nouns for class names. What is a "PrepareModel" ??? 
+// Name does not give a hint about the objects of the class
+// Is it a wrapper around a CGMES Model that contains additional interpretation data?
+// Suggestion: InterpretedModel
 public class PrepareModel {
 
     public PrepareModel(CgmesModel m) {

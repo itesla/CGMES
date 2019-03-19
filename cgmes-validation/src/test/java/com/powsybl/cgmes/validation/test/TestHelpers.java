@@ -72,12 +72,17 @@ public final class TestHelpers {
     public static Network resetFlows(Network network) {
         network.getBranchStream().forEach(b -> {
             b.getTerminal1().setP(Double.NaN);
+            b.getTerminal1().setQ(Double.NaN);
             b.getTerminal2().setP(Double.NaN);
+            b.getTerminal2().setQ(Double.NaN);
         });
         network.getThreeWindingsTransformerStream().forEach(tx -> {
             tx.getLeg1().getTerminal().setP(Double.NaN);
+            tx.getLeg1().getTerminal().setQ(Double.NaN);
             tx.getLeg2().getTerminal().setP(Double.NaN);
+            tx.getLeg2().getTerminal().setQ(Double.NaN);
             tx.getLeg3().getTerminal().setP(Double.NaN);
+            tx.getLeg3().getTerminal().setQ(Double.NaN);
         });
         return network;
     }

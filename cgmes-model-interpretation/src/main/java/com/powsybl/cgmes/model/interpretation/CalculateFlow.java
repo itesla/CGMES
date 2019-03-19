@@ -16,6 +16,7 @@ import com.powsybl.triplestore.api.PropertyBag;
 /**
  * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
  */
+// XXX Luma Review A class should also be named with a noun, not a verb
 public class CalculateFlow {
 
     public CalculateFlow(PrepareModel inputModel) {
@@ -54,6 +55,8 @@ public class CalculateFlow {
         }
     }
 
+    // XXX LUMA Review Do not repeat "calculateFlow" if that concept is in the class name
+    // XXX LUMA Review For discussion: T2x abbreviation, prefer "TwoWindingsTransformer", as it is used in the rest of powsybl (easy to search)
     public void calculateFlowT2x(String n, PropertyBag node1, PropertyBag node2,
             PropertyBag transformer, CgmesEquipmentModelMapping config) {
         double v1 = node1.asDouble("v");
@@ -132,6 +135,7 @@ public class CalculateFlow {
         }
     }
 
+    // XXX LUMA Review Duplicated code smell; calculateEndFromFlow and calculateEndToFlow differ only in name of parameters ???
     private void calculateEndFromFlow(String n, String nEnd1, double v1, double angleDegrees1,
             AdmittanceMatrix admittanceMatrix) {
         if (v1 == 0.0) {
@@ -202,6 +206,8 @@ public class CalculateFlow {
         badVoltage = !anglesAreOk(angles);
     }
 
+    // XXX LUMA Review Duplicated code smell: too many similar functions; for sure they could be rewritten reusing code!
+    
     // T3x flow calculations
     private void calculateEnd1Flow(String n, String nEnd1, double v1,
             double angleDegrees1, T3xAdmittanceMatrix admittanceMatrix) {
@@ -522,6 +528,7 @@ public class CalculateFlow {
         return equipmentModel;
     }
 
+    // XXX LUMA Review Why not use AdmittanceMatrix here
     static class KronChainAdmittance {
         Complex yff;
         Complex yft;

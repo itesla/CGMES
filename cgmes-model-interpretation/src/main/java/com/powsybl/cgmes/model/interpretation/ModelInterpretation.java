@@ -186,6 +186,7 @@ public class ModelInterpretation {
     }
 
     private double calculateTotalBalanceError(ValidationData validationData) {
+        // XXX LUMA Review don't need to write block and return if lambda has only one expression
         double totalError = validationData.balanceData.values().stream().filter(pb -> {
             return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false);
         }).map(pb -> {
@@ -197,6 +198,7 @@ public class ModelInterpretation {
     private void calculateJoinedNodeBalance(CgmesEquipmentModelMapping config, List<String> nodes,
             PropertyBag nodeBalanceData, Map<String, DetectedEquipmentModel> nodeDetectedModelReport) {
         nodes.forEach(n -> {
+            // XXX LUMA Review Why a node in the list would be null ???
             if (n == null) {
                 LOG.warn("Node null");
                 return;
