@@ -9,6 +9,7 @@ package com.powsybl.cgmes.model.interpretation;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,12 +22,18 @@ import com.powsybl.cgmes.tools.Catalog;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel
+ *         <demiguelm at aia.es>
  */
 public class CgmesModelsInterpretation extends Catalog {
 
     public CgmesModelsInterpretation(String sdata) {
+        this(sdata, null);
+    }
+
+    public CgmesModelsInterpretation(String sdata, String sboundary) {
         super(sdata);
+        boundary = sboundary == null ? null : Paths.get(sboundary);
         exceptions = new HashMap<>();
     }
 
@@ -52,9 +59,15 @@ public class CgmesModelsInterpretation extends Catalog {
 
     private CgmesModel load(Path p) {
         String impl = TripleStoreFactory.defaultImplementation();
-        return CgmesModelFactory.create(dataSource(p), impl);
+        if (boundary == null) {
+            return CgmesModelFactory.create(dataSource(p), impl);
+        } else {
+            return CgmesModelFactory.create(dataSource(p), dataSource(boundary), impl);
+        }
     }
 
+    private final Path boundary;
+    // XXX LUMA Review exceptions should not be static
     private static Map<String, Exception> exceptions;
     private static final Logger LOG = LoggerFactory.getLogger(CgmesModelsInterpretation.class);
 }

@@ -281,8 +281,9 @@ public class PrepareModel {
             double nominalV = cgmes.nominalVoltage(baseVoltageId);
 
             PropertyBag node = nodes.computeIfAbsent(id, x -> new PropertyBag(propertyNames));
-            node.put("v", v);
-            node.put("angle", angle);
+            // XXX LUMA Review how to deal with invalid values (null values in some Topological Nodes after)
+            node.put("v", v == null ? "0" : v);
+            node.put("angle", angle == null ? "0" : angle);
             node.put("p", "0.0");
             node.put("q", "0.0");
             node.put("nominalV", Double.toString(nominalV));
@@ -321,8 +322,9 @@ public class PrepareModel {
             }
 
             node = nodes.computeIfAbsent(nodeId, x -> new PropertyBag(propertyNames));
-            node.put("v", v);
-            node.put("angle", angle);
+            // XXX LUMA Review dealing with invalid voltages
+            node.put("v", v == null ? "0" : v);
+            node.put("angle", angle == null ? "0" : angle);
             node.put("p", "0.0");
             node.put("q", "0.0");
         }
@@ -362,8 +364,9 @@ public class PrepareModel {
             String angle = n.get("angle");
 
             node = nodes.computeIfAbsent(nodeId, x -> new PropertyBag(propertyNames));
-            node.put("v", v);
-            node.put("angle", angle);
+            // XXX LUMA Review dealing with invalid voltages
+            node.put("v", v == null ? "0" : v);
+            node.put("angle", angle == null ? "0" : angle);
             node.put("p", "0.0");
             node.put("q", "0.0");
         }
