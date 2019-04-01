@@ -17,9 +17,9 @@ class CgmesEquipmentModelMapping {
     }
 
     // XXX LUMA Review prefer abbreviation Xfmr3
-    // XXX LUMA Review use of word "distribution" here may be confusing 
+    // XXX LUMA Review use of word "distribution" here may be confusing
     enum T3xDistribution {
-        // XXX LUMA Review INSIDE, OUTSIDE ==> STAR_BUS_SIDE, NETWORK_SIDE 
+        // XXX LUMA Review INSIDE, OUTSIDE ==> STAR_BUS_SIDE, NETWORK_SIDE
         INSIDE, OUTSIDE, SPLIT
     }
 
