@@ -27,6 +27,7 @@ public class BranchModelConversion {
         }
 
         // T2x
+        // XXX LUMA Review use standard abbreviation XFMR: XFMR2
         shunt2 = detectedBranchModel.shunt2 ? ConversionType.KO : ConversionType.OK;
         ratio2 = detectedBranchModel.ratio2.equals(ChangerType.CHANGEABLE_AT_NON_NEUTRAL) ? ConversionType.CONVERSION
                 : ConversionType.OK;

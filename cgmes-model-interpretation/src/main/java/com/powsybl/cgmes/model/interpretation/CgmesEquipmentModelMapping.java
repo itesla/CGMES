@@ -16,6 +16,8 @@ class CgmesEquipmentModelMapping {
         END1, END2, SPLIT, RTC, END1_END2, X
     }
 
+    // XXX LUMA Review prefer abbreviation Xfmr3
+    // XXX LUMA Review use of word "distribution" here may be confusing 
     enum T3xDistribution {
         INSIDE, OUTSIDE, SPLIT
     }

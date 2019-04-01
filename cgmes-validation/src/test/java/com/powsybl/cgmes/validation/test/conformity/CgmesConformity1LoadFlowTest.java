@@ -62,7 +62,7 @@ public class CgmesConformity1LoadFlowTest {
                 .writeNetworksInputsResults(true)
                 .validateInitialState(true)
                 .specificCompatibility(true)
-                // Threshold raised from 0.1 to 0.3 after 3wtx
+                // Threshold raised from 0.1 to 0.3 after xfmr3
                 .threshold(0.3)
                 // PP_Brussels 110 kV has huge mismatch due to phase shifter
                 // If we use the given SV tap position (16) mismatch is > 850 MW in P
@@ -77,7 +77,7 @@ public class CgmesConformity1LoadFlowTest {
                         2,
                         new PowerFlow(-55.2263, 221.8674))
                                 .debug())
-                // This is the required threshold after 3wtx flows calc has been added
+                // This is the required threshold after xmfr3 flows calc has been added
                 .threshold(1.2)
                 // TODO _3a3b27be does not have reactive margins as synchronous machine
                 // properties

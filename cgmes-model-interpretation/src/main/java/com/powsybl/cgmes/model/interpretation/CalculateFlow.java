@@ -57,6 +57,7 @@ public class CalculateFlow {
 
     // XXX LUMA Review Do not repeat "calculateFlow" if that concept is in the class name
     // XXX LUMA Review For discussion: T2x abbreviation, prefer "TwoWindingsTransformer", as it is used in the rest of powsybl (easy to search)
+    // XXX LUMA Review If abbreviation is "required", use standard one "xmfr": Xfmr2, Xfmr3
     public void calculateFlowT2x(String n, PropertyBag node1, PropertyBag node2,
             PropertyBag transformer, CgmesEquipmentModelMapping config) {
         double v1 = node1.asDouble("v");
