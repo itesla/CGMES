@@ -10,9 +10,11 @@ package com.powsybl.cgmes.model.interpretation;
 import org.apache.commons.math3.complex.Complex;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel
- *         <demiguelm at aia.es>
+ * XXX LUMA Review authors in separate lines
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
+// XXX LUMA Review this class should be named BranchAdmittanceMatrix ???
 class AdmittanceMatrix {
 
     // XXX Luma Review Uniform naming. Should we use 11, 12, 21, 22 instead of ff,

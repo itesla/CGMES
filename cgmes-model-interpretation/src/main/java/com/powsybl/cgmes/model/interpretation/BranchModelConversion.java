@@ -85,7 +85,6 @@ public class BranchModelConversion {
 
             // XXX Luma Review What should we do with the evalModel ???
             // If we remove evalModel, we also can get rid of previous local variables
-            String evalModel = model11 + model12 + "." + model21 + model22 + "." + model31 + model32;
         }
     }
 
