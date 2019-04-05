@@ -35,7 +35,8 @@ import com.powsybl.commons.io.table.TableFormatterConfig;
 import com.powsybl.triplestore.api.PropertyBag;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
 public class InterpretationsReport {
 
@@ -52,8 +53,7 @@ public class InterpretationsReport {
                 Entry<String, InterpretationResult> o2) -> {
             return Double.compare(o1.getValue().error, o2.getValue().error);
         };
-        Map<String, InterpretationResult> sortedResults = interpretations.entrySet().stream()
-                .sorted(byError.reversed())
+        Map<String, InterpretationResult> sortedResults = interpretations.entrySet().stream().sorted(byError.reversed())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
                     throw new AssertionError();
                 }, LinkedHashMap::new));
@@ -96,8 +96,7 @@ public class InterpretationsReport {
         };
 
         Map<CgmesEquipmentModelMapping, ValidationData> sortedMappingConfigurationData = mappingConfigurationData
-                .entrySet().stream()
-                .sorted(byBalance)
+                .entrySet().stream().sorted(byBalance)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
                     throw new AssertionError();
                 }, LinkedHashMap::new));
@@ -119,8 +118,7 @@ public class InterpretationsReport {
 
     private void interpretationReport(String model, CgmesEquipmentModelMapping mappingConfiguration,
             ValidationData validationData, StringBuilder modelReportBuilder) throws IOException {
-        interpretationReportHeaderSection(model, mappingConfiguration, validationData,
-                modelReportBuilder);
+        interpretationReportHeaderSection(model, mappingConfiguration, validationData, modelReportBuilder);
         interpretationReportBalanceSection(validationData, modelReportBuilder);
         interpretationReportBadNodesSection(validationData, modelReportBuilder);
         interpretationReportBadVoltageNodesSection(validationData, modelReportBuilder);
@@ -134,66 +132,55 @@ public class InterpretationsReport {
         modelReportBuilder.append(System.getProperty("line.separator"));
     }
 
-    private void interpretationReportBalanceSection(ValidationData validationData,
-            StringBuilder modelReportBuilder) throws IOException {
+    private void interpretationReportBalanceSection(ValidationData validationData, StringBuilder modelReportBuilder)
+            throws IOException {
 
-        long notCalculatedNodes = validationData.balanceData.entrySet().stream().filter(entry -> {
-            return !entry.getValue().asBoolean("calculated", false) && !entry.getValue().asBoolean("isolated", false);
-        }).count();
+        long notCalculatedNodes = validationData.balanceData.entrySet().stream()
+                .filter(entry -> !entry.getValue().asBoolean("calculated", false)
+                        && !entry.getValue().asBoolean("isolated", false))
+                .count();
 
         long totalNodes = validationData.balanceData.values().size();
-        long badNodes = validationData.balanceData.values().stream().filter(pb -> {
-            return pb.asBoolean("calculated", false) && !pb.asBoolean("badVoltage", false);
-        }).filter(pb -> {
-            return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
-        }).count();
+        long badNodes = validationData.balanceData.values().stream()
+                .filter(pb -> pb.asBoolean("calculated", false) && !pb.asBoolean("badVoltage", false))
+                .filter(pb -> (Math.abs(pb.asDouble("balanceP"))
+                        + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE)
+                .count();
 
-        long badVoltageNodes = validationData.balanceData.values().stream().filter(pb -> {
-            return pb.asBoolean("calculated", false) && pb.asBoolean("badVoltage", false);
-        }).filter(pb -> {
-            return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
-        }).count();
+        long badVoltageNodes = validationData.balanceData.values().stream()
+                .filter(pb -> pb.asBoolean("calculated", false) && pb.asBoolean("badVoltage", false))
+                .filter(pb -> (Math.abs(pb.asDouble("balanceP"))
+                        + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE)
+                .count();
 
-        long okNodes = validationData.balanceData.values().stream().filter(pb -> {
-            return pb.asBoolean("calculated", false);
-        }).filter(pb -> {
-            return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) <= BALANCE_TOLERANCE;
-        }).count();
+        long okNodes = validationData.balanceData.values().stream().filter(pb -> pb.asBoolean("calculated", false))
+                .filter(pb -> (Math.abs(pb.asDouble("balanceP"))
+                        + Math.abs(pb.asDouble("balanceQ"))) <= BALANCE_TOLERANCE)
+                .count();
 
-        long isolatedNodes = validationData.balanceData.values().stream().filter(pb -> {
-            return pb.asBoolean("isolated", false);
-        }).count();
+        long isolatedNodes = validationData.balanceData.values().stream().filter(pb -> pb.asBoolean("isolated", false))
+                .count();
 
-        double badVoltageNodesError = validationData.balanceData.values().stream().filter(pb -> {
-            return pb.asBoolean("calculated", false) && pb.asBoolean("badVoltage", false);
-        }).filter(pb -> {
-            return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
-        }).map(pb -> {
-            return Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"));
-        }).mapToDouble(Double::doubleValue).sum();
+        double badVoltageNodesError = validationData.balanceData.values().stream()
+                .filter(pb -> pb.asBoolean("calculated", false) && pb.asBoolean("badVoltage", false))
+                .filter(pb -> (Math.abs(pb.asDouble("balanceP"))
+                        + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE)
+                .map(pb -> Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ")))
+                .mapToDouble(Double::doubleValue).sum();
 
-        double badNodesError = validationData.balanceData.values().stream().filter(pb -> {
-            return pb.asBoolean("calculated", false) && !pb.asBoolean("badVoltage", false);
-        }).filter(pb -> {
-            return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
-        }).map(pb -> {
-            return Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ"));
-        }).mapToDouble(Double::doubleValue).sum();
+        double badNodesError = validationData.balanceData.values().stream()
+                .filter(pb -> pb.asBoolean("calculated", false) && !pb.asBoolean("badVoltage", false))
+                .filter(pb -> (Math.abs(pb.asDouble("balanceP"))
+                        + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE)
+                .map(pb -> Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ")))
+                .mapToDouble(Double::doubleValue).sum();
 
         LOG.debug(
                 "BALANCE -- total error;total nodes;isolated nodes;non-calculated nodes;ok nodes;bad error;bad nodes;pct;badVoltage error;badVoltage nodes;pct");
-        LOG.debug("{};{};{};{};{};{};{};{};{};{};{}",
-                validationData.balance, totalNodes, isolatedNodes, notCalculatedNodes, okNodes, badNodesError, badNodes,
-                Long.valueOf(badNodes).doubleValue()
-                        / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
-                badVoltageNodesError, badVoltageNodes,
-                Long.valueOf(badVoltageNodes).doubleValue()
+        LOG.debug("{};{};{};{};{};{};{};{};{};{};{}", validationData.balance, totalNodes, isolatedNodes,
+                notCalculatedNodes, okNodes, badNodesError, badNodes,
+                Long.valueOf(badNodes).doubleValue() / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0,
+                badVoltageNodesError, badVoltageNodes, Long.valueOf(badVoltageNodes).doubleValue()
                         / Long.valueOf(totalNodes - isolatedNodes).doubleValue() * 100.0);
 
         TableFormatterConfig config = new TableFormatterConfig(Locale.US, ',', "-", true, true);
@@ -235,8 +222,7 @@ public class InterpretationsReport {
         }
     }
 
-    private void interpretationReportBadNodesSection(ValidationData validationData,
-            StringBuilder modelReportBuilder) {
+    private void interpretationReportBadNodesSection(ValidationData validationData, StringBuilder modelReportBuilder) {
         boolean showOnlyBadNodes = true;
         boolean showOnlyBadVoltageNodes = false;
         interpretationReportNodesSection("BAD NODES", validationData, modelReportBuilder, showOnlyBadVoltageNodes,
@@ -248,14 +234,12 @@ public class InterpretationsReport {
         boolean showOnlyBadNodes = false;
         boolean showOnlyBadVoltageNodes = true;
         interpretationReportNodesSection("BAD VOLTAGE NODES", validationData, modelReportBuilder,
-                showOnlyBadVoltageNodes,
-                showOnlyBadNodes);
+                showOnlyBadVoltageNodes, showOnlyBadNodes);
     }
 
     private void interpretationReportNodesSection(String prefix, ValidationData validationData,
-            StringBuilder modelReportBuilder, boolean showOnlyBadVoltageNodes,
-            boolean showOnlyBadNodes) {
-        LOG.debug("%s -- id;balanceP;balanceQ;lines;t2xs;t3xs;nodes", prefix);
+            StringBuilder modelReportBuilder, boolean showOnlyBadVoltageNodes, boolean showOnlyBadNodes) {
+        LOG.debug("%s -- id;balanceP;balanceQ;lines;xfmr2s;xfmr3s;nodes", prefix);
 
         TableFormatterConfig config = new TableFormatterConfig(Locale.US, ',', "-", true, true);
         CsvTableFormatterFactory factory = new CsvTableFormatterFactory();
@@ -264,8 +248,8 @@ public class InterpretationsReport {
             new Column("balanceP"),
             new Column("balanceQ"),
             new Column("lines"),
-            new Column("t2xs"),
-            new Column("t3xs"),
+            new Column("xfmr2s"),
+            new Column("xfmr3s"),
             new Column("nodes")
         };
         try (Writer writer = new StringWriter()) {
@@ -284,19 +268,18 @@ public class InterpretationsReport {
                 double nodeBalanceP = pb.asDouble("balanceP");
                 double nodeBalanceQ = pb.asDouble("balanceQ");
                 int lines = pb.asInt("line");
-                int t2xs = pb.asInt("t2x");
-                int t3xs = pb.asInt("t3x");
-                LOG.debug("{},{},{},{},{},{},{}", nodes.iterator().next(), nodeBalanceP, nodeBalanceQ, lines, t2xs,
-                        t3xs,
-                        nodes);
+                int xfmr2s = pb.asInt("xfmr2");
+                int xfmr3s = pb.asInt("xfmr3");
+                LOG.debug("{},{},{},{},{},{},{}", nodes.iterator().next(), nodeBalanceP, nodeBalanceQ, lines, xfmr2s,
+                        xfmr3s, nodes);
                 try {
                     formatter
                             .writeCell(nodes.iterator().next())
                             .writeCell(nodeBalanceP)
                             .writeCell(nodeBalanceQ)
                             .writeCell(lines)
-                            .writeCell(t2xs)
-                            .writeCell(t3xs)
+                            .writeCell(xfmr2s)
+                            .writeCell(xfmr3s)
                             .writeCell(nodes.toString());
                 } catch (IOException x) {
                     // Ignored
@@ -308,8 +291,7 @@ public class InterpretationsReport {
         }
     }
 
-    private void interpretationReportModelSection(ValidationData validationData,
-            StringBuilder modelReportBuilder) {
+    private void interpretationReportModelSection(ValidationData validationData, StringBuilder modelReportBuilder) {
         Map<String, DetectedEquipmentModel> sortedByModelReport = new TreeMap<String, DetectedEquipmentModel>(
                 new Comparator<String>() {
                     @Override

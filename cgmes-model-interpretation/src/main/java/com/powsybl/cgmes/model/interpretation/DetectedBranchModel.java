@@ -10,7 +10,8 @@ package com.powsybl.cgmes.model.interpretation;
 import org.apache.commons.math3.complex.Complex;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
 class DetectedBranchModel {
 
@@ -29,16 +30,17 @@ class DetectedBranchModel {
     }
 
     public DetectedBranchModel(Complex ysh1, Complex ysh2, double a1, double angle1, double a2, double angle2,
-            boolean tc1DifferentRatios, boolean ptc1DifferentAngles, boolean tc2DifferentRatios, boolean ptc2DifferentAngles) {
-        this.ratio1 = t2xRatioModel(a1, tc1DifferentRatios);
-        this.phase1 = t2xPhaseModel(angle1, ptc1DifferentAngles);
+            boolean tc1DifferentRatios, boolean ptc1DifferentAngles, boolean tc2DifferentRatios,
+            boolean ptc2DifferentAngles) {
+        this.ratio1 = xfmrRatioModel(a1, tc1DifferentRatios);
+        this.phase1 = xfmrPhaseModel(angle1, ptc1DifferentAngles);
         this.shunt1 = shuntModel(ysh1);
         this.shunt2 = shuntModel(ysh2);
-        this.ratio2 = t2xRatioModel(a2, tc2DifferentRatios);
-        this.phase2 = t2xPhaseModel(angle2, ptc2DifferentAngles);
+        this.ratio2 = xfmrRatioModel(a2, tc2DifferentRatios);
+        this.phase2 = xfmrPhaseModel(angle2, ptc2DifferentAngles);
     }
 
-    private ChangerType t2xRatioModel(double a, boolean tcDifferentRatios) {
+    private ChangerType xfmrRatioModel(double a, boolean tcDifferentRatios) {
         if (a == 1.0) {
             if (tcDifferentRatios) {
                 return ChangerType.CHANGEABLE_AT_NEUTRAL;
@@ -54,12 +56,7 @@ class DetectedBranchModel {
         }
     }
 
-    private ChangerType t2xRatioModelNoRatio() {
-        return ChangerType.ABSENT;
-    }
-
-    private ChangerType t2xPhaseModel(double angle, boolean ptcDifferentAngles) {
-        StringBuilder model = new StringBuilder();
+    private ChangerType xfmrPhaseModel(double angle, boolean ptcDifferentAngles) {
         if (angle == 0.0) {
             if (ptcDifferentAngles) {
                 return ChangerType.CHANGEABLE_AT_NEUTRAL;
@@ -73,10 +70,6 @@ class DetectedBranchModel {
                 return ChangerType.FIXED;
             }
         }
-    }
-
-    private ChangerType t2xPhaseModelNoPhase() {
-        return ChangerType.ABSENT;
     }
 
     private boolean shuntModel(Complex ysh) {

@@ -9,40 +9,53 @@ package com.powsybl.cgmes.model.interpretation;
 
 import org.apache.commons.math3.complex.Complex;
 
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.EndDistribution;
+import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.LineShuntMappingAlternative;
 import com.powsybl.triplestore.api.PropertyBag;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
-public class LineAdmittanceMatrix extends AdmittanceMatrix {
+public class LineModel {
 
-    public LineAdmittanceMatrix(PropertyBag line, CgmesEquipmentModelMapping config) {
+    public LineModel(PropertyBag line, CgmesEquipmentModelMapping config) {
         super();
         this.config = config;
+        this.line = line;
+        admittanceMatrix = new BranchAdmittanceMatrix();
 
         r = line.asDouble("r");
         x = line.asDouble("x");
-        bch = line.asDouble("bch");
     }
 
-    public void calculate(double nominalV1, double nominalV2) {
+    public void interpret(double nominalV1, double nominalV2) {
 
+        // yshunt
         BShuntData bShuntData = getLineBshunt(config);
         double bsh1 = bShuntData.bsh1;
         double bsh2 = bShuntData.bsh2;
-
-        Complex z = new Complex(r, x);
         Complex ysh1 = new Complex(0.0, bsh1);
         Complex ysh2 = new Complex(0.0, bsh2);
 
+        detectBranchModel(bsh1, bsh2);
+
+        // add structural ratio after detected branch model
         // Lines with nominalV1 != nominalV2 (380, 400)
         double a0 = getLineRatio0(nominalV1, nominalV2, config);
-        yff = z.reciprocal().add(ysh1);
-        yft = z.reciprocal().negate().divide(a0);
-        ytf = z.reciprocal().negate().divide(a0);
-        ytt = z.reciprocal().add(ysh2).divide(a0 * a0);
 
+        // admittance
+        admittanceMatrix.calculateAdmittance(r, x, a0, 0.0, ysh1, 1.0, 0.0, ysh2);
+    }
+
+    public DetectedBranchModel getBranchModel() {
+        return branchModel;
+    }
+
+    public BranchAdmittanceMatrix getAdmittanceMatrix() {
+        return admittanceMatrix;
+    }
+
+    private void detectBranchModel(double bsh1, double bsh2) {
         branchModel = new DetectedBranchModel(bsh1, bsh2);
     }
 
@@ -59,7 +72,8 @@ public class LineAdmittanceMatrix extends AdmittanceMatrix {
     }
 
     private BShuntData getLineBshunt(CgmesEquipmentModelMapping config) {
-        EndDistribution lineBshunt = config.getLineBshunt();
+        double bch = line.asDouble("bch");
+        LineShuntMappingAlternative lineBshunt = config.getLineBshunt();
         BShuntData bShuntData = new BShuntData();
         switch (lineBshunt) {
             case END1:
@@ -82,8 +96,11 @@ public class LineAdmittanceMatrix extends AdmittanceMatrix {
     }
 
     private final CgmesEquipmentModelMapping config;
+    private final PropertyBag                line;
 
-    private final double               r;
-    private final double               x;
-    private final double               bch;
+    private final double                     r;
+    private final double                     x;
+
+    private BranchAdmittanceMatrix           admittanceMatrix;
+    private DetectedBranchModel              branchModel;
 }

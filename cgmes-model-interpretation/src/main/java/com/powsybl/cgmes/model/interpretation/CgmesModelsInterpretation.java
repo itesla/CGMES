@@ -22,8 +22,8 @@ import com.powsybl.cgmes.tools.Catalog;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel
- *         <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
 public class CgmesModelsInterpretation extends Catalog {
 
@@ -66,8 +66,7 @@ public class CgmesModelsInterpretation extends Catalog {
         }
     }
 
-    private final Path boundary;
-    // XXX LUMA Review exceptions should not be static
-    private static Map<String, Exception> exceptions;
-    private static final Logger LOG = LoggerFactory.getLogger(CgmesModelsInterpretation.class);
+    private final Path             boundary;
+    private Map<String, Exception> exceptions;
+    private static final Logger    LOG = LoggerFactory.getLogger(CgmesModelsInterpretation.class);
 }

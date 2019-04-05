@@ -26,15 +26,12 @@ import com.powsybl.triplestore.api.PropertyBag;
 import com.powsybl.triplestore.api.PropertyBags;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
-// XXX Luma Review Use nouns for class names. What is a "PrepareModel" ???
-// Name does not give a hint about the objects of the class
-// Is it a wrapper around a CGMES Model that contains additional interpretation data?
-// Suggestion: InterpretedModel
-public class PrepareModel {
+public class InterpretedModel {
 
-    public PrepareModel(CgmesModel m) {
+    public InterpretedModel(CgmesModel m) {
         cgmes = m;
     }
 
@@ -48,15 +45,10 @@ public class PrepareModel {
         getNodeFlow(cgmes, nodeParameters);
 
         if (LOG.isDebugEnabled()) {
-            nodeParameters.keySet().forEach(key -> {
-                LOG.debug("node {} ,  {}", key, nodeParameters.get(key));
-            });
-            lineParameters.keySet().forEach(key -> {
-                LOG.debug("line {} , {}", key, lineParameters.get(key));
-            });
-            transformerParameters.keySet().forEach(key -> {
-                LOG.debug("transformer {} , {}", key, transformerParameters.get(key));
-            });
+            nodeParameters.keySet().forEach(key -> LOG.debug("node {} ,  {}", key, nodeParameters.get(key)));
+            lineParameters.keySet().forEach(key -> LOG.debug("line {} , {}", key, lineParameters.get(key)));
+            transformerParameters.keySet()
+                    .forEach(key -> LOG.debug("transformer {} , {}", key, transformerParameters.get(key)));
         }
     }
 
@@ -116,8 +108,7 @@ public class PrepareModel {
         return equipmentsInNode;
     }
 
-    private List<List<String>> joinRetainedSwitchesNodes(CgmesModel cgmes,
-            Map<String, PropertyBag> nodeParameters) {
+    private List<List<String>> joinRetainedSwitchesNodes(CgmesModel cgmes, Map<String, PropertyBag> nodeParameters) {
 
         isolatedNodes = new HashMap<>();
         List<List<String>> joinedNodes = new ArrayList<>();
@@ -158,12 +149,10 @@ public class PrepareModel {
                 node.add(id1);
             }
         });
-        cgmes.acLineSegments()
-                .forEach(l -> getZ0LinesNodesAd(l, CgmesNames.AC_LINE_SEGMENT, nodes));
+        cgmes.acLineSegments().forEach(l -> getZ0LinesNodesAd(l, CgmesNames.AC_LINE_SEGMENT, nodes));
         cgmes.equivalentBranches().forEach(eb -> getZ0LinesNodesAd(eb, "EquivalentBranch", nodes));
-        cgmes.seriesCompensators()
-                .forEach(sc -> getZ0LinesNodesAd(sc, CgmesNames.SERIES_COMPENSATOR, nodes));
-        cgmes.groupedTransformerEnds().values().forEach(tends -> getZ0T2xNodesAd(tends, nodes));
+        cgmes.seriesCompensators().forEach(sc -> getZ0LinesNodesAd(sc, CgmesNames.SERIES_COMPENSATOR, nodes));
+        cgmes.groupedTransformerEnds().values().forEach(tends -> getZ0Xfmr2NodesAd(tends, nodes));
 
         List<String> visitedNodes = new ArrayList<>();
         nodeParameters.keySet().forEach(k -> {
@@ -204,8 +193,7 @@ public class PrepareModel {
         return joinedNodes;
     }
 
-    private void getZ0LinesNodesAd(PropertyBag equipment, String cgmesNameId,
-            Map<String, List<String>> nodes) {
+    private void getZ0LinesNodesAd(PropertyBag equipment, String cgmesNameId, Map<String, List<String>> nodes) {
         CgmesTerminal t1 = cgmes.terminal(equipment.getId(CgmesNames.TERMINAL + 1));
         CgmesTerminal t2 = cgmes.terminal(equipment.getId(CgmesNames.TERMINAL + 2));
         if (!t1.connected() || !t2.connected()) {
@@ -225,7 +213,7 @@ public class PrepareModel {
         node.add(nodeId1);
     }
 
-    private void getZ0T2xNodesAd(PropertyBags ends, Map<String, List<String>> nodes) {
+    private void getZ0Xfmr2NodesAd(PropertyBags ends, Map<String, List<String>> nodes) {
         if (ends.size() != 2) {
             return;
         }
@@ -281,7 +269,8 @@ public class PrepareModel {
             double nominalV = cgmes.nominalVoltage(baseVoltageId);
 
             PropertyBag node = nodes.computeIfAbsent(id, x -> new PropertyBag(propertyNames));
-            // XXX LUMA Review how to deal with invalid values (null values in some Topological Nodes after)
+            // XXX LUMA Review how to deal with invalid values (null values in some Topological
+            // Nodes after)
             node.put("v", v == null ? "0" : v);
             node.put("angle", angle == null ? "0" : angle);
             node.put("p", "0.0");
@@ -304,8 +293,7 @@ public class PrepareModel {
         cgmes.acDcConverters().forEach(e -> terminalFlow(cgmes, nodes, e));
     }
 
-    private void terminalFlow(CgmesModel cgmes, Map<String, PropertyBag> nodes,
-            PropertyBag equipment) {
+    private void terminalFlow(CgmesModel cgmes, Map<String, PropertyBag> nodes, PropertyBag equipment) {
         CgmesTerminal t = cgmes.terminal(equipment.getId(CgmesNames.TERMINAL));
         if (!t.connected()) {
             return;
@@ -350,8 +338,7 @@ public class PrepareModel {
         node.put("q", String.valueOf(qNode + qEquipment));
     }
 
-    private void equipmentFlow(CgmesModel cgmes, Map<String, PropertyBag> nodes,
-            PropertyBag equipment) {
+    private void equipmentFlow(CgmesModel cgmes, Map<String, PropertyBag> nodes, PropertyBag equipment) {
         CgmesTerminal t = cgmes.terminal(equipment.getId(CgmesNames.TERMINAL));
         if (!t.connected()) {
             return;
@@ -399,21 +386,17 @@ public class PrepareModel {
         node.put("q", String.valueOf(qNode + qEquipment));
     }
 
-    private Map<String, PropertyBag> lineParameters(CgmesModel cgmes,
-            Map<String, List<String>> equipmentsInNode) {
+    private Map<String, PropertyBag> lineParameters(CgmesModel cgmes, Map<String, List<String>> equipmentsInNode) {
 
         propertyNames = new ArrayList<>(Arrays.asList("r", "x", "bch"));
         Map<String, PropertyBag> lines = new HashMap<>();
-        cgmes.acLineSegments()
-                .forEach(l -> getLineParameters(l, CgmesNames.AC_LINE_SEGMENT, lines));
+        cgmes.acLineSegments().forEach(l -> getLineParameters(l, CgmesNames.AC_LINE_SEGMENT, lines));
         cgmes.equivalentBranches().forEach(eb -> getLineParameters(eb, "EquivalentBranch", lines));
-        cgmes.seriesCompensators()
-                .forEach(sc -> getLineParameters(sc, CgmesNames.SERIES_COMPENSATOR, lines));
+        cgmes.seriesCompensators().forEach(sc -> getLineParameters(sc, CgmesNames.SERIES_COMPENSATOR, lines));
         return lines;
     }
 
-    private void getLineParameters(PropertyBag equipment, String cgmesNameId,
-            Map<String, PropertyBag> lines) {
+    private void getLineParameters(PropertyBag equipment, String cgmesNameId, Map<String, PropertyBag> lines) {
         String id = equipment.getId(cgmesNameId);
         double r = equipment.asDouble("r");
         double x = equipment.asDouble("x");
@@ -504,20 +487,17 @@ public class PrepareModel {
             }
             if (partialConnected) {
                 // Add all ends. Associate with a node only it is connected to it
-                ends.forEach(end -> transformerEndParameters(cgmes, equipmentsInNode,
-                        powerTransformerRatioTapChanger, powerTransformerPhaseTapChanger,
-                        transformers,
-                        id, end));
+                ends.forEach(end -> transformerEndParameters(cgmes, equipmentsInNode, powerTransformerRatioTapChanger,
+                        powerTransformerPhaseTapChanger, transformers, id, end));
             }
         });
         return transformers;
     }
 
-    private void transformerEndParameters(CgmesModel cgmes,
-            Map<String, List<String>> equipmentsInNode,
+    private void transformerEndParameters(CgmesModel cgmes, Map<String, List<String>> equipmentsInNode,
             Map<String, PropertyBag> powerTransformerRatioTapChanger,
-            Map<String, PropertyBag> powerTransformerPhaseTapChanger,
-            Map<String, PropertyBag> transformers, String id, PropertyBag end) {
+            Map<String, PropertyBag> powerTransformerPhaseTapChanger, Map<String, PropertyBag> transformers, String id,
+            PropertyBag end) {
         String endNumber = end.get("endNumber");
         String r = end.get("r");
         String x = end.get("x");
@@ -713,6 +693,5 @@ public class PrepareModel {
     private Map<String, PropertyBag>   transformerParameters;
     private Map<String, List<String>>  equipmentsInNode;
 
-    private static final Logger        LOG = LoggerFactory
-            .getLogger(PrepareModel.class);
+    private static final Logger        LOG = LoggerFactory.getLogger(InterpretedModel.class);
 }

@@ -21,17 +21,18 @@ import org.junit.Test;
 import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.cgmes.model.interpretation.InterpretationResult;
 import com.powsybl.cgmes.model.interpretation.ModelInterpretation;
-import com.powsybl.cgmes.model.interpretation.PrepareModel;
+import com.powsybl.cgmes.model.interpretation.InterpretedModel;
 import com.powsybl.cgmes.model.triplestore.CgmesModelTripleStore;
 import com.powsybl.triplestore.api.PropertyBag;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
 public class TestKronAdmittance {
 
-    public static final String CIM_16_NAMESPACE = "http://iec.ch/TC57/2013/CIM-schema-cim16#";
+    public static final String  CIM_16_NAMESPACE  = "http://iec.ch/TC57/2013/CIM-schema-cim16#";
     private static final double BALANCE_TOLERANCE = 1.0;
 
     @BeforeClass
@@ -104,10 +105,10 @@ public class TestKronAdmittance {
     }
 
     private Map<String, List<String>> equipmentsInNodeModel(
-        Map<String, PropertyBag> lineParameters) {
+            Map<String, PropertyBag> lineParameters) {
         Map<String, List<String>> equipmentsInNode = new HashMap<>();
-        propertyNames = new ArrayList<>(Arrays.asList("r", "x", "bch", "terminal1", "terminal2",
-            "connected1", "connected2"));
+        propertyNames = new ArrayList<>(
+                Arrays.asList("r", "x", "bch", "terminal1", "terminal2", "connected1", "connected2"));
 
         lineParameters.keySet().forEach(id -> {
             PropertyBag line = lineParameters.get(id);
@@ -127,7 +128,7 @@ public class TestKronAdmittance {
         return equipmentsInNode;
     }
 
-    private PrepareModel testLineModel(boolean lineT2Connected) {
+    private InterpretedModel testLineModel(boolean lineT2Connected) {
         double sbase = 100.0;
         double vbase = 400.0;
         // Impedances are expressed in per-unit values,
@@ -209,7 +210,7 @@ public class TestKronAdmittance {
             }
         });
 
-        PrepareModel model = new PrepareModel(cgmes);
+        InterpretedModel model = new InterpretedModel(cgmes);
         model.setNodeParameters(nodeParameters);
         model.setJoinedNodes(joinedNodes);
         model.setLineParameters(lineParameters);
@@ -220,7 +221,7 @@ public class TestKronAdmittance {
         return model;
     }
 
-    private PrepareModel testT2xModel(boolean t2xT2Connected) {
+    private InterpretedModel testXfmr2Model(boolean xfmr2T2Connected) {
         double sbase = 100.0;
         double vbase = 400.0;
         // Impedances are expressed in per-unit values,
@@ -279,32 +280,32 @@ public class TestKronAdmittance {
         Map<String, PropertyBag> transformerParameters = new HashMap<>();
 
         id = "T2";
-        PropertyBag t2x = transformerParameters.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
-        t2x.put("r1", Double.toString(0.0016 / zpu));
-        t2x.put("x1", Double.toString(0.091 / zpu));
-        t2x.put("b1", Double.toString(0.39 * zpu));
-        t2x.put("g1", Double.toString(0.0));
-        t2x.put("ratedU1", Double.toString(400.0));
-        t2x.put("r2", Double.toString(0.0));
-        t2x.put("x2", Double.toString(0.0));
-        t2x.put("b2", Double.toString(0.0));
-        t2x.put("g2", Double.toString(0.0));
-        t2x.put("ratedU2", Double.toString(400.0));
+        PropertyBag xfmr2 = transformerParameters.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
+        xfmr2.put("r1", Double.toString(0.0016 / zpu));
+        xfmr2.put("x1", Double.toString(0.091 / zpu));
+        xfmr2.put("b1", Double.toString(0.39 * zpu));
+        xfmr2.put("g1", Double.toString(0.0));
+        xfmr2.put("ratedU1", Double.toString(400.0));
+        xfmr2.put("r2", Double.toString(0.0));
+        xfmr2.put("x2", Double.toString(0.0));
+        xfmr2.put("b2", Double.toString(0.0));
+        xfmr2.put("g2", Double.toString(0.0));
+        xfmr2.put("ratedU2", Double.toString(400.0));
         nodeId1 = "T";
         t1connected = true;
-        t2x.put("terminal1", nodeId1);
-        t2x.put("connected1", Boolean.toString(t1connected));
+        xfmr2.put("terminal1", nodeId1);
+        xfmr2.put("connected1", Boolean.toString(t1connected));
         if (t1connected) {
-            List<String> idT2x = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
-            idT2x.add(id);
+            List<String> idXfmr2 = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
+            idXfmr2.add(id);
         }
         nodeId2 = "2";
-        t2connected = t2xT2Connected;
-        t2x.put("terminal2", nodeId2);
-        t2x.put("connected2", Boolean.toString(t2connected));
+        t2connected = xfmr2T2Connected;
+        xfmr2.put("terminal2", nodeId2);
+        xfmr2.put("connected2", Boolean.toString(t2connected));
         if (t2connected) {
-            List<String> idT2x = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
-            idT2x.add(id);
+            List<String> idXfmr2 = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
+            idXfmr2.add(id);
         }
 
         Map<List<String>, Boolean> isolatedNodes = new HashMap<>();
@@ -318,7 +319,7 @@ public class TestKronAdmittance {
             }
         });
 
-        PrepareModel model = new PrepareModel(cgmes);
+        InterpretedModel model = new InterpretedModel(cgmes);
         model.setNodeParameters(nodeParameters);
         model.setJoinedNodes(joinedNodes);
         model.setLineParameters(lineParameters);
@@ -329,7 +330,7 @@ public class TestKronAdmittance {
         return model;
     }
 
-    private PrepareModel testT3xModel(boolean t2xT2Connected) {
+    private InterpretedModel testXfmr3Model(boolean xfmr3T2Connected) {
         double sbase = 100.0;
         double vbase = 400.0;
         // Impedances are expressed in per-unit values,
@@ -350,45 +351,45 @@ public class TestKronAdmittance {
         Map<String, PropertyBag> transformerParameters = new HashMap<>();
 
         String id = "123";
-        PropertyBag t3x = transformerParameters.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
-        t3x.put("r1", Double.toString(0.0016 / zpu));
-        t3x.put("x1", Double.toString(0.091 / zpu));
-        t3x.put("b1", Double.toString(0.39 * zpu));
-        t3x.put("g1", Double.toString(0.0));
-        t3x.put("ratedU1", Double.toString(400.0));
-        t3x.put("r2", Double.toString(0.0));
-        t3x.put("x2", Double.toString(0.0));
-        t3x.put("b2", Double.toString(0.0));
-        t3x.put("g2", Double.toString(0.0));
-        t3x.put("ratedU2", Double.toString(400.0));
-        t3x.put("r3", Double.toString(0.0));
-        t3x.put("x3", Double.toString(0.0));
-        t3x.put("b3", Double.toString(0.0));
-        t3x.put("g3", Double.toString(0.0));
-        t3x.put("ratedU3", Double.toString(400.0));
+        PropertyBag xfmr3 = transformerParameters.computeIfAbsent(id, z -> new PropertyBag(propertyNames));
+        xfmr3.put("r1", Double.toString(0.0016 / zpu));
+        xfmr3.put("x1", Double.toString(0.091 / zpu));
+        xfmr3.put("b1", Double.toString(0.39 * zpu));
+        xfmr3.put("g1", Double.toString(0.0));
+        xfmr3.put("ratedU1", Double.toString(400.0));
+        xfmr3.put("r2", Double.toString(0.0));
+        xfmr3.put("x2", Double.toString(0.0));
+        xfmr3.put("b2", Double.toString(0.0));
+        xfmr3.put("g2", Double.toString(0.0));
+        xfmr3.put("ratedU2", Double.toString(400.0));
+        xfmr3.put("r3", Double.toString(0.0));
+        xfmr3.put("x3", Double.toString(0.0));
+        xfmr3.put("b3", Double.toString(0.0));
+        xfmr3.put("g3", Double.toString(0.0));
+        xfmr3.put("ratedU3", Double.toString(400.0));
         String nodeId1 = "1";
         boolean t1connected = true;
-        t3x.put("terminal1", nodeId1);
-        t3x.put("connected1", Boolean.toString(t1connected));
+        xfmr3.put("terminal1", nodeId1);
+        xfmr3.put("connected1", Boolean.toString(t1connected));
         if (t1connected) {
-            List<String> idT3x = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
-            idT3x.add(id);
+            List<String> idXfmr3 = equipmentsInNode.computeIfAbsent(nodeId1, z -> new ArrayList<>());
+            idXfmr3.add(id);
         }
         String nodeId2 = "2";
-        boolean t2connected = t2xT2Connected;
-        t3x.put("terminal2", nodeId2);
-        t3x.put("connected2", Boolean.toString(t2connected));
+        boolean t2connected = xfmr3T2Connected;
+        xfmr3.put("terminal2", nodeId2);
+        xfmr3.put("connected2", Boolean.toString(t2connected));
         if (t2connected) {
-            List<String> idT3x = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
-            idT3x.add(id);
+            List<String> idXfmr3 = equipmentsInNode.computeIfAbsent(nodeId2, z -> new ArrayList<>());
+            idXfmr3.add(id);
         }
         String nodeId3 = "3";
         boolean t3connected = true;
-        t3x.put("terminal3", nodeId3);
-        t3x.put("connected3", Boolean.toString(t3connected));
+        xfmr3.put("terminal3", nodeId3);
+        xfmr3.put("connected3", Boolean.toString(t3connected));
         if (t3connected) {
-            List<String> idT3x = equipmentsInNode.computeIfAbsent(nodeId3, z -> new ArrayList<>());
-            idT3x.add(id);
+            List<String> idXfmr3 = equipmentsInNode.computeIfAbsent(nodeId3, z -> new ArrayList<>());
+            idXfmr3.add(id);
         }
 
         Map<List<String>, Boolean> isolatedNodes = new HashMap<>();
@@ -402,7 +403,7 @@ public class TestKronAdmittance {
             }
         });
 
-        PrepareModel model = new PrepareModel(cgmes);
+        InterpretedModel model = new InterpretedModel(cgmes);
         model.setNodeParameters(nodeParameters);
         model.setJoinedNodes(joinedNodes);
         model.setLineParameters(lineParameters);
@@ -435,9 +436,9 @@ public class TestKronAdmittance {
     }
 
     @Test
-    public void fullConnectT2xModelTest() throws IOException {
+    public void fullConnectXfmr2ModelTest() throws IOException {
         ModelInterpretation flowValidation = new ModelInterpretation(cgmes);
-        flowValidation.setInputModel(testT2xModel(true));
+        flowValidation.setInputModel(testXfmr2Model(true));
         flowValidation.interpret();
         InterpretationResult interpretation = flowValidation.getInterpretation();
         Assert.assertTrue(interpretation.error < BALANCE_TOLERANCE);
@@ -447,9 +448,9 @@ public class TestKronAdmittance {
     }
 
     @Test
-    public void kronAntennaT2xModelTest() throws IOException {
+    public void kronAntennaXfmr2ModelTest() throws IOException {
         ModelInterpretation flowValidation = new ModelInterpretation(cgmes);
-        flowValidation.setInputModel(testT2xModel(false));
+        flowValidation.setInputModel(testXfmr2Model(false));
         flowValidation.interpret();
         InterpretationResult interpretation = flowValidation.getInterpretation();
         Assert.assertTrue(interpretation.error < BALANCE_TOLERANCE);
@@ -459,9 +460,9 @@ public class TestKronAdmittance {
     }
 
     @Test
-    public void fullConnectT3xModelTest() throws IOException {
+    public void fullConnectXfmr3ModelTest() throws IOException {
         ModelInterpretation flowValidation = new ModelInterpretation(cgmes);
-        flowValidation.setInputModel(testT3xModel(true));
+        flowValidation.setInputModel(testXfmr3Model(true));
         flowValidation.interpret();
         InterpretationResult interpretation = flowValidation.getInterpretation();
         Assert.assertTrue(interpretation.error < BALANCE_TOLERANCE);
@@ -471,9 +472,9 @@ public class TestKronAdmittance {
     }
 
     @Test
-    public void kronAntennaT3xModelTest() throws IOException {
+    public void kronAntennaXfmr3ModelTest() throws IOException {
         ModelInterpretation flowValidation = new ModelInterpretation(cgmes);
-        flowValidation.setInputModel(testT3xModel(false));
+        flowValidation.setInputModel(testXfmr3Model(false));
         flowValidation.interpret();
         InterpretationResult interpretation = flowValidation.getInterpretation();
         Assert.assertTrue(interpretation.error < BALANCE_TOLERANCE);
@@ -483,16 +484,15 @@ public class TestKronAdmittance {
     }
 
     private long getBadNodes(Map<List<String>, PropertyBag> balanceData) {
-        long badNodes = balanceData.values().stream().filter(pb -> {
-            return pb.asBoolean("calculated", false) && !pb.asBoolean("badVoltage", false);
-        }).filter(pb -> {
-            return (Math.abs(pb.asDouble("balanceP"))
-                    + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE;
-        }).count();
+        long badNodes = balanceData.values().stream()
+                .filter(pb -> pb.asBoolean("calculated", false) && !pb.asBoolean("badVoltage", false))
+                .filter(pb -> (Math.abs(pb.asDouble("balanceP"))
+                        + Math.abs(pb.asDouble("balanceQ"))) > BALANCE_TOLERANCE)
+                .count();
 
         return badNodes;
     }
 
-    private static CgmesModel cgmes;
+    private static CgmesModel   cgmes;
     private static List<String> propertyNames;
 }

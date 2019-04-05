@@ -23,21 +23,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.powsybl.cgmes.model.CgmesModel;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.EndDistribution;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.T3xDistribution;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.T3xPhaseAngleClock;
+import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr2PhaseAngleClockAlternative;
+import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr2RatioPhaseMappingAlternative;
+import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr2ShuntMappingAlternative;
+import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr3PhaseAngleClockAlternative;
+import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr3RatioPhaseMappingAlternative;
+import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr3ShuntMappingAlternative;
 import com.powsybl.cgmes.model.interpretation.InterpretationResult.ValidationData;
 import com.powsybl.triplestore.api.PropertyBag;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
 public class ModelInterpretation {
 
     private static final double BALANCE_TOLERANCE = 1.0;
 
     public ModelInterpretation(CgmesModel m) {
-        inputModel = new PrepareModel(m);
+        inputModel = new InterpretedModel(m);
         validationDataForAllModelMapping = new HashMap<>();
         bestError = Double.MAX_VALUE;
     }
@@ -47,7 +51,7 @@ public class ModelInterpretation {
         calculateBalancesForAllModelMapping();
     }
 
-    public void setInputModel(PrepareModel inputModel) {
+    public void setInputModel(InterpretedModel inputModel) {
         this.inputModel = inputModel;
     }
 
@@ -67,63 +71,62 @@ public class ModelInterpretation {
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT2xRatio0(EndDistribution.X);
+        config.setXfmr2Ratio0(Xfmr2RatioPhaseMappingAlternative.X);
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT2xYShunt(EndDistribution.SPLIT);
+        config.setXfmr2YShunt(Xfmr2ShuntMappingAlternative.SPLIT);
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT2xYShunt(EndDistribution.SPLIT);
-        config.setT2xRatio0(EndDistribution.END1);
+        config.setXfmr2YShunt(Xfmr2ShuntMappingAlternative.SPLIT);
+        config.setXfmr2Ratio0(Xfmr2RatioPhaseMappingAlternative.END1);
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT2xRatio0(EndDistribution.END1);
+        config.setXfmr2Ratio0(Xfmr2RatioPhaseMappingAlternative.END1);
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT2xRatio0(EndDistribution.RTC);
-        config.setT2xPtc2Negate(true);
+        config.setXfmr2Ratio0(Xfmr2RatioPhaseMappingAlternative.RTC);
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT2xYShunt(EndDistribution.SPLIT);
-        config.setT3xYShunt(T3xDistribution.SPLIT);
+        config.setXfmr2YShunt(Xfmr2ShuntMappingAlternative.SPLIT);
+        config.setXfmr3YShunt(Xfmr3ShuntMappingAlternative.SPLIT);
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT2xYShunt(EndDistribution.SPLIT);
-        config.setT3xYShunt(T3xDistribution.SPLIT);
+        config.setXfmr2YShunt(Xfmr2ShuntMappingAlternative.SPLIT);
+        config.setXfmr3YShunt(Xfmr3ShuntMappingAlternative.SPLIT);
         config.setLineRatio0(true);
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT2xPhaseAngleClock(true);
-        config.setT3xPhaseAngleClock(T3xPhaseAngleClock.INSIDE);
-        config.setT2xPac2Negate(true);
+        config.setXfmr2PhaseAngleClock(Xfmr2PhaseAngleClockAlternative.END1_END2);
+        config.setXfmr3PhaseAngleClock(Xfmr3PhaseAngleClockAlternative.STAR_BUS_SIDE);
+        config.setXfmr2Pac2Negate(true);
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT2xYShunt(EndDistribution.SPLIT);
-        config.setT3xYShunt(T3xDistribution.SPLIT);
-        config.setT2xPhaseAngleClock(true);
-        config.setT3xPhaseAngleClock(T3xPhaseAngleClock.INSIDE);
-        config.setT2xPac2Negate(true);
+        config.setXfmr2YShunt(Xfmr2ShuntMappingAlternative.SPLIT);
+        config.setXfmr3YShunt(Xfmr3ShuntMappingAlternative.SPLIT);
+        config.setXfmr2PhaseAngleClock(Xfmr2PhaseAngleClockAlternative.END1_END2);
+        config.setXfmr3PhaseAngleClock(Xfmr3PhaseAngleClockAlternative.STAR_BUS_SIDE);
+        config.setXfmr2Pac2Negate(true);
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT2xYShunt(EndDistribution.SPLIT);
-        config.setT3xYShunt(T3xDistribution.SPLIT);
-        config.setT2xPhaseAngleClock(true);
-        config.setT3xPhaseAngleClock(T3xPhaseAngleClock.INSIDE);
-        config.setT2xPac2Negate(true);
+        config.setXfmr2YShunt(Xfmr2ShuntMappingAlternative.SPLIT);
+        config.setXfmr3YShunt(Xfmr3ShuntMappingAlternative.SPLIT);
+        config.setXfmr2PhaseAngleClock(Xfmr2PhaseAngleClockAlternative.END1_END2);
+        config.setXfmr3PhaseAngleClock(Xfmr3PhaseAngleClockAlternative.STAR_BUS_SIDE);
+        config.setXfmr2Pac2Negate(true);
         config.setLineRatio0(true);
         configs.add(config);
 
         config = new CgmesEquipmentModelMapping();
-        config.setT3xRatio0Inside(false);
+        config.setXfmr3Ratio0StarBusSide(Xfmr3RatioPhaseMappingAlternative.NETWORK_SIDE);
         configs.add(config);
     }
 
@@ -146,7 +149,7 @@ public class ModelInterpretation {
         ValidationData validationData = new ValidationData();
         Map<List<String>, PropertyBag> balanceData = new HashMap<>();
         List<String> pn = new ArrayList<>(
-                Arrays.asList("balanceP", "balanceQ", "calculated", "line", "t2x", "t3x"));
+                Arrays.asList("balanceP", "balanceQ", "calculated", "line", "xfmr2", "xfmr3"));
 
         inputModel.getJoinedNodes().forEach(nodes -> {
             Map<String, DetectedEquipmentModel> nodeModelData = new HashMap<>();
@@ -177,8 +180,7 @@ public class ModelInterpretation {
                             + Math.abs(o2.getValue().asDouble("balanceQ", 0.0)));
         };
 
-        validationData.balanceData = balanceData.entrySet().stream()
-                .sorted(byBalance.reversed())
+        validationData.balanceData = balanceData.entrySet().stream().sorted(byBalance.reversed())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
                     throw new AssertionError();
                 }, LinkedHashMap::new));
@@ -186,31 +188,24 @@ public class ModelInterpretation {
     }
 
     private double calculateTotalBalanceError(ValidationData validationData) {
-        // XXX LUMA Review don't need to write block and return if lambda has only one expression
-        double totalError = validationData.balanceData.values().stream().filter(pb -> {
-            return pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false);
-        }).map(pb -> {
-            return Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ"));
-        }).mapToDouble(Double::doubleValue).sum();
+        double totalError = validationData.balanceData.values().stream()
+                .filter(pb -> pb.asBoolean("calculated", false) && !pb.asBoolean("isolated", false))
+                .map(pb -> Math.abs(pb.asDouble("balanceP")) + Math.abs(pb.asDouble("balanceQ")))
+                .mapToDouble(Double::doubleValue).sum();
         return totalError;
     }
 
     private void calculateJoinedNodeBalance(CgmesEquipmentModelMapping config, List<String> nodes,
             PropertyBag nodeBalanceData, Map<String, DetectedEquipmentModel> nodeDetectedModelReport) {
         nodes.forEach(n -> {
-            // XXX LUMA Review Why a node in the list would be null ???
-            if (n == null) {
-                LOG.warn("Node null");
-                return;
-            }
             PropertyBag node = inputModel.getNodeParameters(n);
             Objects.requireNonNull(node, "node without parameters");
             if (inputModel.getEquipmentsInNode().containsKey(n)) {
                 inputModel.getEquipmentsInNode().get(n).forEach(id -> {
                     boolean isLine = false;
-                    boolean isT2x = false;
-                    boolean isT3x = false;
-                    CalculateFlow calcFlow = new CalculateFlow(inputModel);
+                    boolean isXfmr2 = false;
+                    boolean isXfmr3 = false;
+                    FlowCalculator calcFlow = new FlowCalculator(inputModel);
                     PropertyBag line = inputModel.getLineParameters(id);
                     if (line != null) {
                         PropertyBag node1 = inputModel
@@ -219,7 +214,7 @@ public class ModelInterpretation {
                         PropertyBag node2 = inputModel
                                 .getNodeParameters(line.get("terminal2"));
                         Objects.requireNonNull(node2, "node2 null in line");
-                        calcFlow.calculateFlowLine(n, node1, node2, line, config);
+                        calcFlow.forLine(n, node1, node2, line, config);
                         isLine = true;
                     }
                     PropertyBag transformer = inputModel.getTransformerParameters(id);
@@ -233,16 +228,16 @@ public class ModelInterpretation {
                         PropertyBag node3 = inputModel
                                 .getNodeParameters(transformer.get("terminal3"));
                         if (node3 == null) {
-                            calcFlow.calculateFlowT2x(n, node1, node2, transformer, config);
-                            isT2x = true;
+                            calcFlow.forTwoWindingTransformer(n, node1, node2, transformer, config);
+                            isXfmr2 = true;
                         } else {
-                            calcFlow.calculateFlowT3x(n, node1, node2, node3, transformer, config);
-                            isT3x = true;
+                            calcFlow.forThreeWindingTransformer(n, node1, node2, node3, transformer, config);
+                            isXfmr3 = true;
                         }
                     }
 
                     writeToNodeDetectedModelData(nodeDetectedModelReport, calcFlow.getEquipmentModel());
-                    writeToNodeBalanceData(nodeBalanceData, calcFlow, isLine, isT2x, isT3x);
+                    writeToNodeBalanceData(nodeBalanceData, calcFlow, isLine, isXfmr2, isXfmr3);
                 });
             }
 
@@ -250,8 +245,7 @@ public class ModelInterpretation {
         });
     }
 
-    private void addNodeInjectionToJoinedBusBalance(PropertyBag node,
-            PropertyBag nodeBalanceData) {
+    private void addNodeInjectionToJoinedBusBalance(PropertyBag node, PropertyBag nodeBalanceData) {
         double p = node.asDouble("p");
         double q = node.asDouble("q");
         double nodeBalanceP = nodeBalanceData.asDouble("balanceP");
@@ -268,8 +262,8 @@ public class ModelInterpretation {
         nodeBalanceReport.put("isolated", "false");
         nodeBalanceReport.put("badVoltage", "false");
         nodeBalanceReport.put("line", Integer.toString(0));
-        nodeBalanceReport.put("t2x", Integer.toString(0));
-        nodeBalanceReport.put("t3x", Integer.toString(0));
+        nodeBalanceReport.put("xfmr2", Integer.toString(0));
+        nodeBalanceReport.put("xfmr3", Integer.toString(0));
         return nodeBalanceReport;
     }
 
@@ -279,34 +273,30 @@ public class ModelInterpretation {
         nodeBalanceData.put("badVoltage", "false");
     }
 
-    private void writeToNodeBalanceData(PropertyBag nodeBalanceData, CalculateFlow calcFlow,
-            boolean isLine, boolean isT2x, boolean isT3x) {
+    private void writeToNodeBalanceData(PropertyBag nodeBalanceData, FlowCalculator calcFlow, boolean isLine,
+            boolean isXfmr2, boolean isXfmr3) {
         if (calcFlow.getCalculated()) {
             double balanceP = nodeBalanceData.asDouble("balanceP");
             double balanceQ = nodeBalanceData.asDouble("balanceQ");
-            nodeBalanceData.put("balanceP",
-                    Double.toString(balanceP + calcFlow.getP()));
-            nodeBalanceData.put("balanceQ",
-                    Double.toString(balanceQ + calcFlow.getQ()));
+            nodeBalanceData.put("balanceP", Double.toString(balanceP + calcFlow.getP()));
+            nodeBalanceData.put("balanceQ", Double.toString(balanceQ + calcFlow.getQ()));
             if (calcFlow.getBadVoltage()) {
-                nodeBalanceData.put("badVoltage",
-                        Boolean.toString(calcFlow.getBadVoltage()));
+                nodeBalanceData.put("badVoltage", Boolean.toString(calcFlow.getBadVoltage()));
             }
         } else {
-            nodeBalanceData.put("calculated",
-                    Boolean.toString(calcFlow.getCalculated()));
+            nodeBalanceData.put("calculated", Boolean.toString(calcFlow.getCalculated()));
         }
         if (isLine) {
             int lines = nodeBalanceData.asInt("line");
             nodeBalanceData.put("line", Integer.toString(lines + 1));
         }
-        if (isT2x) {
-            int t2xs = nodeBalanceData.asInt("t2x");
-            nodeBalanceData.put("t2x", Integer.toString(t2xs + 1));
+        if (isXfmr2) {
+            int xfmr2s = nodeBalanceData.asInt("xfmr2");
+            nodeBalanceData.put("xfmr2", Integer.toString(xfmr2s + 1));
         }
-        if (isT3x) {
-            int t3xs = nodeBalanceData.asInt("t3x");
-            nodeBalanceData.put("t3x", Integer.toString(t3xs + 1));
+        if (isXfmr3) {
+            int xfmr3s = nodeBalanceData.asInt("xfmr3");
+            nodeBalanceData.put("xfmr3", Integer.toString(xfmr3s + 1));
         }
     }
 
@@ -323,15 +313,14 @@ public class ModelInterpretation {
         detectedModelData.put(detectedEquipmentModel.code(), aggregateModel);
     }
 
-    private void writeToBalanceData(List<String> pn,
-            Map<List<String>, PropertyBag> balanceData, List<String> nodes,
+    private void writeToBalanceData(List<String> pn, Map<List<String>, PropertyBag> balanceData, List<String> nodes,
             PropertyBag nodeBalanceData) {
         boolean calculatedNodes = nodeBalanceData.asBoolean("calculated", true);
         boolean isolatedNodes = nodeBalanceData.asBoolean("isolated", true);
         boolean badVoltageNodes = nodeBalanceData.asBoolean("badVoltage", true);
         int nodeLines = nodeBalanceData.asInt("line");
-        int nodeT2xs = nodeBalanceData.asInt("t2x");
-        int nodeT3xs = nodeBalanceData.asInt("t3x");
+        int nodeXfmr2s = nodeBalanceData.asInt("xfmr2");
+        int nodeXfmr3s = nodeBalanceData.asInt("xfmr3");
 
         PropertyBag pb = new PropertyBag(pn);
 
@@ -348,13 +337,12 @@ public class ModelInterpretation {
         pb.put("badVoltage", Boolean.toString(badVoltageNodes));
         pb.put("isolated", Boolean.toString(isolatedNodes));
         pb.put("line", Integer.toString(nodeLines));
-        pb.put("t2x", Integer.toString(nodeT2xs));
-        pb.put("t3x", Integer.toString(nodeT3xs));
+        pb.put("xfmr2", Integer.toString(nodeXfmr2s));
+        pb.put("xfmr3", Integer.toString(nodeXfmr3s));
         balanceData.put(nodes, pb);
     }
 
-    private void writeToDetectedModelData(
-            Map<String, DetectedEquipmentModel> detectedModelData,
+    private void writeToDetectedModelData(Map<String, DetectedEquipmentModel> detectedModelData,
             Map<String, DetectedEquipmentModel> nodeDetectedModelData, PropertyBag nodeBalanceData) {
 
         nodeDetectedModelData.keySet().forEach(detectedEquipmentModel -> {
@@ -383,7 +371,7 @@ public class ModelInterpretation {
         });
     }
 
-    private PrepareModel                                    inputModel;
+    private InterpretedModel                                inputModel;
     private double                                          bestError;
     private Map<CgmesEquipmentModelMapping, ValidationData> validationDataForAllModelMapping;
 

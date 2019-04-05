@@ -14,7 +14,8 @@ import java.util.Map;
 import com.powsybl.triplestore.api.PropertyBag;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
 public class InterpretationResult {
 

@@ -11,41 +11,90 @@ import org.apache.commons.math3.complex.Complex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.triplestore.api.PropertyBag;
 import com.powsybl.triplestore.api.PropertyBags;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
-class TxUtilities {
+public final class XfmrUtilities {
 
-    public TxUtilities(CgmesModel cgmes) {
-        this.cgmes = cgmes;
+    private XfmrUtilities() {
     }
 
-    protected double applyCorrection(double x, double xc) {
+    public static TapChangerData getRatioTapChanger(double rstep, double rns, double rsvi,
+            PropertyBags ratioTapChangerTable1) {
+        TapChangerData tapChangerData = new TapChangerData();
+        if (ratioTapChangerIsTabular(ratioTapChangerTable1)) {
+            tapChangerData = getTabularRatioTapChangerData(rstep, ratioTapChangerTable1);
+            tapChangerData.tabularDifferentRatios = getTabularRatioTapChangerDifferentRatios(ratioTapChangerTable1);
+        } else {
+            tapChangerData = getRatioTapChangerData(rstep, rns, rsvi);
+        }
+        return tapChangerData;
+    }
+
+    public static TapChangerData getPhaseTapChanger(String ptype, double pstep, double pls, double phs, double pns,
+            double psvi, double pwca, double stepPhaseShiftIncrement, PropertyBags phaseTapChangerTable) {
+        TapChangerData tapChangerData = new TapChangerData();
+        if (phaseTapChangerIsTabular(ptype, phaseTapChangerTable)) {
+            tapChangerData = getTabularPhaseTapChangerData(pstep, phaseTapChangerTable);
+            tapChangerData.tabularDifferentRatios = getTabularPhaseTapChangerDifferentRatios(phaseTapChangerTable);
+            tapChangerData.tabularDifferentAngles = getTabularPhaseTapChangerDifferentAngles(phaseTapChangerTable);
+        } else if (phaseTapChangerIsAsymmetrical(ptype)) {
+            tapChangerData = getAsymmetricalPhaseTapChangerData(ptype, pstep, pns, psvi, pwca);
+            tapChangerData.asymmetricalDifferentRatios = getAsymmetricalPhaseTapChangerDifferentRatios(psvi, pls, phs);
+        } else if (phaseTapChangerIsSymmetrical(ptype)) {
+            tapChangerData = getSymmetricalPhaseTapChangerData(ptype, pstep, pns, psvi, stepPhaseShiftIncrement);
+        } else {
+            tapChangerData = getSymmetricalPhaseTapChangerData(ptype, pstep, pns, psvi, stepPhaseShiftIncrement);
+        }
+        return tapChangerData;
+    }
+
+    public static double getX(double x, double ptcA, String ptype, double pls, double phs, double pns, double psvi,
+            double pwca, double stepPhaseShiftIncrement, double xStepMin, double xStepMax) {
+        double xo = x;
+        if (phaseTapChangerIsAsymmetrical(ptype)) {
+            if (xStepMax > 0) {
+                double alphaMax = getAsymmetricalAlphaMax(ptype, pls, phs, pns, psvi, pwca);
+                xo = getAsymmetricalX(xStepMin, xStepMax, ptcA, alphaMax, pwca);
+            }
+        } else if (phaseTapChangerIsSymmetrical(ptype)) {
+            if (xStepMax > 0) {
+                double alphaMax = getSymmetricalAlphaMax(ptype, pls, phs, pns, psvi, stepPhaseShiftIncrement);
+                xo = getSymmetricalX(xStepMin, xStepMax, ptcA, alphaMax);
+            }
+        } else {
+            if (xStepMax > 0) {
+                double alphaMax = getSymmetricalAlphaMax(ptype, pls, phs, pns, psvi, stepPhaseShiftIncrement);
+                xo = getSymmetricalX(xStepMin, xStepMax, ptcA, alphaMax);
+            }
+        }
+        return xo;
+    }
+
+    public static double applyCorrection(double x, double xc) {
         return x * (1.0 + xc / 100.0);
     }
 
-    protected boolean ratioTapChangerIsTabular(String ratioTapChangerTable) {
+    private static boolean ratioTapChangerIsTabular(PropertyBags ratioTapChangerTable) {
         if (ratioTapChangerTable != null) {
             return true;
         }
         return false;
     }
 
-    protected TapChangerData getRatioTapChangerData(double rstep, double rns, double rsvi) {
+    private static TapChangerData getRatioTapChangerData(double rstep, double rns, double rsvi) {
         TapChangerData tapChangerData = new TapChangerData();
         tapChangerData.rptca = 1.0 + (rstep - rns) * (rsvi / 100.0);
         tapChangerData.rptcA = 0.0;
         return tapChangerData;
     }
 
-    protected TapChangerData getTabularRatioTapChangerData(double rstep,
-            String ratioTapChangerTableName) {
+    private static TapChangerData getTabularRatioTapChangerData(double rstep, PropertyBags ratioTapChangerTable) {
         TapChangerData tapChangerData = new TapChangerData();
-        PropertyBags ratioTapChangerTable = cgmes.ratioTapChangerTable(ratioTapChangerTableName);
         if (ratioTapChangerTable.isEmpty()) {
             LOG.warn("Empty RatioTapChangerTable");
         }
@@ -63,7 +112,7 @@ class TxUtilities {
         return tapChangerData;
     }
 
-    private double getDoublePoint(PropertyBag point, String parameter, double defaultValue) {
+    private static double getDoublePoint(PropertyBag point, String parameter, double defaultValue) {
         double value = point.asDouble(parameter, defaultValue);
         if (Double.isNaN(value) || Double.isInfinite(value)) {
             return defaultValue;
@@ -71,49 +120,43 @@ class TxUtilities {
         return value;
     }
 
-    protected boolean getTabularRatioTapChangerDifferentRatios(String ratioTapChangerTableName) {
-        PropertyBags ratioTapChangerTable = cgmes.ratioTapChangerTable(ratioTapChangerTableName);
-        return ratioTapChangerTable.stream().map(pb -> {
-            return pb.asDouble("ratio");
-        }).mapToDouble(Double::doubleValue).distinct().limit(2).count() > 1;
+    private static boolean getTabularRatioTapChangerDifferentRatios(PropertyBags ratioTapChangerTable) {
+        return ratioTapChangerTable.stream().map(pb -> pb.asDouble("ratio")).mapToDouble(Double::doubleValue).distinct()
+                .limit(2).count() > 1;
     }
 
-    protected boolean phaseTapChangerIsTabular(String ptype, String phaseTapChangerTable) {
+    private static boolean phaseTapChangerIsTabular(String ptype, PropertyBags phaseTapChangerTable) {
         if (ptype != null && phaseTapChangerTable != null && ptype.endsWith("tabular")) {
             return true;
         }
         return false;
     }
 
-    protected boolean phaseTapChangerIsAsymmetrical(String ptype) {
+    private static boolean phaseTapChangerIsAsymmetrical(String ptype) {
         if (ptype != null && ptype.endsWith("asymmetrical")) {
             return true;
         }
         return false;
     }
 
-    protected boolean phaseTapChangerIsSymmetrical(String ptype) {
+    private static boolean phaseTapChangerIsSymmetrical(String ptype) {
         if (ptype != null && !ptype.endsWith("asymmetrical") && ptype.endsWith("symmetrical")) {
             return true;
         }
         return false;
     }
 
-    protected boolean getTabularPhaseTapChangerDifferentRatios(String phaseTapChangerTableName) {
-        PropertyBags phaseTapChangerTable = cgmes.phaseTapChangerTable(phaseTapChangerTableName);
-        return phaseTapChangerTable.stream().map(pb -> {
-            return pb.asDouble("ratio");
-        }).mapToDouble(Double::doubleValue).distinct().limit(2).count() > 1;
+    private static boolean getTabularPhaseTapChangerDifferentRatios(PropertyBags phaseTapChangerTable) {
+        return phaseTapChangerTable.stream().map(pb -> pb.asDouble("ratio")).mapToDouble(Double::doubleValue).distinct()
+                .limit(2).count() > 1;
     }
 
-    protected boolean getTabularPhaseTapChangerDifferentAngles(String phaseTapChangerTableName) {
-        PropertyBags phaseTapChangerTable = cgmes.phaseTapChangerTable(phaseTapChangerTableName);
-        return phaseTapChangerTable.stream().map(pb -> {
-            return pb.asDouble("angle");
-        }).mapToDouble(Double::doubleValue).distinct().limit(2).count() > 1;
+    private static boolean getTabularPhaseTapChangerDifferentAngles(PropertyBags phaseTapChangerTable) {
+        return phaseTapChangerTable.stream().map(pb -> pb.asDouble("angle")).mapToDouble(Double::doubleValue).distinct()
+                .limit(2).count() > 1;
     }
 
-    protected boolean getAsymmetricalPhaseTapChangerDifferentRatios(double psvi, double pls,
+    private static boolean getAsymmetricalPhaseTapChangerDifferentRatios(double psvi, double pls,
             double phs) {
         if (psvi != 0.0 && pls != phs) {
             return true;
@@ -121,10 +164,8 @@ class TxUtilities {
         return false;
     }
 
-    protected TapChangerData getTabularPhaseTapChangerData(double pstep,
-            String phaseTapChangerTableName) {
+    private static TapChangerData getTabularPhaseTapChangerData(double pstep, PropertyBags phaseTapChangerTable) {
         TapChangerData tapChangerData = new TapChangerData();
-        PropertyBags phaseTapChangerTable = cgmes.phaseTapChangerTable(phaseTapChangerTableName);
         if (phaseTapChangerTable.isEmpty()) {
             LOG.warn("Empty PhaseTapChangerTable");
         }
@@ -143,8 +184,8 @@ class TxUtilities {
         return tapChangerData;
     }
 
-    protected double getSymmetricalAlphaMax(String ptype, double stepMin,
-            double stepMax, double pns, double psvi, double stepPhaseShiftIncrement) {
+    private static double getSymmetricalAlphaMax(String ptype, double stepMin, double stepMax, double pns, double psvi,
+            double stepPhaseShiftIncrement) {
         double alphaMax = 0.0;
         for (double step = stepMin; step <= stepMax; step++) {
             TapChangerData tapChangerData = getSymmetricalPhaseTapChangerData(ptype, step, pns, psvi,
@@ -156,8 +197,8 @@ class TxUtilities {
         return alphaMax;
     }
 
-    protected TapChangerData getSymmetricalPhaseTapChangerData(String ptype, double pstep,
-            double pns, double psvi, double stepPhaseShiftIncrement) {
+    private static TapChangerData getSymmetricalPhaseTapChangerData(String ptype, double pstep, double pns, double psvi,
+            double stepPhaseShiftIncrement) {
         TapChangerData tapChangerData = new TapChangerData();
         tapChangerData.rptca = 1.0;
         tapChangerData.rptcA = 0.0;
@@ -172,8 +213,8 @@ class TxUtilities {
         return tapChangerData;
     }
 
-    protected double getAsymmetricalAlphaMax(String ptype, double stepMin,
-            double stepMax, double pns, double psvi, double pwca) {
+    private static double getAsymmetricalAlphaMax(String ptype, double stepMin, double stepMax, double pns, double psvi,
+            double pwca) {
         double alphaMax = 0.0;
         for (double step = stepMin; step <= stepMax; step++) {
             TapChangerData tapChangerData = getAsymmetricalPhaseTapChangerData(ptype, step, pns, psvi, pwca);
@@ -184,8 +225,8 @@ class TxUtilities {
         return alphaMax;
     }
 
-    protected TapChangerData getAsymmetricalPhaseTapChangerData(String ptype, double pstep,
-            double pns, double psvi, double pwca) {
+    private static TapChangerData getAsymmetricalPhaseTapChangerData(String ptype, double pstep, double pns,
+            double psvi, double pwca) {
         TapChangerData tapChangerData = new TapChangerData();
         tapChangerData.rptca = 1.0;
         tapChangerData.rptcA = 0.0;
@@ -197,14 +238,15 @@ class TxUtilities {
         return tapChangerData;
     }
 
-    protected double getSymmetricalX(double xStepMin, double xStepMax, double alphaDegrees, double alphaMaxDegrees) {
+    private static double getSymmetricalX(double xStepMin, double xStepMax, double alphaDegrees,
+            double alphaMaxDegrees) {
         double alpha = Math.toRadians(alphaDegrees);
         double alphaMax = Math.toRadians(alphaMaxDegrees);
         return xStepMin + (xStepMax - xStepMin) * Math.pow(Math.sin(alpha / 2) / Math.sin(alphaMax / 2), 2);
     }
 
-    protected double getAsymmetricalX(double xStepMin, double xStepMax, double alphaDegrees, double alphaMaxDegrees,
-            double pwcaDegrees) {
+    private static double getAsymmetricalX(double xStepMin, double xStepMax, double alphaDegrees,
+            double alphaMaxDegrees, double pwcaDegrees) {
         double alpha = Math.toRadians(alphaDegrees);
         double alphaMax = Math.toRadians(alphaMaxDegrees);
         double pwca = Math.toRadians(pwcaDegrees);
@@ -213,7 +255,7 @@ class TxUtilities {
         return xStepMin + (xStepMax - xStepMin) * Math.pow(Math.tan(alpha) / Math.tan(alphaMax) * numer / denom, 2);
     }
 
-    protected double getPhaseAngleClock(int phaseAngleClock) {
+    static double getPhaseAngleClock(int phaseAngleClock) {
         double phaseAngleClockDegree = 0.0;
         phaseAngleClockDegree += phaseAngleClock * 30.0;
         phaseAngleClockDegree = Math.IEEEremainder(phaseAngleClockDegree, 360.0);
@@ -223,7 +265,7 @@ class TxUtilities {
         return phaseAngleClockDegree;
     }
 
-    protected boolean getTxDifferentRatios(double rsvi, double rls, double rhs, boolean rtcTabularDifferentRatios,
+    static boolean getXfmrDifferentRatios(double rsvi, double rls, double rhs, boolean rtcTabularDifferentRatios,
             boolean ptcTabularDifferentRatios, boolean ptcAsymmetricalDifferentRatios) {
         if (rsvi != 0 && rls != rhs) {
             return true;
@@ -231,7 +273,7 @@ class TxUtilities {
         return rtcTabularDifferentRatios || ptcTabularDifferentRatios || ptcAsymmetricalDifferentRatios;
     }
 
-    protected boolean getTxDifferentAngles(double psvi, double stepPhaseShiftIncrement, double pls, double phs,
+    static boolean getXfmrDifferentAngles(double psvi, double stepPhaseShiftIncrement, double pls, double phs,
             boolean ptcTabularDifferentAngles) {
         if (psvi != 0 && pls != phs) {
             return true;
@@ -243,12 +285,15 @@ class TxUtilities {
     }
 
     static class TapChangerData {
-        double rptca = 1.0;
-        double rptcA = 0.0;
-        double rc    = 0.0;
-        double xc    = 0.0;
-        double bc    = 0.0;
-        double gc    = 0.0;
+        double  rptca                       = 1.0;
+        double  rptcA                       = 0.0;
+        double  rc                          = 0.0;
+        double  xc                          = 0.0;
+        double  bc                          = 0.0;
+        double  gc                          = 0.0;
+        boolean tabularDifferentRatios      = false;
+        boolean tabularDifferentAngles      = false;
+        boolean asymmetricalDifferentRatios = false;
     }
 
     static class RatioPhaseData {
@@ -277,7 +322,5 @@ class TxUtilities {
         double angle2 = 0.0;
     }
 
-    protected CgmesModel          cgmes;
-    protected static final Logger LOG = LoggerFactory
-            .getLogger(AdmittanceMatrix.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BranchAdmittanceMatrix.class);
 }

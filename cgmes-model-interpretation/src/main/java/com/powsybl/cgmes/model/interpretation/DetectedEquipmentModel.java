@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author José Antonio Marqués <marquesja at aia.es>, Marcos de Miguel <demiguelm at aia.es>
+ * @author José Antonio Marqués <marquesja at aia.es>
+ * @author Marcos de Miguel <demiguelm at aia.es>
  */
 class DetectedEquipmentModel {
 
@@ -23,7 +24,8 @@ class DetectedEquipmentModel {
         ok = 0;
     }
 
-    public DetectedEquipmentModel(DetectedBranchModel branchModel1, DetectedBranchModel branchModel2, DetectedBranchModel branchModel3) {
+    public DetectedEquipmentModel(DetectedBranchModel branchModel1, DetectedBranchModel branchModel2,
+            DetectedBranchModel branchModel3) {
         detectedBranchModels = new ArrayList<>();
         this.detectedBranchModels.add(branchModel1);
         this.detectedBranchModels.add(branchModel2);
@@ -55,7 +57,7 @@ class DetectedEquipmentModel {
 
     public String conversionCode() {
         // Line model always ok
-        // T2x model
+        // Xfmr2 model
         String model = code();
         if (model.length() == 6) {
             String model1 = model.substring(0, 3);
@@ -68,7 +70,7 @@ class DetectedEquipmentModel {
             if (evalModel.contains("(C)") || evalModel.contains("(ko)")) {
                 return evalModel;
             }
-            // T3x model
+            // Xfmr3 model
         } else if (model.length() == 20) {
             String model1 = model.substring(0, 6);
             String model11 = model1.substring(0, 3);
@@ -113,7 +115,7 @@ class DetectedEquipmentModel {
     }
 
     final List<DetectedBranchModel> detectedBranchModels;
-    int total;
-    int calculated;
-    int ok;
+    int                             total;
+    int                             calculated;
+    int                             ok;
 }
