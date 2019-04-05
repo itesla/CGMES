@@ -7,8 +7,6 @@
 
 package com.powsybl.cgmes.model.interpretation;
 
-import java.util.Arrays;
-
 import org.apache.commons.math3.complex.Complex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
