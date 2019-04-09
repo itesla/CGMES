@@ -297,14 +297,18 @@ public final class XfmrUtilities {
     }
 
     static class RatioPhaseData {
-        double  a1                  = 1.0;
-        double  angle1              = 0.0;
-        double  a2                  = 1.0;
-        double  angle2              = 0.0;
-        boolean tc1DifferentRatios  = false;
-        boolean ptc1DifferentAngles = false;
-        boolean tc2DifferentRatios  = false;
-        boolean ptc2DifferentAngles = false;
+        double  a1                    = 1.0;
+        double  angle1                = 0.0;
+        double  a2                    = 1.0;
+        double  angle2                = 0.0;
+        boolean rtc1RegulatingControl = false;
+        boolean tc1DifferentRatios    = false;
+        boolean ptc1RegulatingControl = false;
+        boolean ptc1DifferentAngles   = false;
+        boolean rtc2RegulatingControl = false;
+        boolean tc2DifferentRatios    = false;
+        boolean ptc2RegulatingControl = false;
+        boolean ptc2DifferentAngles   = false;
     }
 
     static class YShuntData {

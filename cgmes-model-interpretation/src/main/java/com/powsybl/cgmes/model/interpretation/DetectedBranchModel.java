@@ -16,7 +16,7 @@ import org.apache.commons.math3.complex.Complex;
 class DetectedBranchModel {
 
     enum ChangerType {
-        ABSENT, FIXED, CHANGEABLE_AT_NEUTRAL, CHANGEABLE_AT_NON_NEUTRAL
+        ABSENT, FIXED, CHANGEABLE_AT_NEUTRAL, CHANGEABLE_AT_NON_NEUTRAL, REGULATING_CONTROL
     }
 
     // Line
@@ -30,17 +30,21 @@ class DetectedBranchModel {
     }
 
     public DetectedBranchModel(Complex ysh1, Complex ysh2, double a1, double angle1, double a2, double angle2,
-            boolean tc1DifferentRatios, boolean ptc1DifferentAngles, boolean tc2DifferentRatios,
-            boolean ptc2DifferentAngles) {
-        this.ratio1 = xfmrRatioModel(a1, tc1DifferentRatios);
-        this.phase1 = xfmrPhaseModel(angle1, ptc1DifferentAngles);
+            boolean rtc1RegulatingControl, boolean tc1DifferentRatios, boolean ptc1RegulatingControl,
+            boolean ptc1DifferentAngles, boolean rtc2RegulatingControl, boolean tc2DifferentRatios,
+            boolean ptc2RegulatingControl, boolean ptc2DifferentAngles) {
+        this.ratio1 = xfmrRatioModel(a1, rtc1RegulatingControl, tc1DifferentRatios);
+        this.phase1 = xfmrPhaseModel(angle1, ptc1RegulatingControl, ptc1DifferentAngles);
         this.shunt1 = shuntModel(ysh1);
         this.shunt2 = shuntModel(ysh2);
-        this.ratio2 = xfmrRatioModel(a2, tc2DifferentRatios);
-        this.phase2 = xfmrPhaseModel(angle2, ptc2DifferentAngles);
+        this.ratio2 = xfmrRatioModel(a2, rtc2RegulatingControl, tc2DifferentRatios);
+        this.phase2 = xfmrPhaseModel(angle2, ptc2RegulatingControl, ptc2DifferentAngles);
     }
 
-    private ChangerType xfmrRatioModel(double a, boolean tcDifferentRatios) {
+    private ChangerType xfmrRatioModel(double a, boolean rtcRegulatingControl, boolean tcDifferentRatios) {
+        if (rtcRegulatingControl && tcDifferentRatios) {
+            return ChangerType.REGULATING_CONTROL;
+        }
         if (a == 1.0) {
             if (tcDifferentRatios) {
                 return ChangerType.CHANGEABLE_AT_NEUTRAL;
@@ -56,7 +60,10 @@ class DetectedBranchModel {
         }
     }
 
-    private ChangerType xfmrPhaseModel(double angle, boolean ptcDifferentAngles) {
+    private ChangerType xfmrPhaseModel(double angle, boolean ptcRegulatingControl, boolean ptcDifferentAngles) {
+        if (ptcRegulatingControl && ptcDifferentAngles) {
+            return ChangerType.REGULATING_CONTROL;
+        }
         if (angle == 0.0) {
             if (ptcDifferentAngles) {
                 return ChangerType.CHANGEABLE_AT_NEUTRAL;
@@ -82,70 +89,68 @@ class DetectedBranchModel {
     public String code() {
         StringBuilder code = new StringBuilder();
         if (ratio1 != null) {
-            switch (ratio1) {
-                case ABSENT:
-                    code.append("_");
-                    break;
-                case FIXED:
-                    code.append("*");
-                    break;
-                case CHANGEABLE_AT_NEUTRAL:
-                    code.append("r");
-                    break;
-                case CHANGEABLE_AT_NON_NEUTRAL:
-                    code.append("R");
-                    break;
-            }
+            code.append(ratioCode(ratio1));
         }
         if (phase1 != null) {
-            switch (phase1) {
-                case ABSENT:
-                    code.append("_");
-                    break;
-                case FIXED:
-                    code.append("*");
-                    break;
-                case CHANGEABLE_AT_NEUTRAL:
-                    code.append("p");
-                    break;
-                case CHANGEABLE_AT_NON_NEUTRAL:
-                    code.append("P");
-                    break;
-            }
+            code.append(phaseCode(phase1));
         }
-        code.append(shunt1 ? "Y" : "N");
-        code.append(shunt2 ? "Y" : "N");
+        code.append(shuntCode(shunt1));
+        code.append(shuntCode(shunt2));
         if (ratio2 != null) {
-            switch (ratio2) {
-                case ABSENT:
-                    code.append("_");
-                    break;
-                case FIXED:
-                    code.append("*");
-                    break;
-                case CHANGEABLE_AT_NEUTRAL:
-                    code.append("r");
-                    break;
-                case CHANGEABLE_AT_NON_NEUTRAL:
-                    code.append("R");
-                    break;
-            }
+            code.append(ratioCode(ratio2));
         }
         if (phase2 != null) {
-            switch (phase2) {
-                case ABSENT:
-                    code.append("_");
-                    break;
-                case FIXED:
-                    code.append("*");
-                    break;
-                case CHANGEABLE_AT_NEUTRAL:
-                    code.append("p");
-                    break;
-                case CHANGEABLE_AT_NON_NEUTRAL:
-                    code.append("P");
-                    break;
-            }
+            code.append(phaseCode(phase2));
+        }
+        return code.toString();
+    }
+
+    private String shuntCode(boolean shunt) {
+        StringBuilder code = new StringBuilder();
+        code.append(shunt ? "Y" : "N");
+        return code.toString();
+    }
+
+    private String ratioCode(ChangerType ratio) {
+        StringBuilder code = new StringBuilder();
+        switch (ratio) {
+            case ABSENT:
+                code.append("_");
+                break;
+            case FIXED:
+                code.append("x");
+                break;
+            case CHANGEABLE_AT_NEUTRAL:
+                code.append("1");
+                break;
+            case CHANGEABLE_AT_NON_NEUTRAL:
+                code.append("r");
+                break;
+            case REGULATING_CONTROL:
+                code.append("R");
+                break;
+        }
+        return code.toString();
+    }
+
+    private String phaseCode(ChangerType phase) {
+        StringBuilder code = new StringBuilder();
+        switch (phase) {
+            case ABSENT:
+                code.append("_");
+                break;
+            case FIXED:
+                code.append("x");
+                break;
+            case CHANGEABLE_AT_NEUTRAL:
+                code.append("0");
+                break;
+            case CHANGEABLE_AT_NON_NEUTRAL:
+                code.append("p");
+                break;
+            case REGULATING_CONTROL:
+                code.append("P");
+                break;
         }
         return code.toString();
     }
