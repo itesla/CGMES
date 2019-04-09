@@ -63,9 +63,34 @@ class DetectedEquipmentModel {
             String model1 = model.substring(0, 3);
             String model2 = model.substring(3, 6);
 
+            if (model1.contains("RP")) {
+                model1 = model1.replace("P", "P(ko)");
+            }
+
             model2 = model2.replace("Y", "Y(ko)");
-            model2 = model2.replace("R", "R(C)");
-            model2 = model2.replace("P", "P(C)");
+
+            if (model1.contains("R") || model1.contains("r") || model1.contains("1")) {
+                model2 = model2.replace("R", "R(ko)");
+                model2 = model2.replace("r", "r(ko)");
+                model2 = model2.replace("1", "1(ko)");
+            } else {
+                model2 = model2.replace("R", "R(C)");
+                model2 = model2.replace("r", "r(C)");
+                model2 = model2.replace("1", "1(C)");
+            }
+
+            if (model1.contains("P") || model1.contains("p") || model1.contains("0")) {
+                model2 = model2.replace("P", "P(ko)");
+                model2 = model2.replace("p", "p(ko)");
+                model2 = model2.replace("0", "0(ko)");
+            } else {
+                model2 = model2.replace("P", "P(C)");
+                model2 = model2.replace("p", "p(C)");
+                model2 = model2.replace("0", "0(C)");
+            }
+
+            model2 = model2.replace("x", "x(C)");
+
             String evalModel = model1 + model2;
             if (evalModel.contains("(C)") || evalModel.contains("(ko)")) {
                 return evalModel;
@@ -88,22 +113,49 @@ class DetectedEquipmentModel {
             model31 = model31.replace("Y", "Y(C)");
             model32 = model32.replace("Y", "Y(ko)");
             model11 = model11.replace("P", "P(ko)");
+            model11 = model11.replace("p", "p(ko)");
+            model11 = model11.replace("0", "0(ko)");
             model12 = model12.replace("P", "P(ko)");
+            model12 = model12.replace("p", "p(ko)");
+            model12 = model12.replace("0", "0(ko)");
             model21 = model21.replace("P", "P(ko)");
+            model21 = model21.replace("p", "p(ko)");
+            model21 = model21.replace("0", "0(ko)");
             model22 = model22.replace("P", "P(ko)");
+            model22 = model22.replace("p", "p(ko)");
+            model22 = model22.replace("0", "0(ko)");
             model31 = model31.replace("P", "P(ko)");
+            model31 = model31.replace("p", "p(ko)");
+            model31 = model31.replace("0", "0(ko)");
             model32 = model32.replace("P", "P(ko)");
+            model32 = model32.replace("p", "p(ko)");
+            model32 = model32.replace("0", "0(ko)");
+
             model21 = model21.replace("R", "R(C)");
+            model21 = model21.replace("r", "r(C)");
+            model21 = model21.replace("1", "1(C)");
             model31 = model31.replace("R", "R(C)");
-            if (model1.contains("R")) {
-                if (model2.contains("R") && model3.contains("R")) {
-                    model11 = model11.replace("R", "R(ko)");
-                    model12 = model12.replace("R", "R(ko)");
-                } else {
-                    model11 = model11.replace("R", "R(C)");
-                    model12 = model12.replace("R", "R(C)");
-                }
+            model31 = model31.replace("r", "r(C)");
+            model31 = model31.replace("1", "1(C)");
+
+            if ((model2.contains("R") || model2.contains("r") || model2.contains("1")) &&
+                    (model3.contains("R") || model3.contains("r") || model3.contains("1"))) {
+                model11 = model11.replace("R", "R(ko)");
+                model11 = model11.replace("r", "r(ko)");
+                model11 = model11.replace("1", "1(ko)");
+                model12 = model12.replace("R", "R(ko)");
+                model12 = model12.replace("r", "r(ko)");
+                model12 = model12.replace("1", "1(ko)");
+            } else {
+                model11 = model11.replace("R", "R(C)");
+                model11 = model11.replace("r", "r(C)");
+                model11 = model11.replace("1", "1(C)");
+                model12 = model12.replace("R", "R(C)");
+                model12 = model12.replace("r", "r(C)");
+                model12 = model12.replace("1", "1(C)");
             }
+            model12 = model12.replace("x", "x(C)");
+            model12 = model21.replace("x", "x(C)");
 
             String evalModel = model11 + model12 + "." + model21 + model22 + "." + model31 + model32;
             if (evalModel.contains("(C)") || evalModel.contains("(ko)")) {

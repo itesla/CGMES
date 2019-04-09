@@ -10,8 +10,9 @@ package com.powsybl.cgmes.model.interpretation;
 import org.apache.commons.math3.complex.Complex;
 
 import com.powsybl.cgmes.model.CgmesModel;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr3ShuntMappingAlternative;
 import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr3PhaseAngleClockAlternative;
+import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr3RatioPhaseMappingAlternative;
+import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr3ShuntMappingAlternative;
 import com.powsybl.cgmes.model.interpretation.XfmrUtilities.PhaseAngleClockData;
 import com.powsybl.cgmes.model.interpretation.XfmrUtilities.Ratio0Data;
 import com.powsybl.cgmes.model.interpretation.XfmrUtilities.RatioPhaseData;
@@ -67,17 +68,31 @@ public class Xfmr3Model {
         double angle31 = ratioPhaseData.end3.angle1;
         double a32 = ratioPhaseData.end3.a2;
         double angle32 = ratioPhaseData.end3.angle2;
+        boolean rtc11RegulatingControl = ratioPhaseData.end1.rtc1RegulatingControl;
         boolean tc11DifferentRatios = ratioPhaseData.end1.tc1DifferentRatios;
+        boolean rtc12RegulatingControl = ratioPhaseData.end1.rtc2RegulatingControl;
         boolean tc12DifferentRatios = ratioPhaseData.end1.tc2DifferentRatios;
+        boolean ptc11RegulatingControl = ratioPhaseData.end1.ptc1RegulatingControl;
         boolean ptc11DifferentAngles = ratioPhaseData.end1.ptc1DifferentAngles;
+        boolean ptc12RegulatingControl = ratioPhaseData.end1.ptc2RegulatingControl;
         boolean ptc12DifferentAngles = ratioPhaseData.end1.ptc2DifferentAngles;
+
+        boolean rtc21RegulatingControl = ratioPhaseData.end2.rtc1RegulatingControl;
         boolean tc21DifferentRatios = ratioPhaseData.end2.tc1DifferentRatios;
+        boolean rtc22RegulatingControl = ratioPhaseData.end2.rtc2RegulatingControl;
         boolean tc22DifferentRatios = ratioPhaseData.end2.tc2DifferentRatios;
+        boolean ptc21RegulatingControl = ratioPhaseData.end2.ptc1RegulatingControl;
         boolean ptc21DifferentAngles = ratioPhaseData.end2.ptc1DifferentAngles;
+        boolean ptc22RegulatingControl = ratioPhaseData.end2.ptc2RegulatingControl;
         boolean ptc22DifferentAngles = ratioPhaseData.end2.ptc2DifferentAngles;
+
+        boolean rtc31RegulatingControl = ratioPhaseData.end3.rtc1RegulatingControl;
         boolean tc31DifferentRatios = ratioPhaseData.end3.tc1DifferentRatios;
+        boolean rtc32RegulatingControl = ratioPhaseData.end3.rtc2RegulatingControl;
         boolean tc32DifferentRatios = ratioPhaseData.end3.tc2DifferentRatios;
+        boolean ptc31RegulatingControl = ratioPhaseData.end3.ptc1RegulatingControl;
         boolean ptc31DifferentAngles = ratioPhaseData.end3.ptc1DifferentAngles;
+        boolean ptc32RegulatingControl = ratioPhaseData.end3.ptc2RegulatingControl;
         boolean ptc32DifferentAngles = ratioPhaseData.end3.ptc2DifferentAngles;
 
         // yshunt
@@ -98,11 +113,15 @@ public class Xfmr3Model {
         angle31 += phaseAngleClockData.end3.angle1;
         angle32 += phaseAngleClockData.end3.angle2;
 
-        detectBranchModel(ysh11, ysh12, a11, angle11, a12, angle12, tc11DifferentRatios, ptc11DifferentAngles,
-                tc12DifferentRatios, ptc12DifferentAngles, ysh21, ysh22, a21, angle21, a22, angle22,
-                tc21DifferentRatios, ptc21DifferentAngles, tc22DifferentRatios, ptc22DifferentAngles, ysh31, ysh32, a31,
-                angle31, a32, angle32, tc31DifferentRatios, ptc31DifferentAngles, tc32DifferentRatios,
-                ptc32DifferentAngles);
+        detectBranchModel(ysh11, ysh12, a11, angle11, a12, angle12,
+                rtc11RegulatingControl, tc11DifferentRatios, ptc11RegulatingControl, ptc11DifferentAngles,
+                rtc12RegulatingControl, tc12DifferentRatios, ptc12RegulatingControl, ptc12DifferentAngles,
+                ysh21, ysh22, a21, angle21, a22, angle22,
+                rtc21RegulatingControl, tc21DifferentRatios, ptc21RegulatingControl, ptc21DifferentAngles,
+                rtc22RegulatingControl, tc22DifferentRatios, ptc22RegulatingControl, ptc22DifferentAngles,
+                ysh31, ysh32, a31, angle31, a32, angle32,
+                rtc31RegulatingControl, tc31DifferentRatios, ptc31RegulatingControl, ptc31DifferentAngles,
+                rtc32RegulatingControl, tc32DifferentRatios, ptc32RegulatingControl, ptc32DifferentAngles);
 
         // add structural ratio after detected branch model
         double ratedU0 = 1.0;
@@ -121,9 +140,8 @@ public class Xfmr3Model {
         a32 *= a032;
 
         // admittance
-        admittanceMatrixEnd1.calculateAdmittance(r1, x1, a11, angle11, ysh11, a12, angle12, ysh12);
-        admittanceMatrixEnd2.calculateAdmittance(r2, x2, a21, angle21, ysh21, a22, angle22, ysh22);
-        admittanceMatrixEnd3.calculateAdmittance(r3, x3, a31, angle31, ysh31, a32, angle32, ysh32);
+        calculateAdmittance(a11, angle11, ysh11, a12, angle12, ysh12, a21, angle21, ysh21, a22, angle22, ysh22, a31,
+                angle31, ysh31, a32, angle32, ysh32);
     }
 
     public DetectedBranchModel getBranchModelEnd1() {
@@ -138,21 +156,69 @@ public class Xfmr3Model {
         return branchModelEnd3;
     }
 
+    private void calculateAdmittance(double a11, double angleDegrees11, Complex ysh11, double a12,
+            double angleDegrees12,
+            Complex ysh12, double a21, double angleDegrees21, Complex ysh21, double a22, double angleDegrees22,
+            Complex ysh22,
+            double a31, double angleDegrees31, Complex ysh31, double a32, double angleDegrees32, Complex ysh32) {
+        double angle11 = Math.toRadians(angleDegrees11);
+        double angle12 = Math.toRadians(angleDegrees12);
+        double angle21 = Math.toRadians(angleDegrees21);
+        double angle22 = Math.toRadians(angleDegrees22);
+        double angle31 = Math.toRadians(angleDegrees31);
+        double angle32 = Math.toRadians(angleDegrees32);
+        Complex aA11 = new Complex(a11 * Math.cos(angle11), a11 * Math.sin(angle11));
+        Complex aA12 = new Complex(a12 * Math.cos(angle12), a12 * Math.sin(angle12));
+        Complex aA21 = new Complex(a21 * Math.cos(angle21), a21 * Math.sin(angle21));
+        Complex aA22 = new Complex(a22 * Math.cos(angle22), a22 * Math.sin(angle22));
+        Complex aA31 = new Complex(a31 * Math.cos(angle31), a31 * Math.sin(angle31));
+        Complex aA32 = new Complex(a32 * Math.cos(angle32), a32 * Math.sin(angle32));
+
+        Complex z1 = new Complex(r1, x1);
+        admittanceMatrixEnd1.y11 = z1.reciprocal().add(ysh11).divide(aA11.conjugate().multiply(aA11));
+        admittanceMatrixEnd1.y12 = z1.reciprocal().negate().divide(aA11.conjugate().multiply(aA12));
+        admittanceMatrixEnd1.y21 = z1.reciprocal().negate().divide(aA12.conjugate().multiply(aA11));
+        admittanceMatrixEnd1.y22 = z1.reciprocal().add(ysh12).divide(aA12.conjugate().multiply(aA12));
+
+        Complex z2 = new Complex(r2, x2);
+        admittanceMatrixEnd2.y11 = z2.reciprocal().add(ysh21).divide(aA21.conjugate().multiply(aA21));
+        admittanceMatrixEnd2.y12 = z2.reciprocal().negate().divide(aA21.conjugate().multiply(aA22));
+        admittanceMatrixEnd2.y21 = z2.reciprocal().negate().divide(aA22.conjugate().multiply(aA21));
+        admittanceMatrixEnd2.y22 = z2.reciprocal().add(ysh22).divide(aA22.conjugate().multiply(aA22));
+
+        Complex z3 = new Complex(r3, x3);
+        admittanceMatrixEnd3.y11 = z3.reciprocal().add(ysh31).divide(aA31.conjugate().multiply(aA31));
+        admittanceMatrixEnd3.y12 = z3.reciprocal().negate().divide(aA31.conjugate().multiply(aA32));
+        admittanceMatrixEnd3.y21 = z3.reciprocal().negate().divide(aA32.conjugate().multiply(aA31));
+        admittanceMatrixEnd3.y22 = z3.reciprocal().add(ysh32).divide(aA32.conjugate().multiply(aA32));
+    }
+
     private void detectBranchModel(Complex ysh11, Complex ysh12, double a11, double angle11, double a12, double angle12,
-            boolean tc11DifferentRatios, boolean ptc11DifferentAngles, boolean tc12DifferentRatios,
-            boolean ptc12DifferentAngles, Complex ysh21, Complex ysh22, double a21, double angle21, double a22,
-            double angle22, boolean tc21DifferentRatios, boolean ptc21DifferentAngles, boolean tc22DifferentRatios,
-            boolean ptc22DifferentAngles, Complex ysh31, Complex ysh32, double a31, double angle31, double a32,
-            double angle32, boolean tc31DifferentRatios, boolean ptc31DifferentAngles, boolean tc32DifferentRatios,
-            boolean ptc32DifferentAngles) {
-        branchModelEnd1 = new DetectedBranchModel(ysh11, ysh12, a11, angle11, a12, angle12, tc11DifferentRatios,
-                ptc11DifferentAngles, tc12DifferentRatios, ptc12DifferentAngles);
+            boolean rtc11RegulatingControl, boolean tc11DifferentRatios,
+            boolean ptc11RegulatingControl, boolean ptc11DifferentAngles,
+            boolean rtc12RegulatingControl, boolean tc12DifferentRatios,
+            boolean ptc12RegulatingControl, boolean ptc12DifferentAngles,
+            Complex ysh21, Complex ysh22, double a21, double angle21, double a22, double angle22,
+            boolean rtc21RegulatingControl, boolean tc21DifferentRatios,
+            boolean ptc21RegulatingControl, boolean ptc21DifferentAngles,
+            boolean rtc22RegulatingControl, boolean tc22DifferentRatios,
+            boolean ptc22RegulatingControl, boolean ptc22DifferentAngles,
+            Complex ysh31, Complex ysh32, double a31, double angle31, double a32, double angle32,
+            boolean rtc31RegulatingControl, boolean tc31DifferentRatios,
+            boolean ptc31RegulatingControl, boolean ptc31DifferentAngles,
+            boolean rtc32RegulatingControl, boolean tc32DifferentRatios,
+            boolean ptc32RegulatingControl, boolean ptc32DifferentAngles) {
+        branchModelEnd1 = new DetectedBranchModel(ysh11, ysh12, a11, angle11, a12, angle12, rtc11RegulatingControl,
+                tc11DifferentRatios, ptc11RegulatingControl, ptc11DifferentAngles,
+                rtc12RegulatingControl, tc12DifferentRatios, ptc12RegulatingControl, ptc12DifferentAngles);
 
-        branchModelEnd2 = new DetectedBranchModel(ysh21, ysh22, a21, angle21, a22, angle22, tc21DifferentRatios,
-                ptc21DifferentAngles, tc22DifferentRatios, ptc22DifferentAngles);
+        branchModelEnd2 = new DetectedBranchModel(ysh21, ysh22, a21, angle21, a22, angle22, rtc21RegulatingControl,
+                tc21DifferentRatios, ptc21RegulatingControl, ptc21DifferentAngles,
+                rtc22RegulatingControl, tc22DifferentRatios, ptc22RegulatingControl, ptc22DifferentAngles);
 
-        branchModelEnd3 = new DetectedBranchModel(ysh31, ysh32, a31, angle31, a32, angle32, tc31DifferentRatios,
-                ptc31DifferentAngles, tc32DifferentRatios, ptc32DifferentAngles);
+        branchModelEnd3 = new DetectedBranchModel(ysh31, ysh32, a31, angle31, a32, angle32, rtc31RegulatingControl,
+                tc31DifferentRatios, ptc31RegulatingControl, ptc31DifferentAngles,
+                rtc32RegulatingControl, tc32DifferentRatios, ptc32RegulatingControl, ptc32DifferentAngles);
     }
 
     public BranchAdmittanceMatrix getAdmittanceMatrixEnd1() {
@@ -172,15 +238,8 @@ public class Xfmr3Model {
         double ratedU2 = transformer.asDouble("ratedU2");
         double ratedU3 = transformer.asDouble("ratedU3");
         Xfmr3Ratio0Data ratio0Data = new Xfmr3Ratio0Data();
-        switch (config.getXfmr3Ratio0StarBusSide()) {
-            case NETWORK_SIDE:
-                ratio0Data.end1.a01 = ratedU1 / ratedU0;
-                ratio0Data.end1.a02 = ratedU0 / ratedU0;
-                ratio0Data.end2.a01 = ratedU2 / ratedU0;
-                ratio0Data.end2.a02 = ratedU0 / ratedU0;
-                ratio0Data.end3.a01 = ratedU3 / ratedU0;
-                ratio0Data.end3.a02 = ratedU0 / ratedU0;
-                break;
+        Xfmr3RatioPhaseMappingAlternative xfmr3Ratio0StarBusSide = config.getXfmr3Ratio0StarBusSide();
+        switch (xfmr3Ratio0StarBusSide) {
             case STAR_BUS_SIDE:
                 ratio0Data.end1.a01 = ratedU1 / ratedU1;
                 ratio0Data.end1.a02 = ratedU0 / ratedU1;
@@ -188,6 +247,14 @@ public class Xfmr3Model {
                 ratio0Data.end2.a02 = ratedU0 / ratedU2;
                 ratio0Data.end3.a01 = ratedU3 / ratedU3;
                 ratio0Data.end3.a02 = ratedU0 / ratedU3;
+                break;
+            case NETWORK_SIDE:
+                ratio0Data.end1.a01 = ratedU1 / ratedU0;
+                ratio0Data.end1.a02 = ratedU0 / ratedU0;
+                ratio0Data.end2.a01 = ratedU2 / ratedU0;
+                ratio0Data.end2.a02 = ratedU0 / ratedU0;
+                ratio0Data.end3.a01 = ratedU3 / ratedU0;
+                ratio0Data.end3.a02 = ratedU0 / ratedU0;
                 break;
         }
         return ratio0Data;
@@ -347,34 +414,54 @@ public class Xfmr3Model {
         boolean ptc3DifferentAngles = XfmrUtilities.getXfmrDifferentAngles(psvi3, stepPhaseShiftIncrement3, pls3, phs3,
                 ptc3TabularDifferentAngles);
 
-        switch (config.getXfmr3RatioPhaseStarBusSide()) {
-            case NETWORK_SIDE:
-                ratioPhaseData.end1.a1 = rtc1a * ptc1a;
-                ratioPhaseData.end1.angle1 = rtc1A + ptc1A;
-                ratioPhaseData.end1.tc1DifferentRatios = tc1DifferentRatios;
-                ratioPhaseData.end1.ptc1DifferentAngles = ptc1DifferentAngles;
-                ratioPhaseData.end2.a1 = rtc2a * ptc2a;
-                ratioPhaseData.end2.angle1 = rtc2A + ptc2A;
-                ratioPhaseData.end2.tc1DifferentRatios = tc2DifferentRatios;
-                ratioPhaseData.end2.ptc1DifferentAngles = ptc2DifferentAngles;
-                ratioPhaseData.end3.a1 = rtc3a * ptc3a;
-                ratioPhaseData.end3.angle1 = rtc3A + ptc3A;
-                ratioPhaseData.end3.tc1DifferentRatios = tc3DifferentRatios;
-                ratioPhaseData.end3.ptc1DifferentAngles = ptc3DifferentAngles;
-                break;
+        boolean rtc1RegulatingControl = transformer.asBoolean("ratioRegulatingControlEnabled1", false);
+        boolean ptc1RegulatingControl = transformer.asBoolean("phaseRegulatingControlEnabled1", false);
+        boolean rtc2RegulatingControl = transformer.asBoolean("ratioRegulatingControlEnabled2", false);
+        boolean ptc2RegulatingControl = transformer.asBoolean("phaseRegulatingControlEnabled2", false);
+        boolean rtc3RegulatingControl = transformer.asBoolean("ratioRegulatingControlEnabled3", false);
+        boolean ptc3RegulatingControl = transformer.asBoolean("phaseRegulatingControlEnabled3", false);
+
+        Xfmr3RatioPhaseMappingAlternative xfmr3RatioPhaseStarBusSide = config.getXfmr3RatioPhaseStarBusSide();
+        switch (xfmr3RatioPhaseStarBusSide) {
             case STAR_BUS_SIDE:
                 ratioPhaseData.end1.a2 = rtc1a * ptc1a;
                 ratioPhaseData.end1.angle2 = rtc1A + ptc1A;
                 ratioPhaseData.end1.tc2DifferentRatios = tc1DifferentRatios;
                 ratioPhaseData.end1.ptc2DifferentAngles = ptc1DifferentAngles;
+                ratioPhaseData.end1.rtc2RegulatingControl = rtc1RegulatingControl;
+                ratioPhaseData.end1.ptc2RegulatingControl = ptc1RegulatingControl;
                 ratioPhaseData.end2.a2 = rtc2a * ptc2a;
                 ratioPhaseData.end2.angle2 = rtc2A + ptc2A;
                 ratioPhaseData.end2.tc2DifferentRatios = tc2DifferentRatios;
                 ratioPhaseData.end2.ptc2DifferentAngles = ptc2DifferentAngles;
+                ratioPhaseData.end2.rtc2RegulatingControl = rtc2RegulatingControl;
+                ratioPhaseData.end2.ptc2RegulatingControl = ptc2RegulatingControl;
                 ratioPhaseData.end3.a2 = rtc3a * ptc3a;
                 ratioPhaseData.end3.angle2 = rtc3A + ptc3A;
                 ratioPhaseData.end3.tc2DifferentRatios = tc3DifferentRatios;
                 ratioPhaseData.end3.ptc2DifferentAngles = ptc3DifferentAngles;
+                ratioPhaseData.end3.rtc2RegulatingControl = rtc3RegulatingControl;
+                ratioPhaseData.end3.ptc2RegulatingControl = ptc3RegulatingControl;
+                break;
+            case NETWORK_SIDE:
+                ratioPhaseData.end1.a1 = rtc1a * ptc1a;
+                ratioPhaseData.end1.angle1 = rtc1A + ptc1A;
+                ratioPhaseData.end1.tc1DifferentRatios = tc1DifferentRatios;
+                ratioPhaseData.end1.ptc1DifferentAngles = ptc1DifferentAngles;
+                ratioPhaseData.end1.rtc1RegulatingControl = rtc1RegulatingControl;
+                ratioPhaseData.end1.ptc1RegulatingControl = ptc1RegulatingControl;
+                ratioPhaseData.end2.a1 = rtc2a * ptc2a;
+                ratioPhaseData.end2.angle1 = rtc2A + ptc2A;
+                ratioPhaseData.end2.tc1DifferentRatios = tc2DifferentRatios;
+                ratioPhaseData.end2.ptc1DifferentAngles = ptc2DifferentAngles;
+                ratioPhaseData.end2.rtc1RegulatingControl = rtc2RegulatingControl;
+                ratioPhaseData.end2.ptc1RegulatingControl = ptc2RegulatingControl;
+                ratioPhaseData.end3.a1 = rtc3a * ptc3a;
+                ratioPhaseData.end3.angle1 = rtc3A + ptc3A;
+                ratioPhaseData.end3.tc1DifferentRatios = tc3DifferentRatios;
+                ratioPhaseData.end3.ptc1DifferentAngles = ptc3DifferentAngles;
+                ratioPhaseData.end3.rtc1RegulatingControl = rtc3RegulatingControl;
+                ratioPhaseData.end3.ptc1RegulatingControl = ptc3RegulatingControl;
                 break;
         }
 
