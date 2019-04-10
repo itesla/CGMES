@@ -268,8 +268,8 @@ public class FlowCalculator {
             p = sft.getReal();
             q = sft.getImaginary();
         } else if (nEnd2.equals(n)) {
-            p = sft.getReal();
-            q = sft.getImaginary();
+            p = stf.getReal();
+            q = stf.getImaginary();
         } else {
             LOG.warn("calculateEnd1End2Flow. Unexpected node");
         }
