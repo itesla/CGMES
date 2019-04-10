@@ -55,6 +55,10 @@ public class ModelInterpretation {
         this.inputModel = inputModel;
     }
 
+    public InterpretedModel getInputModel() {
+        return inputModel;
+    }
+
     public InterpretationResult getInterpretation() {
         InterpretationResult r = new InterpretationResult();
         r.error = bestError;

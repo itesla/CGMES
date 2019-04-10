@@ -11,33 +11,33 @@ package com.powsybl.cgmes.model.interpretation;
  * @author José Antonio Marqués <marquesja at aia.es>
  * @author Marcos de Miguel <demiguelm at aia.es>
  */
-class CgmesEquipmentModelMapping {
+public class CgmesEquipmentModelMapping {
 
-    enum LineShuntMappingAlternative {
+    public enum LineShuntMappingAlternative {
         END1, END2, SPLIT
     }
 
-    enum Xfmr2ShuntMappingAlternative {
+    public enum Xfmr2ShuntMappingAlternative {
         END1, END2, SPLIT, END1_END2
     }
 
-    enum Xfmr2RatioPhaseMappingAlternative {
+    public enum Xfmr2RatioPhaseMappingAlternative {
         END1, END2, END1_END2, RTC, X
     }
 
-    enum Xfmr2PhaseAngleClockAlternative {
+    public enum Xfmr2PhaseAngleClockAlternative {
         OFF, END1_END2
     }
 
-    enum Xfmr3RatioPhaseMappingAlternative {
+    public enum Xfmr3RatioPhaseMappingAlternative {
         STAR_BUS_SIDE, NETWORK_SIDE
     }
 
-    enum Xfmr3ShuntMappingAlternative {
+    public enum Xfmr3ShuntMappingAlternative {
         STAR_BUS_SIDE, NETWORK_SIDE, SPLIT
     }
 
-    enum Xfmr3PhaseAngleClockAlternative {
+    public enum Xfmr3PhaseAngleClockAlternative {
         OFF, STAR_BUS_SIDE, NETWORK_SIDE
     }
 

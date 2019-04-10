@@ -48,9 +48,10 @@
 	<modules>
 		<module>cgmes-validation</module>
 		<module>cgmes-validation-csi</module>
-		<module>distribution-core-cgmes</module>
 		<module>cgmes-tools</module>
+		<module>distribution-core-cgmes</module>
 		<module>cgmes-model-interpretation</module>
+		<module>cgmes-conversion-validation</module>
 	</modules>
 	
 	<properties>
@@ -422,6 +423,11 @@
 				<artifactId>powsybl-iidm-impl</artifactId>
 				<version>${powsyblcore.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>com.google.jimfs</groupId>
+				<artifactId>jimfs</artifactId>
+				<version>${jimfs.version}</version>
+			</dependency>
 			<!-- Runtime dependencies -->
 			<dependency>
 				<groupId>ch.qos.logback</groupId>
@@ -434,12 +440,6 @@
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava-testlib</artifactId>
 				<version>${guava.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.google.jimfs</groupId>
-				<artifactId>jimfs</artifactId>
-				<version>${jimfs.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
@@ -497,7 +497,6 @@
 				<groupId>com.powsybl</groupId>
 				<artifactId>powsybl-loadflow-results-completion</artifactId>
 				<version>${powsyblcore.version}</version>
-				<scope>test</scope>
 			</dependency>
 	        <dependency>
 	            <groupId>com.powsybl</groupId>

@@ -57,7 +57,7 @@ public class CgmesModelsInterpretation extends Catalog {
         return exceptions;
     }
 
-    private CgmesModel load(Path p) {
+    protected CgmesModel load(Path p) {
         String impl = TripleStoreFactory.defaultImplementation();
         if (boundary == null) {
             return CgmesModelFactory.create(dataSource(p), impl);
