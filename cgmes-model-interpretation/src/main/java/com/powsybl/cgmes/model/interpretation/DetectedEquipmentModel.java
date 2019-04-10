@@ -140,7 +140,7 @@ class DetectedEquipmentModel {
             model32 = model32.replace("n", "n(C)");
 
             if ((model2.contains("R") || model2.contains("r") || model2.contains("n")) &&
-                    (model3.contains("R") || model3.contains("n") || model3.contains("n"))) {
+                    (model3.contains("R") || model3.contains("r") || model3.contains("n"))) {
                 model11 = model11.replace("R", "R(ko)");
                 model11 = model11.replace("r", "r(ko)");
                 model11 = model11.replace("n", "n(ko)");
