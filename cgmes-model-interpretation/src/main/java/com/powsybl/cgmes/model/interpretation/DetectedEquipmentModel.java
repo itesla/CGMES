@@ -155,8 +155,10 @@ class DetectedEquipmentModel {
                 model12 = model12.replace("r", "r(C)");
                 model12 = model12.replace("n", "n(C)");
             }
+            model11 = model11.replace("x", "x(C)");
             model12 = model12.replace("x", "x(C)");
-            model21 = model21.replace("x", "x(C)");
+            model22 = model22.replace("x", "x(C)");
+            model32 = model32.replace("x", "x(C)");
 
             String evalModel = model11 + model12 + "." + model21 + model22 + "." + model31 + model32;
             if (evalModel.contains("(C)") || evalModel.contains("(ko)")) {
