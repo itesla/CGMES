@@ -291,6 +291,46 @@ public class InterpretedModel {
         cgmes.synchronousMachines().forEach(e -> terminalFlow(cgmes, nodes, e));
         cgmes.externalNetworkInjections().forEach(e -> terminalFlow(cgmes, nodes, e));
         cgmes.acDcConverters().forEach(e -> terminalFlow(cgmes, nodes, e));
+
+        String svInjection = "SELECT * "
+                + "WHERE { "
+                + "{ GRAPH ?graphSV {"
+                + "    ?SvInjection"
+                + "        a cim:SvInjection ;"
+                + "        cim:SvInjection.TopologicalNode ?TopologicalNode ;"
+                + "        cim:SvInjection.pInjection ?p ;"
+                + "        cim:SvInjection.qInjection ?q"
+                + "}}"
+                + "}";
+        ((CgmesModelTripleStore) cgmes).query(svInjection).forEach(e -> nodeInjection(cgmes, nodes, e));
+    }
+
+    private void nodeInjection(CgmesModel cgmes, Map<String, PropertyBag> nodes, PropertyBag injection) {
+        String nodeId = injection.getId("TopologicalNode");
+        PropertyBag node = nodes.get(nodeId);
+        if (node == null) {
+            PropertyBag n = voltages.get(nodeId);
+            String v = "0.0";
+            String angle = "0.0";
+            if (n != null) {
+                v = n.get("v");
+                angle = n.get("angle");
+            }
+
+            node = nodes.computeIfAbsent(nodeId, x -> new PropertyBag(propertyNames));
+            // XXX LUMA Review dealing with invalid voltages
+            node.put("v", v == null ? "0" : v);
+            node.put("angle", angle == null ? "0" : angle);
+            node.put("p", "0.0");
+            node.put("q", "0.0");
+        }
+        double pNode = node.asDouble("p");
+        double qNode = node.asDouble("q");
+        double pEquipment = injection.asDouble("p");
+        double qEquipment = injection.asDouble("q");
+
+        node.put("p", String.valueOf(pNode + pEquipment));
+        node.put("q", String.valueOf(qNode + qEquipment));
     }
 
     private void terminalFlow(CgmesModel cgmes, Map<String, PropertyBag> nodes, PropertyBag equipment) {
@@ -535,6 +575,7 @@ public class InterpretedModel {
             String ratioNeutralStep = rt.get("neutralStep");
             String ratioStepVoltageIncrement = rt.get("stepVoltageIncrement");
             String ratioStep = rt.get("SVtapStep");
+            String ratioRegulatingControlEnabled = rt.getId("regulatingControlEnabled");
             if (tableId != null) {
                 transformer.put("RatioTapChangerTable" + endNumber, tableId);
             }
@@ -556,6 +597,9 @@ public class InterpretedModel {
             if (ratioStep != null) {
                 transformer.put("rstep" + endNumber, ratioStep);
             }
+            if (ratioRegulatingControlEnabled != null) {
+                transformer.put("ratioRegulatingControlEnabled" + endNumber, ratioRegulatingControlEnabled);
+            }
         }
         if (pt != null) {
             String tableId = pt.getId("PhaseTapChangerTable");
@@ -568,6 +612,7 @@ public class InterpretedModel {
             String phaseStep = pt.get("SVtapStep");
             String phaseWindingConnectionAngle = pt.get("windingConnectionAngle");
             String ptcType = pt.getLocal("phaseTapChangerType").toLowerCase();
+            String phaseRegulatingControlEnabled = pt.getId("regulatingControlEnabled");
             if (pt.containsKey("xStepMin") && pt.containsKey("xStepMax")) {
                 String xStepMin = pt.get("xStepMin");
                 String xStepMax = pt.get("xStepMax");
@@ -612,6 +657,9 @@ public class InterpretedModel {
             }
             if (ptcType != null) {
                 transformer.put("ptype" + endNumber, ptcType);
+            }
+            if (phaseRegulatingControlEnabled != null) {
+                transformer.put("phaseRegulatingControlEnabled" + endNumber, phaseRegulatingControlEnabled);
             }
         }
 

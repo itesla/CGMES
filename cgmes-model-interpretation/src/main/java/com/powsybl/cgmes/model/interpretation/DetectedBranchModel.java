@@ -9,6 +9,9 @@ package com.powsybl.cgmes.model.interpretation;
 
 import org.apache.commons.math3.complex.Complex;
 
+import com.powsybl.cgmes.model.interpretation.XfmrUtilities.PhaseData;
+import com.powsybl.cgmes.model.interpretation.XfmrUtilities.RatioData;
+
 /**
  * @author José Antonio Marqués <marquesja at aia.es>
  * @author Marcos de Miguel <demiguelm at aia.es>
@@ -29,30 +32,28 @@ class DetectedBranchModel {
         this.phase2 = null;
     }
 
-    public DetectedBranchModel(Complex ysh1, Complex ysh2, double a1, double angle1, double a2, double angle2,
-            boolean rtc1RegulatingControl, boolean tc1DifferentRatios, boolean ptc1RegulatingControl,
-            boolean ptc1DifferentAngles, boolean rtc2RegulatingControl, boolean tc2DifferentRatios,
-            boolean ptc2RegulatingControl, boolean ptc2DifferentAngles) {
-        this.ratio1 = xfmrRatioModel(a1, rtc1RegulatingControl, tc1DifferentRatios);
-        this.phase1 = xfmrPhaseModel(angle1, ptc1RegulatingControl, ptc1DifferentAngles);
+    public DetectedBranchModel(Complex ysh1, Complex ysh2, RatioData ratio1, PhaseData phase1,
+            RatioData ratio2, PhaseData phase2) {
+        this.ratio1 = xfmrRatioModel(ratio1);
+        this.phase1 = xfmrPhaseModel(phase1);
         this.shunt1 = shuntModel(ysh1);
         this.shunt2 = shuntModel(ysh2);
-        this.ratio2 = xfmrRatioModel(a2, rtc2RegulatingControl, tc2DifferentRatios);
-        this.phase2 = xfmrPhaseModel(angle2, ptc2RegulatingControl, ptc2DifferentAngles);
+        this.ratio2 = xfmrRatioModel(ratio2);
+        this.phase2 = xfmrPhaseModel(phase2);
     }
 
-    private ChangerType xfmrRatioModel(double a, boolean rtcRegulatingControl, boolean tcDifferentRatios) {
-        if (rtcRegulatingControl && tcDifferentRatios) {
+    private ChangerType xfmrRatioModel(RatioData ratio) {
+        if (ratio.regulatingControl && ratio.changeable) {
             return ChangerType.REGULATING_CONTROL;
         }
-        if (a == 1.0) {
-            if (tcDifferentRatios) {
+        if (ratio.a == 1.0) {
+            if (ratio.changeable) {
                 return ChangerType.CHANGEABLE_AT_NEUTRAL;
             } else {
                 return ChangerType.ABSENT;
             }
         } else {
-            if (tcDifferentRatios) {
+            if (ratio.changeable) {
                 return ChangerType.CHANGEABLE_AT_NON_NEUTRAL;
             } else {
                 return ChangerType.FIXED;
@@ -60,18 +61,18 @@ class DetectedBranchModel {
         }
     }
 
-    private ChangerType xfmrPhaseModel(double angle, boolean ptcRegulatingControl, boolean ptcDifferentAngles) {
-        if (ptcRegulatingControl && ptcDifferentAngles) {
+    private ChangerType xfmrPhaseModel(PhaseData phase) {
+        if (phase.regulatingControl && phase.changeable) {
             return ChangerType.REGULATING_CONTROL;
         }
-        if (angle == 0.0) {
-            if (ptcDifferentAngles) {
+        if (phase.a == 1.0 && phase.angle == 0.0) {
+            if (phase.changeable) {
                 return ChangerType.CHANGEABLE_AT_NEUTRAL;
             } else {
                 return ChangerType.ABSENT;
             }
         } else {
-            if (ptcDifferentAngles) {
+            if (phase.changeable) {
                 return ChangerType.CHANGEABLE_AT_NON_NEUTRAL;
             } else {
                 return ChangerType.FIXED;
@@ -121,7 +122,7 @@ class DetectedBranchModel {
                 code.append("x");
                 break;
             case CHANGEABLE_AT_NEUTRAL:
-                code.append("1");
+                code.append("n");
                 break;
             case CHANGEABLE_AT_NON_NEUTRAL:
                 code.append("r");
@@ -143,7 +144,7 @@ class DetectedBranchModel {
                 code.append("x");
                 break;
             case CHANGEABLE_AT_NEUTRAL:
-                code.append("0");
+                code.append("m");
                 break;
             case CHANGEABLE_AT_NON_NEUTRAL:
                 code.append("p");
