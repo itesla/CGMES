@@ -299,34 +299,34 @@ public final class XfmrUtilities {
     static class RatioData {
         double  a                 = 1.0;
         boolean regulatingControl = false;
-		boolean changeable        = false;
+        boolean changeable        = false;
     }
 
     static class PhaseData {
         double  a                 = 1.0;
-		double  angle             = 0.0;
+        double  angle             = 0.0;
         boolean regulatingControl = false;
-		boolean changeable        = false;
+        boolean changeable        = false;
     }
 
     static class RatioPhaseData {
-		RatioData ratio1;
-		PhaseData phase1;
-		RatioData ratio2;
-		PhaseData phase2;
+        RatioData ratio1;
+        PhaseData phase1;
+        RatioData ratio2;
+        PhaseData phase2;
 
-        //double  a1                    = 1.0;
-        //double  angle1                = 0.0;
-        //double  a2                    = 1.0;
-        //double  angle2                = 0.0;
-        //boolean rtc1RegulatingControl = false;
-        //boolean tc1DifferentRatios    = false;
-        //boolean ptc1RegulatingControl = false;
-        //boolean ptc1DifferentAngles   = false;
-        //boolean rtc2RegulatingControl = false;
-        //boolean tc2DifferentRatios    = false;
-        //boolean ptc2RegulatingControl = false;
-        //boolean ptc2DifferentAngles   = false;
+        // double a1 = 1.0;
+        // double angle1 = 0.0;
+        // double a2 = 1.0;
+        // double angle2 = 0.0;
+        // boolean rtc1RegulatingControl = false;
+        // boolean tc1DifferentRatios = false;
+        // boolean ptc1RegulatingControl = false;
+        // boolean ptc1DifferentAngles = false;
+        // boolean rtc2RegulatingControl = false;
+        // boolean tc2DifferentRatios = false;
+        // boolean ptc2RegulatingControl = false;
+        // boolean ptc2DifferentAngles = false;
     }
 
     static class YShuntData {

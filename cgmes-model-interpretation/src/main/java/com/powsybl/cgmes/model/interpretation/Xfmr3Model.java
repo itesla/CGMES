@@ -58,18 +58,18 @@ public class Xfmr3Model {
     public void interpret() {
 
         Xfmr3RatioPhaseData ratioPhaseData = getXfmr3RatioPhase(config);
-		RatioData ratio11 = ratioPhaseData.end1.ratio1;
-		PhaseData phase11 = ratioPhaseData.end1.phase1;
-		RatioData ratio12 = ratioPhaseData.end1.ratio2;
-		PhaseData phase12 = ratioPhaseData.end1.phase2;
-		RatioData ratio21 = ratioPhaseData.end2.ratio1;
-		PhaseData phase21 = ratioPhaseData.end2.phase1;
-		RatioData ratio22 = ratioPhaseData.end2.ratio2;
-		PhaseData phase22 = ratioPhaseData.end2.phase2;
-		RatioData ratio31 = ratioPhaseData.end3.ratio1;
-		PhaseData phase31 = ratioPhaseData.end3.phase1;
-		RatioData ratio32 = ratioPhaseData.end3.ratio2;
-		PhaseData phase32 = ratioPhaseData.end3.phase2;
+        RatioData ratio11 = ratioPhaseData.end1.ratio1;
+        PhaseData phase11 = ratioPhaseData.end1.phase1;
+        RatioData ratio12 = ratioPhaseData.end1.ratio2;
+        PhaseData phase12 = ratioPhaseData.end1.phase2;
+        RatioData ratio21 = ratioPhaseData.end2.ratio1;
+        PhaseData phase21 = ratioPhaseData.end2.phase1;
+        RatioData ratio22 = ratioPhaseData.end2.ratio2;
+        PhaseData phase22 = ratioPhaseData.end2.phase2;
+        RatioData ratio31 = ratioPhaseData.end3.ratio1;
+        PhaseData phase31 = ratioPhaseData.end3.phase1;
+        RatioData ratio32 = ratioPhaseData.end3.ratio2;
+        PhaseData phase32 = ratioPhaseData.end3.phase2;
 
         // yshunt
         Xfmr3YShuntData yShuntData = getXfmr3YShunt(config);
@@ -89,16 +89,16 @@ public class Xfmr3Model {
         phase31.angle += phaseAngleClockData.end3.angle1;
         phase32.angle += phaseAngleClockData.end3.angle2;
 
-        detectBranchModel(ysh11, ysh12, ratio11, phase11, ratio12, phase12, 
-                ysh21, ysh22, ratio21, phase21, ratio22, phase22, 
-                ysh31, ysh32, ratio31, phase31, ratio32, phase32); 
+        detectBranchModel(ysh11, ysh12, ratio11, phase11, ratio12, phase12,
+                ysh21, ysh22, ratio21, phase21, ratio22, phase22,
+                ysh31, ysh32, ratio31, phase31, ratio32, phase32);
 
-        double a11 = ratio11.a*phase11.a; 
-        double a12 = ratio12.a*phase12.a; 
-        double a21 = ratio21.a*phase21.a; 
-        double a22 = ratio22.a*phase22.a; 
-        double a31 = ratio31.a*phase31.a; 
-        double a32 = ratio32.a*phase32.a; 
+        double a11 = ratio11.a * phase11.a;
+        double a12 = ratio12.a * phase12.a;
+        double a21 = ratio21.a * phase21.a;
+        double a22 = ratio22.a * phase22.a;
+        double a31 = ratio31.a * phase31.a;
+        double a32 = ratio32.a * phase32.a;
 
         // add structural ratio after detected branch model
         double ratedU0 = 1.0;
@@ -111,9 +111,9 @@ public class Xfmr3Model {
         a32 *= ratio0Data.end3.a02;
 
         // admittance
-		admittanceMatrixEnd1.calculateAdmittance(r1, x1, a11, phase11.angle, ysh11, a12, phase12.angle, ysh12);
-		admittanceMatrixEnd2.calculateAdmittance(r2, x2, a21, phase21.angle, ysh21, a22, phase22.angle, ysh22); 
-		admittanceMatrixEnd3.calculateAdmittance(r3, x3, a31, phase31.angle, ysh31, a32, phase32.angle, ysh32); 
+        admittanceMatrixEnd1.calculateAdmittance(r1, x1, a11, phase11.angle, ysh11, a12, phase12.angle, ysh12);
+        admittanceMatrixEnd2.calculateAdmittance(r2, x2, a21, phase21.angle, ysh21, a22, phase22.angle, ysh22);
+        admittanceMatrixEnd3.calculateAdmittance(r3, x3, a31, phase31.angle, ysh31, a32, phase32.angle, ysh32);
     }
 
     public DetectedBranchModel getBranchModelEnd1() {
@@ -134,9 +134,9 @@ public class Xfmr3Model {
             RatioData ratio22, PhaseData phase22,
             Complex ysh31, Complex ysh32, RatioData ratio31, PhaseData phase31,
             RatioData ratio32, PhaseData phase32) {
-        branchModelEnd1 = new DetectedBranchModel(ysh11, ysh12, ratio11, phase11, ratio12, phase12); 
-        branchModelEnd2 = new DetectedBranchModel(ysh21, ysh22, ratio21, phase21, ratio22, phase22); 
-        branchModelEnd3 = new DetectedBranchModel(ysh31, ysh32, ratio31, phase31, ratio32, phase32); 
+        branchModelEnd1 = new DetectedBranchModel(ysh11, ysh12, ratio11, phase11, ratio12, phase12);
+        branchModelEnd2 = new DetectedBranchModel(ysh21, ysh22, ratio21, phase21, ratio22, phase22);
+        branchModelEnd3 = new DetectedBranchModel(ysh31, ysh32, ratio31, phase31, ratio32, phase32);
     }
 
     public BranchAdmittanceMatrix getAdmittanceMatrixEnd1() {
@@ -316,16 +316,19 @@ public class Xfmr3Model {
 
         xfmr3ParametersCorrectionEnd3(tapChangerData);
 
-        boolean rtc1DifferentRatios = XfmrUtilities.getXfmrDifferentRatios(rsvi1, rls1, rhs1, rtc1TabularDifferentRatios);
-        boolean rtc2DifferentRatios = XfmrUtilities.getXfmrDifferentRatios(rsvi2, rls2, rhs2, rtc2TabularDifferentRatios);
-        boolean rtc3DifferentRatios = XfmrUtilities.getXfmrDifferentRatios(rsvi3, rls3, rhs3, rtc3TabularDifferentRatios);
-        boolean ptc1DifferentRatiosAngles = XfmrUtilities.getXfmrDifferentRatiosAngles(psvi1, stepPhaseShiftIncrement1,
+        boolean rtc1DifferentRatios = XfmrUtilities.getXfmrDifferentRatios(rsvi1, rls1, rhs1,
+                rtc1TabularDifferentRatios);
+        boolean rtc2DifferentRatios = XfmrUtilities.getXfmrDifferentRatios(rsvi2, rls2, rhs2,
+                rtc2TabularDifferentRatios);
+        boolean rtc3DifferentRatios = XfmrUtilities.getXfmrDifferentRatios(rsvi3, rls3, rhs3,
+                rtc3TabularDifferentRatios);
+        boolean ptc1DifferentRatiosAngles = XfmrUtilities.getXfmrDifferentAngles(psvi1, stepPhaseShiftIncrement1,
                 pls1, phs1, ptc1TabularDifferentRatios, ptc1AsymmetricalDifferentRatios,
                 ptc1TabularDifferentAngles);
-        boolean ptc2DifferentRatiosAngles = XfmrUtilities.getXfmrDifferentRatiosAngles(psvi2, stepPhaseShiftIncrement2,
+        boolean ptc2DifferentRatiosAngles = XfmrUtilities.getXfmrDifferentAngles(psvi2, stepPhaseShiftIncrement2,
                 pls2, phs2, ptc2TabularDifferentRatios, ptc2AsymmetricalDifferentRatios,
                 ptc2TabularDifferentAngles);
-        boolean ptc3DifferentRatiosAngles = XfmrUtilities.getXfmrDifferentRatiosAngles(psvi3, stepPhaseShiftIncrement3,
+        boolean ptc3DifferentRatiosAngles = XfmrUtilities.getXfmrDifferentAngles(psvi3, stepPhaseShiftIncrement3,
                 pls3, phs3, ptc3TabularDifferentRatios, ptc3AsymmetricalDifferentRatios,
                 ptc3TabularDifferentAngles);
 
@@ -336,7 +339,7 @@ public class Xfmr3Model {
         boolean rtc3RegulatingControl = transformer.asBoolean("ratioRegulatingControlEnabled3", false);
         boolean ptc3RegulatingControl = transformer.asBoolean("phaseRegulatingControlEnabled3", false);
 
-		// network side always at end1
+        // network side always at end1
         Xfmr3RatioPhaseMappingAlternative xfmr3RatioPhaseStarBusSide = config.getXfmr3RatioPhaseStarBusSide();
         switch (xfmr3RatioPhaseStarBusSide) {
             case STAR_BUS_SIDE:
