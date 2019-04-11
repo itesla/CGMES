@@ -361,13 +361,13 @@ public class FlowCalculator {
         BranchAdmittanceMatrix admittance = new BranchAdmittanceMatrix();
 
         admittance.y11 = yFirstConnected11.subtract(yFirstConnected21.multiply(yFirstConnected12)
-                        .divide(yFirstConnected22.add(ySecondConnected11)));
-        admittance.y12 = ySecondConnected12.multiply(yFirstConnected12)
-                .divide(yFirstConnected22.add(ySecondConnected11)).negate();
-        admittance.y21 = yFirstConnected21.multiply(ySecondConnected21)
-                .divide(yFirstConnected22.add(ySecondConnected11)).negate();
-        admittance.y22 = ySecondConnected22.subtract(
-                ySecondConnected12.multiply(ySecondConnected21).divide(yFirstConnected22.add(ySecondConnected11)));
+                        .divide(yFirstConnected22.add(ySecondConnected22)));
+        admittance.y12 = ySecondConnected21.multiply(yFirstConnected12)
+                .divide(yFirstConnected22.add(ySecondConnected22)).negate();
+        admittance.y21 = yFirstConnected21.multiply(ySecondConnected12)
+                .divide(yFirstConnected22.add(ySecondConnected22)).negate();
+        admittance.y22 = ySecondConnected11.subtract(
+                ySecondConnected21.multiply(ySecondConnected12).divide(yFirstConnected22.add(ySecondConnected22)));
 
         return admittance;
     }
