@@ -29,21 +29,25 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-loadflow-api</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-loadflow-results-completion</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-loadflow-validation</artifactId>
+            <scope>test</scope>
         </dependency>
 
+        <!-- Test dependencies -->
         <dependency>
             <groupId>com.google.jimfs</groupId>
             <artifactId>jimfs</artifactId>
+            <scope>test</scope>
         </dependency>
-        <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

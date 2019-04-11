@@ -1,4 +1,6 @@
-package com.powsybl.cgmes.conversion.validation;
+package com.powsybl.cgmes.conversion.validation.test;
+
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -6,16 +8,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
+import com.powsybl.cgmes.conversion.validation.BestModelInterpretation;
+import com.powsybl.cgmes.conversion.validation.CgmesConversion;
 import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.cgmes.model.CgmesModelFactory;
 import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping;
+import com.powsybl.cgmes.model.interpretation.FlowCalculator;
 import com.powsybl.cgmes.model.interpretation.InterpretationResult;
 import com.powsybl.cgmes.model.interpretation.InterpretedModel;
 import com.powsybl.cgmes.tools.Catalog;
@@ -43,7 +47,7 @@ public class ConversionValidator extends Catalog {
         Map<String, InterpretationResult> interpretations = new HashMap<>();
         reviewAll(pattern, p -> {
             try {
-                validate(load(p));
+                validate(modelName(p), load(p));
             } catch (Exception x) {
                 LOG.warn(x.getMessage());
             }
@@ -60,28 +64,63 @@ public class ConversionValidator extends Catalog {
         }
     }
 
-    private void validate(CgmesModel model) throws IOException {
-        BestModelInterpretation cgmesInterpretation = new BestModelInterpretation(model);
+    private void validate(String model, CgmesModel cgmesModel) throws IOException {
+        BestModelInterpretation cgmesInterpretation = new BestModelInterpretation(cgmesModel);
         cgmesInterpretation.interpret();
         CgmesEquipmentModelMapping modelMapping = cgmesInterpretation.getModelMapping();
-        CgmesConversion conversion = new CgmesConversion(model, modelMapping);
+        CgmesConversion conversion = new CgmesConversion(cgmesModel, modelMapping);
         Network network = conversion.convert();
-        validateModelInterpret(network, cgmesInterpretation);
+        validateModelInterpret(tsoName(model), network, cgmesInterpretation);
     }
 
-    private void validateModelInterpret(Network network, BestModelInterpretation cgmesInterpretation) throws IOException {
+    private void validateModelInterpret(String tsoName, Network network, BestModelInterpretation cgmesInterpretation) throws IOException {
         double threshold = 0.01;
         InterpretedModel interpretedModel = cgmesInterpretation.getInputModel();
         try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
             ValidationConfig config = loadFlowValidationConfig(fs, threshold);
 
             computeMissingFlows(network, config.getLoadFlowParameters());
+
             network.getLineStream().forEach(l -> {
-                PropertyBag interpretedLine = interpretedModel.getLineParameters(l.getId());
                 BranchData branch = new BranchData(l, config.getEpsilonX(), config.applyReactanceCorrection());
-                checkFlows(branch, config);
+
+                PropertyBag interpretedLine = interpretedModel.getLineParameters(l.getId());
+                if (interpretedLine == null) {
+                    return;
+                }
+                PropertyBag node1 = interpretedModel.getNodeParameters(interpretedLine.get("terminal1"));
+                PropertyBag node2 = interpretedModel.getNodeParameters(interpretedLine.get("terminal2"));
+                FlowCalculator calcFlowEnd1 = new FlowCalculator(interpretedModel);
+                calcFlowEnd1.forLine(interpretedLine.get("terminal1"), node1, node2, interpretedLine, cgmesInterpretation.getModelMapping());
+                FlowCalculator calcFlowEnd2 = new FlowCalculator(interpretedModel);
+                calcFlowEnd2.forLine(interpretedLine.get("terminal2"), node1, node2, interpretedLine, cgmesInterpretation.getModelMapping());
+                assertTrue(checkFlows(tsoName, branch, calcFlowEnd1, calcFlowEnd2, config));
             });
         }
+    }
+
+    private boolean checkFlows(String tsoName, BranchData branch, FlowCalculator calcFlowEnd1, FlowCalculator calcFlowEnd2, ValidationConfig config) {
+        boolean validatedEnd1 = true; 
+        if (branch.isConnected1()) {
+            validatedEnd1 = checkFlow(tsoName, branch.getId(), "1", branch.getComputedP1(), branch.getComputedQ1(), calcFlowEnd1.getP(), calcFlowEnd1.getQ(), config);
+        }
+        boolean validatedEnd2 = true; 
+        if (branch.isConnected2()) {
+            validatedEnd2 = checkFlow(tsoName, branch.getId(), "2", branch.getComputedP2(), branch.getComputedQ2(), calcFlowEnd2.getP(), calcFlowEnd2.getQ(), config);
+        }
+        return validatedEnd1 && validatedEnd2;
+    }
+
+    private boolean checkFlow(String tsoName, String id, String terminalNumber, double iidmP, double iidmQ, double cgmesP, double cgmesQ, ValidationConfig config) {
+        boolean validatedP = Math.abs(iidmP - cgmesP) < config.getThreshold();
+        if (!validatedP) {
+            LOG.warn("{} {} {}: {} P{} {} {}", tsoName, ValidationType.FLOWS, ValidationUtils.VALIDATION_ERROR, id, terminalNumber, iidmP, cgmesP);
+        }
+        boolean validatedQ = Math.abs(iidmQ - cgmesQ) < config.getThreshold();
+        if (!validatedQ) {
+            LOG.warn("{} {} {}: {} Q{} {} {}", tsoName, ValidationType.FLOWS, ValidationUtils.VALIDATION_ERROR, id, terminalNumber, iidmQ, cgmesQ);
+        }
+        return validatedP && validatedQ;
     }
 
     private ValidationConfig loadFlowValidationConfig(FileSystem fs, double threshold) {
@@ -111,50 +150,20 @@ public class ConversionValidator extends Catalog {
         }
     }
 
-    public boolean checkFlows(BranchData branch, ValidationConfig config) {
-        Objects.requireNonNull(branch);
-        Objects.requireNonNull(branch.getId());
-        boolean validated = true;
-
-        if (!branch.isConnected1()) {
-            validated &= checkDisconnectedTerminal(branch.getId(), "1", branch.getP1(), branch.getComputedP1(), branch.getQ1(), branch.getComputedQ1(), config);
+    private String tsoName(String model) {
+        int i = model.indexOf("_1D_") + 4;
+        if (model.indexOf("_1D_") == -1) {
+            i = model.indexOf("_2D_") + 4;
         }
-        if (!branch.isConnected2()) {
-            validated &= checkDisconnectedTerminal(branch.getId(), "2", branch.getP2(), branch.getComputedP2(), branch.getQ2(), branch.getComputedQ2(), config);
+        int j = model.indexOf("_", i);
+        if (model.indexOf("_", i) > model.indexOf("\\", i)) {
+            j = model.indexOf("\\", i);
         }
-        if (branch.isConnected1() && ValidationUtils.isMainComponent(config, branch.isMainComponent1())) {
-            validated &= checkConnectedTerminal(branch.getId(), "1", branch.getP1(), branch.getComputedP1(), branch.getQ1(), branch.getComputedQ1(), config);
+        if (j > i) {
+            return model.substring(i, j);
+        } else {
+            return model.substring(i);
         }
-        if (branch.isConnected2() && ValidationUtils.isMainComponent(config, branch.isMainComponent2())) {
-            validated &= checkConnectedTerminal(branch.getId(), "2", branch.getP2(), branch.getComputedP2(), branch.getQ2(), branch.getComputedQ2(), config);
-        }
-        return validated;
-    }
-
-    private static boolean checkDisconnectedTerminal(String id, String terminalNumber, double p, double pCalc, double q, double qCalc, ValidationConfig config) {
-        boolean validated = true;
-        if (!Double.isNaN(p) && Math.abs(p) > config.getThreshold()) {
-            LOG.warn("{} {}: {} disconnected P{} {} {}", ValidationType.FLOWS, ValidationUtils.VALIDATION_ERROR, id, terminalNumber, p, pCalc);
-            validated = false;
-        }
-        if (!Double.isNaN(q) && Math.abs(q) > config.getThreshold()) {
-            LOG.warn("{} {}: {} disconnected Q{} {} {}", ValidationType.FLOWS, ValidationUtils.VALIDATION_ERROR, id, terminalNumber, q, qCalc);
-            validated = false;
-        }
-        return validated;
-    }
-
-    private static boolean checkConnectedTerminal(String id, String terminalNumber, double p, double pCalc, double q, double qCalc, ValidationConfig config) {
-        boolean validated = true;
-        if (ValidationUtils.areNaN(config, pCalc) || Math.abs(p - pCalc) > config.getThreshold()) {
-            LOG.warn("{} {}: {} P{} {} {}", ValidationType.FLOWS, ValidationUtils.VALIDATION_ERROR, id, terminalNumber, p, pCalc);
-            validated = false;
-        }
-        if (ValidationUtils.areNaN(config, qCalc) || Math.abs(q - qCalc) > config.getThreshold()) {
-            LOG.warn("{} {}: {} Q{} {} {}", ValidationType.FLOWS, ValidationUtils.VALIDATION_ERROR, id, terminalNumber, q, qCalc);
-            validated = false;
-        }
-        return validated;
     }
 
     private final Path          boundary;
