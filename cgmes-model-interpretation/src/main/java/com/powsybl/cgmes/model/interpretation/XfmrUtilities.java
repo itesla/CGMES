@@ -265,15 +265,15 @@ public final class XfmrUtilities {
         return phaseAngleClockDegree;
     }
 
-    static boolean getXfmrDifferentRatios(double rsvi, double rls, double rhs, boolean rtcTabularDifferentRatios,
-            boolean ptcTabularDifferentRatios, boolean ptcAsymmetricalDifferentRatios) {
+    static boolean getXfmrDifferentRatios(double rsvi, double rls, double rhs, boolean rtcTabularDifferentRatios) {
         if (rsvi != 0 && rls != rhs) {
             return true;
         }
-        return rtcTabularDifferentRatios || ptcTabularDifferentRatios || ptcAsymmetricalDifferentRatios;
+        return rtcTabularDifferentRatios;
     }
 
     static boolean getXfmrDifferentAngles(double psvi, double stepPhaseShiftIncrement, double pls, double phs,
+            boolean ptcTabularDifferentRatios, boolean ptcAsymmetricalDifferentRatios,
             boolean ptcTabularDifferentAngles) {
         if (psvi != 0 && pls != phs) {
             return true;
@@ -281,7 +281,7 @@ public final class XfmrUtilities {
         if (stepPhaseShiftIncrement != 0 && pls != phs) {
             return true;
         }
-        return ptcTabularDifferentAngles;
+        return ptcTabularDifferentRatios || ptcAsymmetricalDifferentRatios || ptcTabularDifferentAngles;
     }
 
     static class TapChangerData {
@@ -296,19 +296,24 @@ public final class XfmrUtilities {
         boolean asymmetricalDifferentRatios = false;
     }
 
+    static class RatioData {
+        double  a                 = 1.0;
+        boolean regulatingControl = false;
+        boolean changeable        = false;
+    }
+
+    static class PhaseData {
+        double  a                 = 1.0;
+        double  angle             = 0.0;
+        boolean regulatingControl = false;
+        boolean changeable        = false;
+    }
+
     static class RatioPhaseData {
-        double  a1                    = 1.0;
-        double  angle1                = 0.0;
-        double  a2                    = 1.0;
-        double  angle2                = 0.0;
-        boolean rtc1RegulatingControl = false;
-        boolean tc1DifferentRatios    = false;
-        boolean ptc1RegulatingControl = false;
-        boolean ptc1DifferentAngles   = false;
-        boolean rtc2RegulatingControl = false;
-        boolean tc2DifferentRatios    = false;
-        boolean ptc2RegulatingControl = false;
-        boolean ptc2DifferentAngles   = false;
+        RatioData ratio1 = new RatioData();
+        PhaseData phase1 = new PhaseData();
+        RatioData ratio2 = new RatioData();
+        PhaseData phase2 = new PhaseData();
     }
 
     static class YShuntData {
