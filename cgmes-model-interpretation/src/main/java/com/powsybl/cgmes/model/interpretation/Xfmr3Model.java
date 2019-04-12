@@ -207,7 +207,7 @@ public class Xfmr3Model {
         double xStepMin1 = transformer.asDouble("xStepMin1", 0.0);
         double xStepMax1 = transformer.asDouble("xStepMax1", 0.0);
         double pwca1 = transformer.asDouble("pwca1", 0.0);
-        double stepPhaseShiftIncrement1 = transformer.asDouble("stepPhaseShiftIncrement1", 0.0);
+        double stepPhaseShiftIncrement1 = transformer.asDouble("pspsi1", 0.0);
         String ptype1 = transformer.get("ptype1");
         String phaseTapChangerTableName1 = transformer.get("PhaseTapChangerTable1");
         PropertyBags phaseTapChangerTable1 = null;
@@ -252,7 +252,7 @@ public class Xfmr3Model {
         double xStepMin2 = transformer.asDouble("xStepMin2", 0.0);
         double xStepMax2 = transformer.asDouble("xStepMax2", 0.0);
         double pwca2 = transformer.asDouble("pwca2", 0.0);
-        double stepPhaseShiftIncrement2 = transformer.asDouble("stepPhaseShiftIncrement2", 0.0);
+        double stepPhaseShiftIncrement2 = transformer.asDouble("pspsi2", 0.0);
         String ptype2 = transformer.get("ptype2");
         String phaseTapChangerTableName2 = transformer.get("PhaseTapChangerTable2");
         PropertyBags phaseTapChangerTable2 = null;
@@ -297,7 +297,7 @@ public class Xfmr3Model {
         double xStepMin3 = transformer.asDouble("xStepMin3", 0.0);
         double xStepMax3 = transformer.asDouble("xStepMax3", 0.0);
         double pwca3 = transformer.asDouble("pwca3", 0.0);
-        double stepPhaseShiftIncrement3 = transformer.asDouble("stepPhaseShiftIncrement3", 0.0);
+        double stepPhaseShiftIncrement3 = transformer.asDouble("pspsi3", 0.0);
         String ptype3 = transformer.get("ptype3");
         String phaseTapChangerTableName3 = transformer.get("PhaseTapChangerTable3");
         PropertyBags phaseTapChangerTable3 = null;

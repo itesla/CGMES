@@ -10,7 +10,9 @@ package com.powsybl.cgmes.model.interpretation;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -43,7 +45,11 @@ public class CgmesModelsInterpretation extends Catalog {
             try {
                 LOG.info("case {}", modelName(p));
                 ModelInterpretation modelInterpretation = new ModelInterpretation(load(p));
-                modelInterpretation.interpret();
+
+                List<CgmesEquipmentModelMapping> configs = new ArrayList<>();
+                modelInterpretation.addModelMappingConfigurations(configs);
+
+                modelInterpretation.interpret(configs);
                 interpretations.put(modelName(p), modelInterpretation.getInterpretation());
             } catch (Exception x) {
                 exceptions.put(modelName(p), x);

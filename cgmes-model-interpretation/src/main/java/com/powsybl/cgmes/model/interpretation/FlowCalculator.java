@@ -338,10 +338,9 @@ public class FlowCalculator {
             Complex ySecondConnected21, Complex ySecondConnected22, Complex yOpen11, Complex yOpen12, Complex yOpen21,
             Complex yOpen22) {
         Complex ysh = kronAntenna(yOpen11, yOpen12, yOpen21, yOpen22, true);
-        ySecondConnected22.add(ysh);
 
         return kronChain(yFirstConnected11, yFirstConnected12, yFirstConnected21, yFirstConnected22, ySecondConnected11,
-                ySecondConnected12, ySecondConnected21, ySecondConnected22);
+                ySecondConnected12, ySecondConnected21, ySecondConnected22.add(ysh));
     }
 
     private Complex kronAntenna(Complex y11, Complex y12, Complex y21, Complex y22, boolean isOpenFrom) {
