@@ -42,13 +42,17 @@ public class ModelInterpretation {
 
     public ModelInterpretation(CgmesModel m) {
         inputModel = new InterpretedModel(m);
+        try {
+            inputModel.loadModel();
+        } catch (IOException e) {
+            LOG.warn(e.getMessage());
+        }
         validationDataForAllModelMapping = new HashMap<>();
         bestError = Double.MAX_VALUE;
     }
 
-    public void interpret() throws IOException {
-        inputModel.loadModel();
-        calculateBalancesForAllModelMapping();
+    public void interpret(List<CgmesEquipmentModelMapping> configs) throws IOException {
+        calculateBalancesForAllModelMapping(configs);
     }
 
     public void setInputModel(InterpretedModel inputModel) {
@@ -62,7 +66,7 @@ public class ModelInterpretation {
         return r;
     }
 
-    private void addModelMappingConfigurations(List<CgmesEquipmentModelMapping> configs) {
+    public void addModelMappingConfigurations(List<CgmesEquipmentModelMapping> configs) {
         CgmesEquipmentModelMapping config = new CgmesEquipmentModelMapping();
         configs.add(config);
 
@@ -130,10 +134,7 @@ public class ModelInterpretation {
         configs.add(config);
     }
 
-    private void calculateBalancesForAllModelMapping() {
-
-        List<CgmesEquipmentModelMapping> configs = new ArrayList<>();
-        addModelMappingConfigurations(configs);
+    private void calculateBalancesForAllModelMapping(List<CgmesEquipmentModelMapping> configs) {
 
         configs.forEach(config -> {
             ValidationData validationData = calculateBalance(config);
@@ -235,7 +236,6 @@ public class ModelInterpretation {
                             isXfmr3 = true;
                         }
                     }
-
                     writeToNodeDetectedModelData(nodeDetectedModelReport, calcFlow.getEquipmentModel());
                     writeToNodeBalanceData(nodeBalanceData, calcFlow, isLine, isXfmr2, isXfmr3);
                 });
