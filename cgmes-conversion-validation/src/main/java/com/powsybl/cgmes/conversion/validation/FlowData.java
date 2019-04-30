@@ -31,6 +31,13 @@ public class FlowData {
         this.calculated = false;
     }
 
+    public double flowError() {
+        if (calculated && !Double.isNaN(pIidm)) {
+            return Math.abs(pCgmes - pIidm) + Math.abs(qCgmes - qIidm);
+        }
+        return 0.0;
+    }
+
     public String code() {
         StringBuilder code = new StringBuilder();
         switch (endType) {

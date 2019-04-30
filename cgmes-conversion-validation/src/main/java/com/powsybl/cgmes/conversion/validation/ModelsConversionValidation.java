@@ -40,57 +40,48 @@ public class ModelsConversionValidation extends Catalog {
         exceptions = new HashMap<>();
     }
 
-    public Map<String, ConversionValidationResult> reviewAll(String pattern, ValidationConfig config) throws IOException {
+    public Map<String, ConversionValidationResult> reviewAll(String pattern, ValidationConfig config)
+            throws IOException {
         Map<String, ConversionValidationResult> conversionValidationResult = new HashMap<>();
         reviewAll(pattern, p -> {
-            try {
-                LOG.info("case {}", modelName(p));
-                CgmesModel m = load(p);
-                InterpretedModel interpretedModel = InterpretationForConversionValidation.getInterpretedModel(m);
-                List<CgmesEquipmentModelMapping> mappingConfigs = InterpretationForConversionValidation
-                        .getConfigList(m);
+            LOG.info("case {}", modelName(p));
+            CgmesModel m = load(p);
+            InterpretedModel interpretedModel = InterpretationForConversionValidation.getInterpretedModel(m);
+            List<CgmesEquipmentModelMapping> mappingConfigs = InterpretationForConversionValidation
+                    .getConfigList(m);
 
-                verificationDataForAllModelMapping = new HashMap<>();
+            verificationDataForAllModelMapping = new HashMap<>();
 
-                mappingConfigs.forEach(mappingConfig -> {
-                    CgmesConversion conversion = new CgmesConversion(m, mappingConfig);
-                    Network network = conversion.convert();
-                    try {
-                        VerificationData verificationData = validateModel(interpretedModel, mappingConfig, network, config);
-                        verificationDataForAllModelMapping.put(mappingConfig, verificationData);
-                    } catch (Exception x) {
-                        LOG.warn(x.getMessage());
-                    }
-                });
-
-                conversionValidationResult.put(modelName(p), getConversionValidationresult());
-
-            } catch (Exception x) {
-                exceptions.put(modelName(p), x);
-                LOG.warn(x.getMessage());
+            for (CgmesEquipmentModelMapping mappingConfig : mappingConfigs) {
+                CgmesConversion conversion = new CgmesConversion(m, mappingConfig);
+                Network network = conversion.convert();
+                VerificationData verificationData = validateModel(interpretedModel, mappingConfig, network, config);
+                verificationDataForAllModelMapping.put(mappingConfig, verificationData);
             }
+
+            conversionValidationResult.put(modelName(p), getConversionValidationresult());
         });
         return conversionValidationResult;
     }
 
-    public boolean getFailed(Map<String, ConversionValidationResult> conversionValidationResult) {
-        return conversionValidationResult.values().stream().filter(cvr -> cvr.failed).limit(1).count() > 0;
-    }
-
     private ConversionValidationResult getConversionValidationresult() {
         ConversionValidationResult r = new ConversionValidationResult();
-        r.failed = failed(verificationDataForAllModelMapping);
+        r.failedCount = failedCount(verificationDataForAllModelMapping);
         r.verificationDataForAllModelMapping = verificationDataForAllModelMapping;
         return r;
     }
 
-    private boolean failed(Map<CgmesEquipmentModelMapping, VerificationData> verificationDataForAllModelMapping) {
-
-        return verificationDataForAllModelMapping.values().stream().filter(vd -> vd.failed()).limit(1).count() > 0;
+    private int failedCount(Map<CgmesEquipmentModelMapping, VerificationData> verificationDataForAllModelMapping) {
+        return verificationDataForAllModelMapping.values().stream().mapToInt(vd -> vd.failedCount()).sum();
     }
 
     private VerificationData validateModel(InterpretedModel interpretedModel, CgmesEquipmentModelMapping mappingConfig,
-            Network network, ValidationConfig config) throws IOException {
+            Network network, ValidationConfig config) {
+        LOG.info("lines {}", network.getLineCount());
+        LOG.info("dlines {}", network.getDanglingLineCount());
+        LOG.info("xfmr2s {}", network.getTwoWindingsTransformerCount());
+        LOG.info("xfmr3s {}", network.getThreeWindingsTransformerCount());
+        resetFlows(network);
         computeIidmFlows(network, config.getLoadFlowParameters());
 
         return ModelConversionValidation.validate(interpretedModel, mappingConfig, network);
@@ -107,6 +98,27 @@ public class ModelsConversionValidation extends Catalog {
         } catch (Exception e) {
             LOG.error("computeFlows, error {}", e.getMessage());
         }
+    }
+
+    private void resetFlows(Network network) {
+        network.getBranchStream().forEach(b -> {
+            b.getTerminal1().setP(Double.NaN);
+            b.getTerminal2().setP(Double.NaN);
+            b.getTerminal1().setQ(Double.NaN);
+            b.getTerminal2().setQ(Double.NaN);
+        });
+        network.getDanglingLineStream().forEach(d -> {
+            d.getTerminal().setP(Double.NaN);
+            d.getTerminal().setQ(Double.NaN);
+        });
+        network.getThreeWindingsTransformerStream().forEach(tx -> {
+            tx.getLeg1().getTerminal().setP(Double.NaN);
+            tx.getLeg2().getTerminal().setP(Double.NaN);
+            tx.getLeg3().getTerminal().setP(Double.NaN);
+            tx.getLeg1().getTerminal().setQ(Double.NaN);
+            tx.getLeg2().getTerminal().setQ(Double.NaN);
+            tx.getLeg3().getTerminal().setQ(Double.NaN);
+        });
     }
 
     public Map<String, Exception> getExceptions() {

@@ -38,41 +38,45 @@ public final class InterpretationForConversionValidation {
         return configs;
     }
 
+    public static FlowPQ danglingLineFlow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping config, String id) {
+
+        PropertyBag line = interpretedModel.getLineParameters(id);
+        CgmesModel model = interpretedModel.getCgmes();
+        for (PropertyBag node : model.boundaryNodes()) {
+            if (node.getId("Node").equals(line.get("terminal1"))) {
+                return lineFlow(interpretedModel, config, id, Branch.Side.TWO);
+            } else if (node.getId("Node").equals(line.get("terminal2"))) {
+                return lineFlow(interpretedModel, config, id, Branch.Side.ONE);
+            }
+        }
+        return null;
+    }
+
     public static FlowPQ lineFlow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping config, String id,
             Branch.Side side) {
 
         FlowCalculator calcFlow = new FlowCalculator(interpretedModel);
         PropertyBag line = interpretedModel.getLineParameters(id);
-        if (line != null) {
-            PropertyBag node1 = interpretedModel
-                    .getNodeParameters(line.get("terminal1"));
-            Objects.requireNonNull(node1, "node1 null in line");
-            PropertyBag node2 = interpretedModel
-                    .getNodeParameters(line.get("terminal2"));
-            Objects.requireNonNull(node2, "node2 null in line");
+        PropertyBag node1 = interpretedModel
+                .getNodeParameters(line.get("terminal1"));
+        Objects.requireNonNull(node1, "node1 null in line");
+        PropertyBag node2 = interpretedModel
+                .getNodeParameters(line.get("terminal2"));
+        Objects.requireNonNull(node2, "node2 null in line");
 
-            String n;
-            if (side == Branch.Side.ONE) {
-                n = line.get("terminal1");
-            } else {
-                n = line.get("terminal2");
-            }
-            calcFlow.forLine(n, node1, node2, line, config);
-
-            FlowPQ flowPQ = new FlowPQ();
-            flowPQ.p = calcFlow.getP();
-            flowPQ.q = calcFlow.getQ();
-
-            return flowPQ;
-
+        String n;
+        if (side == Branch.Side.ONE) {
+            n = line.get("terminal1");
         } else {
-
-            FlowPQ flowPQ = new FlowPQ();
-            flowPQ.p = 0.0;
-            flowPQ.q = 0.0;
-
-            return flowPQ;
+            n = line.get("terminal2");
         }
+        calcFlow.forLine(n, node1, node2, line, config);
+
+        FlowPQ flowPQ = new FlowPQ();
+        flowPQ.p = calcFlow.getP();
+        flowPQ.q = calcFlow.getQ();
+
+        return flowPQ;
     }
 
     public static FlowPQ xfmr2Flow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping config, String id,
@@ -80,35 +84,26 @@ public final class InterpretationForConversionValidation {
 
         FlowCalculator calcFlow = new FlowCalculator(interpretedModel);
         PropertyBag transformer = interpretedModel.getTransformerParameters(id);
-        if (transformer != null) {
-            PropertyBag node1 = interpretedModel
-                    .getNodeParameters(transformer.get("terminal1"));
-            Objects.requireNonNull(node1, "node1 null in transformer");
-            PropertyBag node2 = interpretedModel
-                    .getNodeParameters(transformer.get("terminal2"));
-            Objects.requireNonNull(node2, "node2 null in transformer");
+        PropertyBag node1 = interpretedModel
+                .getNodeParameters(transformer.get("terminal1"));
+        Objects.requireNonNull(node1, "node1 null in transformer");
+        PropertyBag node2 = interpretedModel
+                .getNodeParameters(transformer.get("terminal2"));
+        Objects.requireNonNull(node2, "node2 null in transformer");
 
-            String n;
-            if (side == Branch.Side.ONE) {
-                n = transformer.get("terminal1");
-            } else {
-                n = transformer.get("terminal2");
-            }
-            calcFlow.forTwoWindingTransformer(n, node1, node2, transformer, config);
-
-            FlowPQ flowPQ = new FlowPQ();
-            flowPQ.p = calcFlow.getP();
-            flowPQ.q = calcFlow.getQ();
-
-            return flowPQ;
+        String n;
+        if (side == Branch.Side.ONE) {
+            n = transformer.get("terminal1");
         } else {
-
-            FlowPQ flowPQ = new FlowPQ();
-            flowPQ.p = 0.0;
-            flowPQ.q = 0.0;
-
-            return flowPQ;
+            n = transformer.get("terminal2");
         }
+        calcFlow.forTwoWindingTransformer(n, node1, node2, transformer, config);
+
+        FlowPQ flowPQ = new FlowPQ();
+        flowPQ.p = calcFlow.getP();
+        flowPQ.q = calcFlow.getQ();
+
+        return flowPQ;
     }
 
     public static FlowPQ xfmr3Flow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping config, String id,
@@ -116,40 +111,30 @@ public final class InterpretationForConversionValidation {
 
         FlowCalculator calcFlow = new FlowCalculator(interpretedModel);
         PropertyBag transformer = interpretedModel.getTransformerParameters(id);
-        if (transformer != null) {
-            PropertyBag node1 = interpretedModel
-                    .getNodeParameters(transformer.get("terminal1"));
-            Objects.requireNonNull(node1, "node1 null in transformer");
-            PropertyBag node2 = interpretedModel
-                    .getNodeParameters(transformer.get("terminal2"));
-            Objects.requireNonNull(node2, "node2 null in transformer");
-            PropertyBag node3 = interpretedModel
-                    .getNodeParameters(transformer.get("terminal3"));
+        PropertyBag node1 = interpretedModel
+                .getNodeParameters(transformer.get("terminal1"));
+        Objects.requireNonNull(node1, "node1 null in transformer");
+        PropertyBag node2 = interpretedModel
+                .getNodeParameters(transformer.get("terminal2"));
+        Objects.requireNonNull(node2, "node2 null in transformer");
+        PropertyBag node3 = interpretedModel
+                .getNodeParameters(transformer.get("terminal3"));
 
-            String n;
-            if (side == ThreeWindingsTransformer.Side.ONE) {
-                n = transformer.get("terminal1");
-            } else if (side == ThreeWindingsTransformer.Side.TWO) {
-                n = transformer.get("terminal2");
-            } else {
-                n = transformer.get("terminal3");
-            }
-            calcFlow.forThreeWindingTransformer(n, node1, node2, node3, transformer, config);
-
-            FlowPQ flowPQ = new FlowPQ();
-            flowPQ.p = calcFlow.getP();
-            flowPQ.q = calcFlow.getQ();
-
-            return flowPQ;
-
+        String n;
+        if (side == ThreeWindingsTransformer.Side.ONE) {
+            n = transformer.get("terminal1");
+        } else if (side == ThreeWindingsTransformer.Side.TWO) {
+            n = transformer.get("terminal2");
         } else {
-            FlowPQ flowPQ = new FlowPQ();
-            flowPQ.p = 0.0;
-            flowPQ.q = 0.0;
-
-            return flowPQ;
+            n = transformer.get("terminal3");
         }
+        calcFlow.forThreeWindingTransformer(n, node1, node2, node3, transformer, config);
 
+        FlowPQ flowPQ = new FlowPQ();
+        flowPQ.p = calcFlow.getP();
+        flowPQ.q = calcFlow.getQ();
+
+        return flowPQ;
     }
 
     static class FlowPQ {

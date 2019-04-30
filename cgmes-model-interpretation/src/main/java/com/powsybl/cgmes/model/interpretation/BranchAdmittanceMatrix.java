@@ -8,6 +8,8 @@
 package com.powsybl.cgmes.model.interpretation;
 
 import org.apache.commons.math3.complex.Complex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author José Antonio Marqués <marquesja at aia.es>
@@ -21,6 +23,13 @@ class BranchAdmittanceMatrix {
         Complex aA1 = new Complex(a1 * Math.cos(angle1), a1 * Math.sin(angle1));
         Complex aA2 = new Complex(a2 * Math.cos(angle2), a2 * Math.sin(angle2));
 
+        //LOG.info("a1 {}", a1);
+        //LOG.info("a2 {}", a2);
+        //LOG.info("angleDegrees1 {}", angleDegrees1);
+        //LOG.info("angleDegrees2 {}", angleDegrees2);
+        //LOG.info("aA1 {}", aA1);
+        //LOG.info("aA2 {}", aA2);
+        
         Complex z = new Complex(r, x);
         y11 = z.reciprocal().add(ysh1).divide(aA1.conjugate().multiply(aA1));
         y12 = z.reciprocal().negate().divide(aA1.conjugate().multiply(aA2));
@@ -33,4 +42,5 @@ class BranchAdmittanceMatrix {
     Complex y21;
     Complex y22;
 
+    private static final Logger    LOG = LoggerFactory.getLogger(BranchAdmittanceMatrix.class);
 }

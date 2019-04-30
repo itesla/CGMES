@@ -73,12 +73,6 @@
             <artifactId>powsybl-triple-store-impl-rdf4j</artifactId>
         </dependency>
 		
-        <!-- To be able to import CIM14 files for comparison -->
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-cim1-converter</artifactId>
-        </dependency>
-		
         <!-- To be able to perform LoadFlow computations -->
         <dependency>
             <groupId>com.powsybl</groupId>

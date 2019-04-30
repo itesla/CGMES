@@ -27,7 +27,8 @@
         level="error" />
     <!-- To watch the properties of every object converted, level to debug -->
     <logger name="com.powsybl.cgmes.conversion" level="error" />
-    <logger name="com.powsybl.cgmes.conversion.validation.test" level="info" />
+    <logger name="com.powsybl.cgmes.conversion.elements.full" level="info" />
+    <logger name="com.powsybl.cgmes.conversion.validation" level="info" />
     <!-- <logger name="com.powsybl.cgmes" level="error" /> -->
     <logger name="org.eclipse.rdf4j.rio.helpers" level="error" />
 </configuration>

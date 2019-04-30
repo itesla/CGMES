@@ -50,12 +50,8 @@ public class Catalog extends Model {
         Map<Path, Exception> wrong = new HashMap<>();
         try (Stream<Path> paths = Files.walk(this.data)) {
             paths.filter(pathMatcher::matches).forEach(path -> {
-                try {
-                    System.err.println(path);
-                    consumer.accept(path);
-                } catch (Exception x) {
-                    wrong.put(path, x);
-                }
+                System.err.println(path);
+                consumer.accept(path);
             });
         }
         return wrong;

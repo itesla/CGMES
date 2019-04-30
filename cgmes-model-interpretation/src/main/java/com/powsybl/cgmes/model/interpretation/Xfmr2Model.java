@@ -8,6 +8,8 @@
 package com.powsybl.cgmes.model.interpretation;
 
 import org.apache.commons.math3.complex.Complex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr2PhaseAngleClockAlternative;
@@ -76,6 +78,14 @@ public class Xfmr2Model {
         a2 *= ratio0Data.a02;
 
         // admittance
+        LOG.info("ratio2.a {} phase2.a {}", ratio2.a,phase2.a);
+        LOG.info("1/a2 {}", 1 / a2);
+        LOG.info("ratio0Data.a02 {}", ratio0Data.a02);
+        LOG.info("r {} {}", r1 + r2, (r1 + r2) * a2 * a2);
+        LOG.info("x {} {}", x1 + x2, (x1 + x2) * a2 * a2);
+       
+        LOG.info("ysh1 {} {}", ysh1, ysh1.divide(a2 * a2));
+        LOG.info("ysh22 {} {}", ysh2, ysh2.divide(a2 * a2));
         admittanceMatrix.calculateAdmittance(r1 + r2, x1 + x2, a1, phase1.angle, ysh1, a2, phase2.angle, ysh2);
     }
 
@@ -421,4 +431,5 @@ public class Xfmr2Model {
 
     private BranchAdmittanceMatrix           admittanceMatrix;
     private DetectedBranchModel              branchModel;
+    private static final Logger    LOG = LoggerFactory.getLogger(Xfmr2Model.class);
 }

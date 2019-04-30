@@ -8,6 +8,7 @@
 package com.powsybl.cgmes.model.interpretation;
 
 import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.complex.ComplexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,8 @@ public class FlowCalculator {
 
         String nEnd1 = line.get("terminal1");
         String nEnd2 = line.get("terminal2");
+        //LOG.info("connected1 {}", connected1);
+        //LOG.info("connected2 {}", connected2);
         if (connected1 && connected2) {
             calculateBothEndsFlow(n, nEnd1, nEnd2, v1, angleDegrees1, v2, angleDegrees2,
                     lineModel.getAdmittanceMatrix());
@@ -169,6 +172,7 @@ public class FlowCalculator {
 
     private void calculateEndFlow(String n, String nEnd, double v, double angleDegrees,
             BranchAdmittanceMatrix admittanceMatrix, boolean isOpenFrom) {
+        //LOG.info("v {}", v);
         if (v == 0.0) {
             return;
         }
@@ -178,8 +182,10 @@ public class FlowCalculator {
         if (nEnd.equals(n)) {
             Complex ysh = kronAntenna(admittanceMatrix.y11, admittanceMatrix.y12, admittanceMatrix.y21,
                     admittanceMatrix.y22, isOpenFrom);
+            //LOG.info("ysh {}", ysh);
             p = ysh.getReal() * a.abs() * a.abs();
             q = -ysh.getImaginary() * a.abs() * a.abs();
+            //LOG.info("p {} q {}", p, q);
         } else {
             LOG.warn("calculateEndToFlow. Unexpected node");
         }
@@ -195,11 +201,18 @@ public class FlowCalculator {
         }
         double angle1 = Math.toRadians(angleDegrees1);
         double angle2 = Math.toRadians(angleDegrees2);
-        Complex vf = new Complex(v1 * Math.cos(angle1), v1 * Math.sin(angle1));
-        Complex vt = new Complex(v2 * Math.cos(angle2), v2 * Math.sin(angle2));
+        Complex vf = ComplexUtils.polar2Complex(v1, angle1);
+        Complex vt = ComplexUtils.polar2Complex(v2, angle2);
 
         flowBothEnds(admittanceMatrix.y11, admittanceMatrix.y12,
                 admittanceMatrix.y21, admittanceMatrix.y22, vf, vt);
+
+        //LOG.info("y11' {}", admittanceMatrix.y11);
+        //LOG.info("y12' {}", admittanceMatrix.y12);
+        //LOG.info("y21' {}", admittanceMatrix.y21);
+        //LOG.info("y22' {}", admittanceMatrix.y22);
+        //LOG.info("v1' {}", vf);
+        //LOG.info("v2' {}", vt);
 
         if (nEnd1.equals(n)) {
             p = sft.getReal();
@@ -360,7 +373,7 @@ public class FlowCalculator {
         BranchAdmittanceMatrix admittance = new BranchAdmittanceMatrix();
 
         admittance.y11 = yFirstConnected11.subtract(yFirstConnected21.multiply(yFirstConnected12)
-                        .divide(yFirstConnected22.add(ySecondConnected22)));
+                .divide(yFirstConnected22.add(ySecondConnected22)));
         admittance.y12 = ySecondConnected21.multiply(yFirstConnected12)
                 .divide(yFirstConnected22.add(ySecondConnected22)).negate();
         admittance.y21 = yFirstConnected21.multiply(ySecondConnected12)
