@@ -31,15 +31,16 @@ public final class ModelConversionValidation {
         Map<String, FlowData> flowDataMap = verificationData.getFlowData();
 
         // Flows validation
-/*
         network.getLineStream().forEach(line -> {
-            EndData2 endData = lineFlow(interpretedModel, mappingConfig, network, line);
+            EndData2 endData = lineFlow(interpretedModel,
+                    mappingConfig, network, line);
             if (endData == null) {
                 return;
             }
 
             addToFlowData(flowDataMap, endData.flowData1);
-            addToFlowData(flowDataMap, endData.flowData2);
+            addToFlowData(flowDataMap,
+                    endData.flowData2);
         });
 
         network.getDanglingLines().forEach(line -> {
@@ -49,7 +50,8 @@ public final class ModelConversionValidation {
             }
 
             addToFlowData(flowDataMap, endData.flowData1);
-            addToFlowData(flowDataMap, endData.flowData2);
+            addToFlowData(flowDataMap,
+                    endData.flowData2);
         });
 
         network.getTwoWindingsTransformerStream().forEach(transformer -> {
@@ -61,7 +63,7 @@ public final class ModelConversionValidation {
             addToFlowData(flowDataMap, endData.flowData1);
             addToFlowData(flowDataMap, endData.flowData2);
         });
-*/
+
         network.getThreeWindingsTransformerStream().forEach(transformer -> {
             EndData3 endData = xfmr3Flow(interpretedModel, mappingConfig, network, transformer);
             if (endData == null) {
@@ -69,7 +71,8 @@ public final class ModelConversionValidation {
             }
 
             addToFlowData(flowDataMap, endData.flowData1);
-            addToFlowData(flowDataMap, endData.flowData2);
+            addToFlowData(flowDataMap,
+                    endData.flowData2);
             addToFlowData(flowDataMap, endData.flowData3);
         });
 
@@ -88,8 +91,13 @@ public final class ModelConversionValidation {
         if (terminal1.isConnected()) {
             InterpretationForConversionValidation.FlowPQ cgmesPQ = InterpretationForConversionValidation
                     .lineFlow(interpretedModel, mappingConfig, line.getId(), Branch.Side.ONE);
-            flowData1 = new FlowData(line.getId(), BranchEndType.LINE_ONE, terminal1.getP(), terminal1.getQ(),
-                    cgmesPQ.p, cgmesPQ.q);
+            if (cgmesPQ.calculated) {
+                flowData1 = new FlowData(line.getId(), BranchEndType.LINE_ONE, terminal1.getP(), terminal1.getQ(),
+                        cgmesPQ.p, cgmesPQ.q);
+            } else {
+                flowData1 = new FlowData(line.getId(), BranchEndType.LINE_ONE);
+            }
+
         } else {
             flowData1 = new FlowData(line.getId(), BranchEndType.LINE_ONE);
         }
@@ -99,8 +107,12 @@ public final class ModelConversionValidation {
         if (terminal2.isConnected()) {
             InterpretationForConversionValidation.FlowPQ cgmesPQ = InterpretationForConversionValidation
                     .lineFlow(interpretedModel, mappingConfig, line.getId(), Branch.Side.TWO);
-            flowData2 = new FlowData(line.getId(), BranchEndType.LINE_TWO, terminal2.getP(), terminal2.getQ(),
-                    cgmesPQ.p, cgmesPQ.q);
+            if (cgmesPQ.calculated) {
+                flowData2 = new FlowData(line.getId(), BranchEndType.LINE_TWO, terminal2.getP(), terminal2.getQ(),
+                        cgmesPQ.p, cgmesPQ.q);
+            } else {
+                flowData2 = new FlowData(line.getId(), BranchEndType.LINE_TWO);
+            }
         } else {
             flowData2 = new FlowData(line.getId(), BranchEndType.LINE_TWO);
         }
@@ -127,8 +139,12 @@ public final class ModelConversionValidation {
             if (cgmesPQ == null) {
                 return null;
             }
-            flowData1 = new FlowData(line.getId(), BranchEndType.LINE_ONE, terminal.getP(), terminal.getQ(),
-                    cgmesPQ.p, cgmesPQ.q);
+            if (cgmesPQ.calculated) {
+                flowData1 = new FlowData(line.getId(), BranchEndType.LINE_ONE, terminal.getP(), terminal.getQ(),
+                        cgmesPQ.p, cgmesPQ.q);
+            } else {
+                flowData1 = new FlowData(line.getId(), BranchEndType.LINE_ONE);
+            }
         } else {
             flowData1 = new FlowData(line.getId(), BranchEndType.LINE_ONE);
         }
@@ -144,10 +160,6 @@ public final class ModelConversionValidation {
     private static EndData2 xfmr2Flow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping mappingConfig,
             Network network, TwoWindingsTransformer transformer) {
 
-        if (!transformer.getId().equals("_e9b047d7-9c92-486d-80a5-65895ed45a9d")) {
-            return null;
-        }
-
         if (interpretedModel.getTransformerParameters(transformer.getId()) == null) {
             return null;
         }
@@ -157,8 +169,13 @@ public final class ModelConversionValidation {
         if (terminal1.isConnected()) {
             InterpretationForConversionValidation.FlowPQ cgmesPQ = InterpretationForConversionValidation
                     .xfmr2Flow(interpretedModel, mappingConfig, transformer.getId(), Branch.Side.ONE);
-            flowData1 = new FlowData(transformer.getId(), BranchEndType.XFMR2_ONE, terminal1.getP(), terminal1.getQ(),
-                    cgmesPQ.p, cgmesPQ.q);
+            if (cgmesPQ.calculated) {
+                flowData1 = new FlowData(transformer.getId(), BranchEndType.XFMR2_ONE, terminal1.getP(),
+                        terminal1.getQ(),
+                        cgmesPQ.p, cgmesPQ.q);
+            } else {
+                flowData1 = new FlowData(transformer.getId(), BranchEndType.XFMR2_ONE);
+            }
         } else {
             flowData1 = new FlowData(transformer.getId(), BranchEndType.XFMR2_ONE);
         }
@@ -168,8 +185,13 @@ public final class ModelConversionValidation {
         if (terminal2.isConnected()) {
             InterpretationForConversionValidation.FlowPQ cgmesPQ = InterpretationForConversionValidation
                     .xfmr2Flow(interpretedModel, mappingConfig, transformer.getId(), Branch.Side.TWO);
-            flowData2 = new FlowData(transformer.getId(), BranchEndType.XFMR2_TWO, terminal2.getP(), terminal2.getQ(),
-                    cgmesPQ.p, cgmesPQ.q);
+            if (cgmesPQ.calculated) {
+                flowData2 = new FlowData(transformer.getId(), BranchEndType.XFMR2_TWO, terminal2.getP(),
+                        terminal2.getQ(),
+                        cgmesPQ.p, cgmesPQ.q);
+            } else {
+                flowData2 = new FlowData(transformer.getId(), BranchEndType.XFMR2_TWO);
+            }
         } else {
             flowData2 = new FlowData(transformer.getId(), BranchEndType.XFMR2_TWO);
         }
@@ -192,8 +214,13 @@ public final class ModelConversionValidation {
         if (terminal1.isConnected()) {
             InterpretationForConversionValidation.FlowPQ cgmesPQ = InterpretationForConversionValidation
                     .xfmr3Flow(interpretedModel, mappingConfig, transformer.getId(), ThreeWindingsTransformer.Side.ONE);
-            flowData1 = new FlowData(transformer.getId(), BranchEndType.XFMR3_ONE, terminal1.getP(), terminal1.getQ(),
-                    cgmesPQ.p, cgmesPQ.q);
+            if (cgmesPQ.calculated) {
+                flowData1 = new FlowData(transformer.getId(), BranchEndType.XFMR3_ONE, terminal1.getP(),
+                        terminal1.getQ(),
+                        cgmesPQ.p, cgmesPQ.q);
+            } else {
+                flowData1 = new FlowData(transformer.getId(), BranchEndType.XFMR3_ONE);
+            }
 
         } else {
             flowData1 = new FlowData(transformer.getId(), BranchEndType.XFMR3_ONE);
@@ -204,8 +231,13 @@ public final class ModelConversionValidation {
         if (terminal2.isConnected()) {
             InterpretationForConversionValidation.FlowPQ cgmesPQ = InterpretationForConversionValidation
                     .xfmr3Flow(interpretedModel, mappingConfig, transformer.getId(), ThreeWindingsTransformer.Side.TWO);
-            flowData2 = new FlowData(transformer.getId(), BranchEndType.XFMR3_TWO, terminal2.getP(), terminal2.getQ(),
-                    cgmesPQ.p, cgmesPQ.q);
+            if (cgmesPQ.calculated) {
+                flowData2 = new FlowData(transformer.getId(), BranchEndType.XFMR3_TWO, terminal2.getP(),
+                        terminal2.getQ(),
+                        cgmesPQ.p, cgmesPQ.q);
+            } else {
+                flowData2 = new FlowData(transformer.getId(), BranchEndType.XFMR3_TWO);
+            }
         } else {
             flowData2 = new FlowData(transformer.getId(), BranchEndType.XFMR3_TWO);
         }
@@ -216,8 +248,13 @@ public final class ModelConversionValidation {
             InterpretationForConversionValidation.FlowPQ cgmesPQ = InterpretationForConversionValidation
                     .xfmr3Flow(interpretedModel, mappingConfig, transformer.getId(),
                             ThreeWindingsTransformer.Side.THREE);
-            flowData3 = new FlowData(transformer.getId(), BranchEndType.XFMR3_THREE, terminal3.getP(), terminal3.getQ(),
-                    cgmesPQ.p, cgmesPQ.q);
+            if (cgmesPQ.calculated) {
+                flowData3 = new FlowData(transformer.getId(), BranchEndType.XFMR3_THREE, terminal3.getP(),
+                        terminal3.getQ(),
+                        cgmesPQ.p, cgmesPQ.q);
+            } else {
+                flowData3 = new FlowData(transformer.getId(), BranchEndType.XFMR3_THREE);
+            }
         } else {
             flowData3 = new FlowData(transformer.getId(), BranchEndType.XFMR3_THREE);
         }

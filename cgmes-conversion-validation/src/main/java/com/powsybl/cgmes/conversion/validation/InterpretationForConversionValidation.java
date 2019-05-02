@@ -38,7 +38,8 @@ public final class InterpretationForConversionValidation {
         return configs;
     }
 
-    public static FlowPQ danglingLineFlow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping config, String id) {
+    public static FlowPQ danglingLineFlow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping config,
+            String id) {
 
         PropertyBag line = interpretedModel.getLineParameters(id);
         CgmesModel model = interpretedModel.getCgmes();
@@ -75,6 +76,7 @@ public final class InterpretationForConversionValidation {
         FlowPQ flowPQ = new FlowPQ();
         flowPQ.p = calcFlow.getP();
         flowPQ.q = calcFlow.getQ();
+        flowPQ.calculated = calcFlow.getCalculated();
 
         return flowPQ;
     }
@@ -102,6 +104,7 @@ public final class InterpretationForConversionValidation {
         FlowPQ flowPQ = new FlowPQ();
         flowPQ.p = calcFlow.getP();
         flowPQ.q = calcFlow.getQ();
+        flowPQ.calculated = calcFlow.getCalculated();
 
         return flowPQ;
     }
@@ -133,12 +136,14 @@ public final class InterpretationForConversionValidation {
         FlowPQ flowPQ = new FlowPQ();
         flowPQ.p = calcFlow.getP();
         flowPQ.q = calcFlow.getQ();
+        flowPQ.calculated = calcFlow.getCalculated();
 
         return flowPQ;
     }
 
     static class FlowPQ {
-        double p;
-        double q;
+        double  p;
+        double  q;
+        boolean calculated;
     }
 }

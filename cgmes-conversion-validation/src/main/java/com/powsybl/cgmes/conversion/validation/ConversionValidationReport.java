@@ -193,22 +193,22 @@ public class ConversionValidationReport {
 
         try (Writer writer = new StringWriter()) {
             TableFormatter formatter = factory.create(writer, "BRANCH END", config, columns);
-            sortedByModelReport.keySet().stream().limit(SHOW_BRANCH_ENDS).forEach(branchEnd -> {
+            sortedByModelReport.entrySet().stream().filter(e -> e.getValue().flowError() > VerificationData.FLOW_THRESHOLD).limit(SHOW_BRANCH_ENDS).forEach(e -> {
                 LOG.debug("{},{},{},{},{}",
-                        sortedByModelReport.get(branchEnd).id,
-                        sortedByModelReport.get(branchEnd).code(),
-                        sortedByModelReport.get(branchEnd).pCgmes,
-                        sortedByModelReport.get(branchEnd).qCgmes,
-                        sortedByModelReport.get(branchEnd).pIidm,
-                        sortedByModelReport.get(branchEnd).qIidm);
+                        e.getValue().id,
+                        e.getValue().code(),
+                        e.getValue().pCgmes,
+                        e.getValue().qCgmes,
+                        e.getValue().pIidm,
+                        e.getValue().qIidm);
                 try {
                     formatter
-                            .writeCell(sortedByModelReport.get(branchEnd).id)
-                            .writeCell(sortedByModelReport.get(branchEnd).code())
-                            .writeCell(sortedByModelReport.get(branchEnd).pCgmes)
-                            .writeCell(sortedByModelReport.get(branchEnd).qCgmes)
-                            .writeCell(sortedByModelReport.get(branchEnd).pIidm)
-                            .writeCell(sortedByModelReport.get(branchEnd).qIidm);
+                            .writeCell(e.getValue().id)
+                            .writeCell(e.getValue().code())
+                            .writeCell(e.getValue().pCgmes)
+                            .writeCell(e.getValue().qCgmes)
+                            .writeCell(e.getValue().pIidm)
+                            .writeCell(e.getValue().qIidm);
                 } catch (IOException x) {
                     // Ignored
                 }

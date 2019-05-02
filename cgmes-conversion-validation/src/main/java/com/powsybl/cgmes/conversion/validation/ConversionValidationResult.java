@@ -12,9 +12,9 @@ import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping;
 
 public class ConversionValidationResult {
 
-    private static final double FLOW_THRESHOLD = 0.0001;
-
     public static class VerificationData {
+
+        public static final double FLOW_THRESHOLD = 0.000001;
 
         public VerificationData() {
             flowData = new HashMap<>();
@@ -38,7 +38,7 @@ public class ConversionValidationResult {
             return flowData.values().stream()
                     .filter(fd -> fd.flowError() > FLOW_THRESHOLD).limit(1).count() > 0;
         }
-
+        
         Map<String, FlowData> flowData;
     }
 

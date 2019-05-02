@@ -101,7 +101,7 @@ public class Xfmr3Model {
         double a32 = ratio32.a * phase32.a;
 
         // add structural ratio after detected branch model
-        double ratedU0 = 1.0;
+        double ratedU0 = transformer.asDouble("ratedU1");
         Xfmr3Ratio0Data ratio0Data = getXfmr3Ratio0(config, ratedU0);
         a11 *= ratio0Data.end1.a01;
         a12 *= ratio0Data.end1.a02;

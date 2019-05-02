@@ -77,10 +77,6 @@ public class ModelsConversionValidation extends Catalog {
 
     private VerificationData validateModel(InterpretedModel interpretedModel, CgmesEquipmentModelMapping mappingConfig,
             Network network, ValidationConfig config) {
-        LOG.info("lines {}", network.getLineCount());
-        LOG.info("dlines {}", network.getDanglingLineCount());
-        LOG.info("xfmr2s {}", network.getTwoWindingsTransformerCount());
-        LOG.info("xfmr3s {}", network.getThreeWindingsTransformerCount());
         resetFlows(network);
         computeIidmFlows(network, config.getLoadFlowParameters());
 
