@@ -4,8 +4,8 @@ import java.util.Map;
 
 import com.powsybl.cgmes.conversion.validation.ConversionValidationResult.VerificationData;
 import com.powsybl.cgmes.conversion.validation.FlowData.BranchEndType;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping;
-import com.powsybl.cgmes.model.interpretation.InterpretedModel;
+import com.powsybl.cgmes.interpretation.model.cgmes.CgmesModelForInterpretation;
+import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative;
 import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.DanglingLine;
 import com.powsybl.iidm.network.Line;
@@ -24,7 +24,7 @@ public final class ModelConversionValidation {
     private ModelConversionValidation() {
     }
 
-    public static VerificationData validate(InterpretedModel interpretedModel, CgmesEquipmentModelMapping mappingConfig,
+    public static VerificationData validate(CgmesModelForInterpretation interpretedModel, InterpretationAlternative mappingConfig,
             Network network) {
 
         VerificationData verificationData = new VerificationData();
@@ -79,10 +79,10 @@ public final class ModelConversionValidation {
         return verificationData;
     }
 
-    private static EndData2 lineFlow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping mappingConfig,
+    private static EndData2 lineFlow(CgmesModelForInterpretation interpretedModel, InterpretationAlternative mappingConfig,
             Network network, Line line) {
 
-        if (interpretedModel.getLineParameters(line.getId()) == null) {
+        if (interpretedModel.getLine(line.getId()) == null) {
             return null;
         }
 
@@ -123,11 +123,10 @@ public final class ModelConversionValidation {
         return endData2;
     }
 
-    private static EndData2 danglingLineFlow(InterpretedModel interpretedModel,
-            CgmesEquipmentModelMapping mappingConfig,
-            Network network, DanglingLine line) {
+    private static EndData2 danglingLineFlow(CgmesModelForInterpretation interpretedModel,
+            InterpretationAlternative mappingConfig, Network network, DanglingLine line) {
 
-        if (interpretedModel.getLineParameters(line.getId()) == null) {
+        if (interpretedModel.getLine(line.getId()) == null) {
             return null;
         }
 
@@ -157,10 +156,10 @@ public final class ModelConversionValidation {
         return endData2;
     }
 
-    private static EndData2 xfmr2Flow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping mappingConfig,
+    private static EndData2 xfmr2Flow(CgmesModelForInterpretation interpretedModel, InterpretationAlternative mappingConfig,
             Network network, TwoWindingsTransformer transformer) {
 
-        if (interpretedModel.getTransformerParameters(transformer.getId()) == null) {
+        if (interpretedModel.getTransformer(transformer.getId()) == null) {
             return null;
         }
 
@@ -202,10 +201,10 @@ public final class ModelConversionValidation {
         return endData2;
     }
 
-    private static EndData3 xfmr3Flow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping mappingConfig,
+    private static EndData3 xfmr3Flow(CgmesModelForInterpretation interpretedModel, InterpretationAlternative mappingConfig,
             Network network, ThreeWindingsTransformer transformer) {
 
-        if (interpretedModel.getTransformerParameters(transformer.getId()) == null) {
+        if (interpretedModel.getTransformer(transformer.getId()) == null) {
             return null;
         }
 

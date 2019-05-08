@@ -46,8 +46,8 @@ public class FlowCalculator {
 
         String nEnd1 = line.get("terminal1");
         String nEnd2 = line.get("terminal2");
-        //LOG.info("connected1 {}", connected1);
-        //LOG.info("connected2 {}", connected2);
+        LOG.info("v1 {} a1 {}", v1, angleDegrees1);
+        LOG.info("v2 {} a2 {}", v2, angleDegrees2);
         if (connected1 && connected2) {
             calculateBothEndsFlow(n, nEnd1, nEnd2, v1, angleDegrees1, v2, angleDegrees2,
                     lineModel.getAdmittanceMatrix());
@@ -207,12 +207,6 @@ public class FlowCalculator {
         flowBothEnds(admittanceMatrix.y11, admittanceMatrix.y12,
                 admittanceMatrix.y21, admittanceMatrix.y22, vf, vt);
 
-        //LOG.info("y11' {}", admittanceMatrix.y11);
-        //LOG.info("y12' {}", admittanceMatrix.y12);
-        //LOG.info("y21' {}", admittanceMatrix.y21);
-        //LOG.info("y22' {}", admittanceMatrix.y22);
-        //LOG.info("v1' {}", vf);
-        //LOG.info("v2' {}", vt);
 
         if (nEnd1.equals(n)) {
             p = sft.getReal();
@@ -339,9 +333,8 @@ public class FlowCalculator {
             Complex ySecondOpen12, Complex ySecondOpen21, Complex ySecondOpen22) {
         Complex ysh1 = kronAntenna(yFirstOpen11, yFirstOpen12, yFirstOpen21, yFirstOpen22, true);
         Complex ysh2 = kronAntenna(ySecondOpen11, ySecondOpen12, ySecondOpen21, ySecondOpen22, true);
-        y22.add(ysh1).add(ysh2);
 
-        return kronAntenna(y11, y12, y21, y22, false);
+        return kronAntenna(y11, y12, y21, y22.add(ysh1).add(ysh2), false);
     }
 
     private BranchAdmittanceMatrix calculateTwoConnectedEndsAdmittance(Complex yFirstConnected11,

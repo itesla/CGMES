@@ -3,7 +3,7 @@ package com.powsybl.cgmes.conversion.validation;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping;
+import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative;
 
 /**
  * @author José Antonio Marqués <marquesja at aia.es>
@@ -38,11 +38,11 @@ public class ConversionValidationResult {
             return flowData.values().stream()
                     .filter(fd -> fd.flowError() > FLOW_THRESHOLD).limit(1).count() > 0;
         }
-        
+
         Map<String, FlowData> flowData;
     }
 
-    public int                                               failedCount;
-    public Map<CgmesEquipmentModelMapping, VerificationData> verificationDataForAllModelMapping;
-    public Exception                                         exception;
+    public int                                              failedCount;
+    public Map<InterpretationAlternative, VerificationData> verificationDataForAllModelMapping;
+    public Exception                                        exception;
 }

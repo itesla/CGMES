@@ -2,28 +2,26 @@ package com.powsybl.cgmes.conversion.validation;
 
 import java.util.Map.Entry;
 
-import com.powsybl.cgmes.model.CgmesModel;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping;
-import com.powsybl.cgmes.model.interpretation.InterpretationResult;
-import com.powsybl.cgmes.model.interpretation.InterpretationResult.ValidationData;
-import com.powsybl.cgmes.model.interpretation.ModelInterpretation;
+import com.powsybl.cgmes.interpretation.Interpretation;
+import com.powsybl.cgmes.interpretation.InterpretationResults;
+import com.powsybl.cgmes.interpretation.InterpretationResults.InterpretationAlternativeResults;
+import com.powsybl.cgmes.interpretation.model.cgmes.CgmesModelForInterpretation;
+import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative;
 
-public class BestModelInterpretation extends ModelInterpretation {
+public class BestModelInterpretation extends Interpretation {
 
-    public BestModelInterpretation(CgmesModel model) {
+    public BestModelInterpretation(CgmesModelForInterpretation model) {
         super(model);
     }
 
-    public CgmesEquipmentModelMapping getModelMapping() {
-        InterpretationResult result = getInterpretation();
-        Entry<CgmesEquipmentModelMapping, ValidationData> e = result.validationDataForAllModelMapping.entrySet()
+    public InterpretationAlternative getModelMapping(InterpretationResults result) {
+        Entry<InterpretationAlternative, InterpretationAlternativeResults> e = result.interpretationAlternativeResults().entrySet()
                 .stream().limit(1).findFirst().get();
         return e.getKey();
     }
 
-    public ValidationData getValidationData() {
-        InterpretationResult result = getInterpretation();
-        Entry<CgmesEquipmentModelMapping, ValidationData> e = result.validationDataForAllModelMapping.entrySet()
+    public InterpretationAlternativeResults getValidationData(InterpretationResults result) {
+        Entry<InterpretationAlternative, InterpretationAlternativeResults> e = result.interpretationAlternativeResults().entrySet()
                 .stream().limit(1).findFirst().get();
         return e.getValue();
     }

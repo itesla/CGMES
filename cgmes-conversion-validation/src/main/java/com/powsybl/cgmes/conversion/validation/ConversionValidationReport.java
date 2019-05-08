@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.powsybl.cgmes.conversion.validation.ConversionValidationResult.VerificationData;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping;
+import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative;
 import com.powsybl.commons.io.table.Column;
 import com.powsybl.commons.io.table.CsvTableFormatterFactory;
 import com.powsybl.commons.io.table.TableFormatter;
@@ -83,14 +83,14 @@ public class ConversionValidationReport {
             return conversionValidationResult.exception.getMessage();
         }
 
-        Map<CgmesEquipmentModelMapping, VerificationData> mappingConfigurationData = conversionValidationResult.verificationDataForAllModelMapping;
-        Comparator<Map.Entry<CgmesEquipmentModelMapping, VerificationData>> byFailedCount = (
-                Entry<CgmesEquipmentModelMapping, VerificationData> o1,
-                Entry<CgmesEquipmentModelMapping, VerificationData> o2) -> {
+        Map<InterpretationAlternative, VerificationData> mappingConfigurationData = conversionValidationResult.verificationDataForAllModelMapping;
+        Comparator<Map.Entry<InterpretationAlternative, VerificationData>> byFailedCount = (
+                Entry<InterpretationAlternative, VerificationData> o1,
+                Entry<InterpretationAlternative, VerificationData> o2) -> {
             return Integer.compare(o1.getValue().failedCount(), o2.getValue().failedCount());
         };
 
-        Map<CgmesEquipmentModelMapping, VerificationData> sortedMappingConfigurationData = mappingConfigurationData
+        Map<InterpretationAlternative, VerificationData> sortedMappingConfigurationData = mappingConfigurationData
                 .entrySet().stream().sorted(byFailedCount.reversed())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
                     throw new AssertionError();
@@ -111,14 +111,14 @@ public class ConversionValidationReport {
         return modelReportBuilder.toString();
     }
 
-    private void conversionValidationReport(String model, CgmesEquipmentModelMapping mappingConfiguration,
+    private void conversionValidationReport(String model, InterpretationAlternative mappingConfiguration,
             VerificationData verificationData, StringBuilder modelReportBuilder) throws IOException {
         conversionValidationReportHeaderSection(mappingConfiguration, modelReportBuilder);
         conversionValidationReportFlowSection(verificationData, modelReportBuilder);
         conversionValidationReportBranchEndSection(verificationData, modelReportBuilder);
     }
 
-    private void conversionValidationReportHeaderSection(CgmesEquipmentModelMapping mappingConfiguration,
+    private void conversionValidationReportHeaderSection(InterpretationAlternative mappingConfiguration,
             StringBuilder modelReportBuilder) {
         LOG.debug("----> MAPPING CONFIG {}", mappingConfiguration);
         modelReportBuilder.append(String.format("----> config %s", mappingConfiguration.toString()));

@@ -187,6 +187,9 @@ public class Xfmr3Model {
         double rstep1 = transformer.asDouble("rstep1", 0.0);
         double rls1 = transformer.asDouble("rls1", 0.0);
         double rhs1 = transformer.asDouble("rhs1", 0.0);
+        if (rstep1 > rhs1 || rstep1 < rls1) {
+            rstep1 = rns1;
+        }
         String ratioTapChangerTableName1 = transformer.get("RatioTapChangerTable1");
         PropertyBags ratioTapChangerTable1 = null;
         if (ratioTapChangerTableName1 != null) {
@@ -204,6 +207,9 @@ public class Xfmr3Model {
         double pstep1 = transformer.asDouble("pstep1", 0.0);
         double pls1 = transformer.asDouble("pls1", 0.0);
         double phs1 = transformer.asDouble("phs1", 0.0);
+        if (pstep1 > phs1 || pstep1 < pls1) {
+            pstep1 = pns1;
+        }
         double xStepMin1 = transformer.asDouble("xStepMin1", 0.0);
         double xStepMax1 = transformer.asDouble("xStepMax1", 0.0);
         double pwca1 = transformer.asDouble("pwca1", 0.0);
@@ -232,6 +238,9 @@ public class Xfmr3Model {
         double rstep2 = transformer.asDouble("rstep2", 0.0);
         double rls2 = transformer.asDouble("rls2", 0.0);
         double rhs2 = transformer.asDouble("rhs2", 0.0);
+        if (rstep2 > rhs2 || rstep2 < rls2) {
+            rstep2 = rns2;
+        }
         String ratioTapChangerTableName2 = transformer.get("RatioTapChangerTable2");
         PropertyBags ratioTapChangerTable2 = null;
         if (ratioTapChangerTableName2 != null) {
@@ -249,6 +258,9 @@ public class Xfmr3Model {
         double pstep2 = transformer.asDouble("pstep2", 0.0);
         double pls2 = transformer.asDouble("pls2", 0.0);
         double phs2 = transformer.asDouble("phs2", 0.0);
+        if (pstep2 > phs2 || pstep2 < pls2) {
+            pstep2 = pns2;
+        }
         double xStepMin2 = transformer.asDouble("xStepMin2", 0.0);
         double xStepMax2 = transformer.asDouble("xStepMax2", 0.0);
         double pwca2 = transformer.asDouble("pwca2", 0.0);
@@ -277,6 +289,9 @@ public class Xfmr3Model {
         double rstep3 = transformer.asDouble("rstep3", 0.0);
         double rls3 = transformer.asDouble("rls3", 0.0);
         double rhs3 = transformer.asDouble("rhs3", 0.0);
+        if (rstep3 > rhs3 || rstep3 < rls3) {
+            rstep3 = rns3;
+        }
         String ratioTapChangerTableName3 = transformer.get("RatioTapChangerTable3");
         PropertyBags ratioTapChangerTable3 = null;
         if (ratioTapChangerTableName3 != null) {
@@ -294,6 +309,9 @@ public class Xfmr3Model {
         double pstep3 = transformer.asDouble("pstep3", 0.0);
         double pls3 = transformer.asDouble("pls3", 0.0);
         double phs3 = transformer.asDouble("phs3", 0.0);
+        if (pstep3 > phs3 || pstep3 < pls3) {
+            pstep3 = pns3;
+        }
         double xStepMin3 = transformer.asDouble("xStepMin3", 0.0);
         double xStepMax3 = transformer.asDouble("xStepMax3", 0.0);
         double pwca3 = transformer.asDouble("pwca3", 0.0);

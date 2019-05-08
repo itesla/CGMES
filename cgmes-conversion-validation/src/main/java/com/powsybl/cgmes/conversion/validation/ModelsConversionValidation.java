@@ -1,8 +1,8 @@
 package com.powsybl.cgmes.conversion.validation;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,17 +10,22 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.powsybl.cgmes.catalog.CatalogLocation;
+import com.powsybl.cgmes.catalog.CatalogReview;
 import com.powsybl.cgmes.conversion.validation.ConversionValidationResult.VerificationData;
+import com.powsybl.cgmes.interpretation.model.cgmes.CgmesModelForInterpretation;
+import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative;
 import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.cgmes.model.CgmesModelFactory;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping;
-import com.powsybl.cgmes.model.interpretation.InterpretedModel;
-import com.powsybl.cgmes.tools.Catalog;
+import com.powsybl.cgmes.model.CgmesOnDataSource;
+import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.loadflow.resultscompletion.LoadFlowResultsCompletion;
 import com.powsybl.loadflow.resultscompletion.LoadFlowResultsCompletionParameters;
 import com.powsybl.loadflow.validation.ValidationConfig;
+import com.powsybl.triplestore.api.TripleStore;
+import com.powsybl.triplestore.api.TripleStoreException;
 import com.powsybl.triplestore.api.TripleStoreFactory;
 
 /**
@@ -28,16 +33,10 @@ import com.powsybl.triplestore.api.TripleStoreFactory;
  * @author Marcos de Miguel <demiguelm at aia.es>
  */
 
-public class ModelsConversionValidation extends Catalog {
+public class ModelsConversionValidation extends CatalogReview {
 
-    public ModelsConversionValidation(String sdata) {
-        this(sdata, null);
-    }
-
-    public ModelsConversionValidation(String sdata, String sboundary) {
-        super(sdata);
-        boundary = sboundary == null ? null : Paths.get(sboundary);
-        exceptions = new HashMap<>();
+    public ModelsConversionValidation(CatalogLocation location) {
+        super(location);
     }
 
     public Map<String, ConversionValidationResult> reviewAll(String pattern, ValidationConfig config)
@@ -45,14 +44,15 @@ public class ModelsConversionValidation extends Catalog {
         Map<String, ConversionValidationResult> conversionValidationResult = new HashMap<>();
         reviewAll(pattern, p -> {
             LOG.info("case {}", modelName(p));
-            CgmesModel m = load(p);
-            InterpretedModel interpretedModel = InterpretationForConversionValidation.getInterpretedModel(m);
-            List<CgmesEquipmentModelMapping> mappingConfigs = InterpretationForConversionValidation
-                    .getConfigList(m);
+            CgmesModelConversion m = cgmesModelConversion(p);
+            m.z0Nodes();
+            CgmesModelForInterpretation interpretedModel = InterpretationForConversionValidation
+                    .getCgmesModelForInterpretation(modelName(p), m);
+            List<InterpretationAlternative> mappingConfigs = InterpretationForConversionValidation.getConfigList();
 
             verificationDataForAllModelMapping = new HashMap<>();
 
-            for (CgmesEquipmentModelMapping mappingConfig : mappingConfigs) {
+            for (InterpretationAlternative mappingConfig : mappingConfigs) {
                 CgmesConversion conversion = new CgmesConversion(m, mappingConfig);
                 Network network = conversion.convert();
                 VerificationData verificationData = validateModel(interpretedModel, mappingConfig, network, config);
@@ -64,6 +64,48 @@ public class ModelsConversionValidation extends Catalog {
         return conversionValidationResult;
     }
 
+    public CgmesModelConversion cgmesModelConversion(Path rpath) {
+        String impl = TripleStoreFactory.defaultImplementation();
+        if (location.boundary() == null) {
+            return createCgmesModel(dataSource(location.dataRoot().resolve(rpath)), impl);
+        } else {
+            return createCgmesModel(dataSource(location.dataRoot().resolve(rpath)), dataSource(location.boundary()),
+                    impl);
+        }
+    }
+
+    private CgmesModelConversion createCgmesModel(ReadOnlyDataSource ds, String tripleStoreImpl) {
+        return createCgmesModel(ds, null, tripleStoreImpl);
+    }
+
+    private CgmesModelConversion createCgmesModel(ReadOnlyDataSource ds, ReadOnlyDataSource dsBoundary,
+            String tripleStoreImpl) {
+        CgmesOnDataSource cds = new CgmesOnDataSource(ds);
+        TripleStore tripleStore = TripleStoreFactory.create(tripleStoreImpl);
+        CgmesModelConversion cgmes = new CgmesModelConversion(cds.cimNamespace(), tripleStore);
+        readCgmesModel(cgmes, cds, cds.baseName());
+        // Only try to read boundary data from additional sources if the main data
+        // source does not contain boundary info
+        if (!cgmes.hasBoundary() && dsBoundary != null) {
+            // Read boundary using same baseName of the main data
+            readCgmesModel(cgmes, new CgmesOnDataSource(dsBoundary), cds.baseName());
+        }
+        return cgmes;
+    }
+
+    private void readCgmesModel(CgmesModelConversion cgmes, CgmesOnDataSource cds, String base) {
+        for (String name : cds.names()) {
+            LOG.info("Reading [{}]", name);
+            try (InputStream is = cds.dataSource().newInputStream(name)) {
+                cgmes.read(base, name, is);
+            } catch (IOException e) {
+                String msg = String.format("Reading [%s]", name);
+                LOG.warn(msg);
+                throw new TripleStoreException(msg, e);
+            }
+        }
+    }
+
     private ConversionValidationResult getConversionValidationresult() {
         ConversionValidationResult r = new ConversionValidationResult();
         r.failedCount = failedCount(verificationDataForAllModelMapping);
@@ -71,11 +113,12 @@ public class ModelsConversionValidation extends Catalog {
         return r;
     }
 
-    private int failedCount(Map<CgmesEquipmentModelMapping, VerificationData> verificationDataForAllModelMapping) {
+    private int failedCount(Map<InterpretationAlternative, VerificationData> verificationDataForAllModelMapping) {
         return verificationDataForAllModelMapping.values().stream().mapToInt(vd -> vd.failedCount()).sum();
     }
 
-    private VerificationData validateModel(InterpretedModel interpretedModel, CgmesEquipmentModelMapping mappingConfig,
+    private VerificationData validateModel(CgmesModelForInterpretation interpretedModel,
+            InterpretationAlternative mappingConfig,
             Network network, ValidationConfig config) {
         resetFlows(network);
         computeIidmFlows(network, config.getLoadFlowParameters());
@@ -117,22 +160,7 @@ public class ModelsConversionValidation extends Catalog {
         });
     }
 
-    public Map<String, Exception> getExceptions() {
-        return exceptions;
-    }
-
-    protected CgmesModel load(Path p) {
-        String impl = TripleStoreFactory.defaultImplementation();
-        if (boundary == null) {
-            return CgmesModelFactory.create(dataSource(p), impl);
-        } else {
-            return CgmesModelFactory.create(dataSource(p), dataSource(boundary), impl);
-        }
-    }
-
-    private final Path                                        boundary;
-    private Map<String, Exception>                            exceptions;
-    private Map<CgmesEquipmentModelMapping, VerificationData> verificationDataForAllModelMapping;
-    private static final Logger                               LOG = LoggerFactory
+    private Map<InterpretationAlternative, VerificationData> verificationDataForAllModelMapping;
+    private static final Logger                              LOG = LoggerFactory
             .getLogger(ModelsConversionValidation.class);
 }

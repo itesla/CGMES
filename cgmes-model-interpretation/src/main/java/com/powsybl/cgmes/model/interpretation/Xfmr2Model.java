@@ -78,14 +78,6 @@ public class Xfmr2Model {
         a2 *= ratio0Data.a02;
 
         // admittance
-        LOG.info("ratio2.a {} phase2.a {}", ratio2.a,phase2.a);
-        LOG.info("1/a2 {}", 1 / a2);
-        LOG.info("ratio0Data.a02 {}", ratio0Data.a02);
-        LOG.info("r {} {}", r1 + r2, (r1 + r2) * a2 * a2);
-        LOG.info("x {} {}", x1 + x2, (x1 + x2) * a2 * a2);
-       
-        LOG.info("ysh1 {} {}", ysh1, ysh1.divide(a2 * a2));
-        LOG.info("ysh22 {} {}", ysh2, ysh2.divide(a2 * a2));
         admittanceMatrix.calculateAdmittance(r1 + r2, x1 + x2, a1, phase1.angle, ysh1, a2, phase2.angle, ysh2);
     }
 
@@ -145,6 +137,9 @@ public class Xfmr2Model {
         double rstep1 = transformer.asDouble("rstep1", 0.0);
         double rls1 = transformer.asDouble("rls1", 0.0);
         double rhs1 = transformer.asDouble("rhs1", 0.0);
+        if (rstep1 > rhs1 || rstep1 < rls1) {
+            rstep1 = rns1;
+        }
         String ratioTapChangerTableName1 = transformer.get("RatioTapChangerTable1");
         PropertyBags ratioTapChangerTable1 = null;
         if (ratioTapChangerTableName1 != null) {
@@ -165,6 +160,9 @@ public class Xfmr2Model {
         double pstep1 = transformer.asDouble("pstep1", 0.0);
         double pls1 = transformer.asDouble("pls1", 0.0);
         double phs1 = transformer.asDouble("phs1", 0.0);
+        if (pstep1 > phs1 || pstep1 < pls1) {
+            pstep1 = pns1;
+        }
         double xStepMin1 = transformer.asDouble("xStepMin1", 0.0);
         double xStepMax1 = transformer.asDouble("xStepMax1", 0.0);
         double pwca1 = transformer.asDouble("pwca1", 0.0);
@@ -193,6 +191,9 @@ public class Xfmr2Model {
         double rstep2 = transformer.asDouble("rstep2", 0.0);
         double rls2 = transformer.asDouble("rls2", 0.0);
         double rhs2 = transformer.asDouble("rhs2", 0.0);
+        if (rstep2 > rhs2 || rstep2 < rls2) {
+            rstep2 = rns2;
+        }
         String ratioTapChangerTableName2 = transformer.get("RatioTapChangerTable2");
         PropertyBags ratioTapChangerTable2 = null;
         if (ratioTapChangerTableName2 != null) {
@@ -210,6 +211,9 @@ public class Xfmr2Model {
         double pstep2 = transformer.asDouble("pstep2", 0.0);
         double pls2 = transformer.asDouble("pls2", 0.0);
         double phs2 = transformer.asDouble("phs2", 0.0);
+        if (pstep2 > phs2 || pstep2 < pls2) {
+            pstep2 = pns2;
+        }
         double xStepMin2 = transformer.asDouble("xStepMin2", 0.0);
         double xStepMax2 = transformer.asDouble("xStepMax2", 0.0);
         double pwca2 = transformer.asDouble("pwca2", 0.0);

@@ -1,15 +1,16 @@
 package com.powsybl.cgmes.conversion.validation;
 
 import com.powsybl.cgmes.conversion.Conversion;
+import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative;
+import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative.Xfmr2PhaseAngleClockAlternative;
+import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative.Xfmr3RatioPhaseInterpretationAlternative;
 import com.powsybl.cgmes.model.CgmesModel;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr2PhaseAngleClockAlternative;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping.Xfmr3RatioPhaseMappingAlternative;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.triplestore.api.PropertyBag;
 
 public class CgmesConversion {
 
-    public CgmesConversion(CgmesModel model, CgmesEquipmentModelMapping modelMapping) {
+    public CgmesConversion(CgmesModel model, InterpretationAlternative modelMapping) {
         Conversion.Config config = configureConversion(modelMapping);
         conversion = new Conversion(model, config);
     }
@@ -18,7 +19,7 @@ public class CgmesConversion {
         return conversion.convert();
     }
 
-    private Conversion.Config configureConversion(CgmesEquipmentModelMapping modelMapping) {
+    private Conversion.Config configureConversion(InterpretationAlternative modelMapping) {
         Conversion.Config config = new Conversion.Config();
         config.allowUnsupportedTapChangers();
 
@@ -83,7 +84,7 @@ public class CgmesConversion {
                 break;
         }
 
-        if (modelMapping.getXfmr3RatioPhaseStarBusSide() == Xfmr3RatioPhaseMappingAlternative.NETWORK_SIDE) {
+        if (modelMapping.getXfmr3RatioPhaseStarBusSide() == Xfmr3RatioPhaseInterpretationAlternative.NETWORK_SIDE) {
             config.setXfmr3RatioPhaseNetworkSide(true);
         } else {
             config.setXfmr3RatioPhaseNetworkSide(false);
@@ -112,7 +113,7 @@ public class CgmesConversion {
                 break;
         }
 
-        if (modelMapping.getXfmr3Ratio0StarBusSide() == Xfmr3RatioPhaseMappingAlternative.NETWORK_SIDE) {
+        if (modelMapping.getXfmr3Ratio0StarBusSide() == Xfmr3RatioPhaseInterpretationAlternative.NETWORK_SIDE) {
             config.setXfmr3Ratio0NetworkSide(true);
         } else {
             config.setXfmr3Ratio0NetworkSide(false);

@@ -1,14 +1,14 @@
 package com.powsybl.cgmes.conversion.validation;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
+import com.powsybl.cgmes.interpretation.InterpretationAlternatives;
+import com.powsybl.cgmes.interpretation.InterpretedComputedFlow;
+import com.powsybl.cgmes.interpretation.model.cgmes.CgmesLine;
+import com.powsybl.cgmes.interpretation.model.cgmes.CgmesModelForInterpretation;
+import com.powsybl.cgmes.interpretation.model.cgmes.CgmesTransformer;
+import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative;
 import com.powsybl.cgmes.model.CgmesModel;
-import com.powsybl.cgmes.model.interpretation.CgmesEquipmentModelMapping;
-import com.powsybl.cgmes.model.interpretation.FlowCalculator;
-import com.powsybl.cgmes.model.interpretation.InterpretedModel;
-import com.powsybl.cgmes.model.interpretation.ModelInterpretation;
 import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.ThreeWindingsTransformer;
 import com.powsybl.triplestore.api.PropertyBag;
@@ -18,10 +18,9 @@ public final class InterpretationForConversionValidation {
     private InterpretationForConversionValidation() {
     }
 
-    public static InterpretedModel getInterpretedModel(CgmesModel m) {
+    public static CgmesModelForInterpretation getCgmesModelForInterpretation(String name, CgmesModel m) {
         try {
-            InterpretedModel interpretedModel = new InterpretedModel(m);
-            interpretedModel.loadModel();
+            CgmesModelForInterpretation interpretedModel = new CgmesModelForInterpretation(name, m);
             return interpretedModel;
         } catch (Exception x) {
             return null;
@@ -30,113 +29,83 @@ public final class InterpretationForConversionValidation {
 
     // JAM_TODO Eliminar la necesidad de crear un ModelInterpretation para definir la lista de
     // configuraciones
-    public static List<CgmesEquipmentModelMapping> getConfigList(CgmesModel m) {
-        ModelInterpretation modelInterpretation = new ModelInterpretation(m);
-
-        List<CgmesEquipmentModelMapping> configs = new ArrayList<>();
-        modelInterpretation.addModelMappingConfigurations(configs);
-        return configs;
+    public static List<InterpretationAlternative> getConfigList() {
+        return InterpretationAlternatives.configured();
     }
 
-    public static FlowPQ danglingLineFlow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping config,
+    public static FlowPQ danglingLineFlow(CgmesModelForInterpretation interpretedModel, InterpretationAlternative mappingConfig,
             String id) {
 
-        PropertyBag line = interpretedModel.getLineParameters(id);
-        CgmesModel model = interpretedModel.getCgmes();
+        CgmesLine line = interpretedModel.getLine(id);
+        CgmesModel model = interpretedModel.cgmes();
         for (PropertyBag node : model.boundaryNodes()) {
-            if (node.getId("Node").equals(line.get("terminal1"))) {
-                return lineFlow(interpretedModel, config, id, Branch.Side.TWO);
-            } else if (node.getId("Node").equals(line.get("terminal2"))) {
-                return lineFlow(interpretedModel, config, id, Branch.Side.ONE);
+            if (node.getId("Node").equals(line.nodeId1())) {
+                return lineFlow(interpretedModel, mappingConfig, id, Branch.Side.TWO);
+            } else if (node.getId("Node").equals(line.nodeId2())) {
+                return lineFlow(interpretedModel, mappingConfig, id, Branch.Side.ONE);
             }
         }
         return null;
     }
 
-    public static FlowPQ lineFlow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping config, String id,
+    public static FlowPQ lineFlow(CgmesModelForInterpretation interpretedModel, InterpretationAlternative mappingConfig, String id,
             Branch.Side side) {
 
-        FlowCalculator calcFlow = new FlowCalculator(interpretedModel);
-        PropertyBag line = interpretedModel.getLineParameters(id);
-        PropertyBag node1 = interpretedModel
-                .getNodeParameters(line.get("terminal1"));
-        Objects.requireNonNull(node1, "node1 null in line");
-        PropertyBag node2 = interpretedModel
-                .getNodeParameters(line.get("terminal2"));
-        Objects.requireNonNull(node2, "node2 null in line");
-
         String n;
+        CgmesLine line = interpretedModel.getLine(id);
         if (side == Branch.Side.ONE) {
-            n = line.get("terminal1");
+            n = line.nodeId1();
         } else {
-            n = line.get("terminal2");
+            n = line.nodeId2();
         }
-        calcFlow.forLine(n, node1, node2, line, config);
+        InterpretedComputedFlow calcFlow = InterpretedComputedFlow.forEquipment(id, n, mappingConfig, interpretedModel);
 
         FlowPQ flowPQ = new FlowPQ();
-        flowPQ.p = calcFlow.getP();
-        flowPQ.q = calcFlow.getQ();
-        flowPQ.calculated = calcFlow.getCalculated();
+        flowPQ.p = calcFlow.p();
+        flowPQ.q = calcFlow.q();
+        flowPQ.calculated = calcFlow.isCalculated();
 
         return flowPQ;
     }
 
-    public static FlowPQ xfmr2Flow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping config, String id,
+    public static FlowPQ xfmr2Flow(CgmesModelForInterpretation interpretedModel, InterpretationAlternative mappingConfig, String id,
             Branch.Side side) {
 
-        FlowCalculator calcFlow = new FlowCalculator(interpretedModel);
-        PropertyBag transformer = interpretedModel.getTransformerParameters(id);
-        PropertyBag node1 = interpretedModel
-                .getNodeParameters(transformer.get("terminal1"));
-        Objects.requireNonNull(node1, "node1 null in transformer");
-        PropertyBag node2 = interpretedModel
-                .getNodeParameters(transformer.get("terminal2"));
-        Objects.requireNonNull(node2, "node2 null in transformer");
-
         String n;
+        CgmesTransformer transformer = interpretedModel.getTransformer(id);
         if (side == Branch.Side.ONE) {
-            n = transformer.get("terminal1");
+            n = transformer.end1().nodeId();
         } else {
-            n = transformer.get("terminal2");
+            n = transformer.end2().nodeId();
         }
-        calcFlow.forTwoWindingTransformer(n, node1, node2, transformer, config);
+        InterpretedComputedFlow calcFlow = InterpretedComputedFlow.forEquipment(id, n, mappingConfig, interpretedModel);
 
         FlowPQ flowPQ = new FlowPQ();
-        flowPQ.p = calcFlow.getP();
-        flowPQ.q = calcFlow.getQ();
-        flowPQ.calculated = calcFlow.getCalculated();
+        flowPQ.p = calcFlow.p();
+        flowPQ.q = calcFlow.q();
+        flowPQ.calculated = calcFlow.isCalculated();
 
         return flowPQ;
     }
 
-    public static FlowPQ xfmr3Flow(InterpretedModel interpretedModel, CgmesEquipmentModelMapping config, String id,
+    public static FlowPQ xfmr3Flow(CgmesModelForInterpretation interpretedModel, InterpretationAlternative mappingConfig, String id,
             ThreeWindingsTransformer.Side side) {
 
-        FlowCalculator calcFlow = new FlowCalculator(interpretedModel);
-        PropertyBag transformer = interpretedModel.getTransformerParameters(id);
-        PropertyBag node1 = interpretedModel
-                .getNodeParameters(transformer.get("terminal1"));
-        Objects.requireNonNull(node1, "node1 null in transformer");
-        PropertyBag node2 = interpretedModel
-                .getNodeParameters(transformer.get("terminal2"));
-        Objects.requireNonNull(node2, "node2 null in transformer");
-        PropertyBag node3 = interpretedModel
-                .getNodeParameters(transformer.get("terminal3"));
-
         String n;
+        CgmesTransformer transformer = interpretedModel.getTransformer(id);
         if (side == ThreeWindingsTransformer.Side.ONE) {
-            n = transformer.get("terminal1");
+            n = transformer.end1().nodeId();
         } else if (side == ThreeWindingsTransformer.Side.TWO) {
-            n = transformer.get("terminal2");
+            n = transformer.end2().nodeId();
         } else {
-            n = transformer.get("terminal3");
+            n = transformer.end3().nodeId();
         }
-        calcFlow.forThreeWindingTransformer(n, node1, node2, node3, transformer, config);
+        InterpretedComputedFlow calcFlow = InterpretedComputedFlow.forEquipment(id, n, mappingConfig, interpretedModel);
 
         FlowPQ flowPQ = new FlowPQ();
-        flowPQ.p = calcFlow.getP();
-        flowPQ.q = calcFlow.getQ();
-        flowPQ.calculated = calcFlow.getCalculated();
+        flowPQ.p = calcFlow.p();
+        flowPQ.q = calcFlow.q();
+        flowPQ.calculated = calcFlow.isCalculated();
 
         return flowPQ;
     }
