@@ -15,8 +15,6 @@ import com.powsybl.cgmes.catalog.CatalogReview;
 import com.powsybl.cgmes.conversion.validation.ConversionValidationResult.VerificationData;
 import com.powsybl.cgmes.interpretation.model.cgmes.CgmesModelForInterpretation;
 import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative;
-import com.powsybl.cgmes.model.CgmesModel;
-import com.powsybl.cgmes.model.CgmesModelFactory;
 import com.powsybl.cgmes.model.CgmesOnDataSource;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.iidm.network.Network;
@@ -130,7 +128,8 @@ public class ModelsConversionValidation extends CatalogReview {
         LoadFlowResultsCompletionParameters p = new LoadFlowResultsCompletionParameters(
                 LoadFlowResultsCompletionParameters.EPSILON_X_DEFAULT,
                 LoadFlowResultsCompletionParameters.APPLY_REACTANCE_CORRECTION_DEFAULT,
-                LoadFlowResultsCompletionParameters.Z0_THRESHOLD_DIFF_VOLTAGE_ANGLE);
+                LoadFlowResultsCompletionParameters.Z0_THRESHOLD_DIFF_VOLTAGE_ANGLE,
+                true);
         LoadFlowResultsCompletion lf = new LoadFlowResultsCompletion(p, lfparams);
         try {
             lf.run(network, null);

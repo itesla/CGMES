@@ -25,7 +25,7 @@ public class CgmesModelConversion extends CgmesModelTripleStore {
         topologicalNodes = new HashMap<>();
         super.topologicalNodes().forEach(tn -> topologicalNodes.put(tn.getId("TopologicalNode"), tn));
 
-        CgmesModelForInterpretation modelForInterpretation = new CgmesModelForInterpretation("topological", this);
+        CgmesModelForInterpretation modelForInterpretation = new CgmesModelForInterpretation("topological", this, true);
         Set<CgmesZ0Node> z0Nodes = modelForInterpretation.getZ0Nodes();
         z0Nodes.forEach(z0Node -> {
             if (z0Node.nodeIds().size() < 2) {

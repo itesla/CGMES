@@ -20,7 +20,7 @@ public final class InterpretationForConversionValidation {
 
     public static CgmesModelForInterpretation getCgmesModelForInterpretation(String name, CgmesModel m) {
         try {
-            CgmesModelForInterpretation interpretedModel = new CgmesModelForInterpretation(name, m);
+            CgmesModelForInterpretation interpretedModel = new CgmesModelForInterpretation(name, m, true);
             return interpretedModel;
         } catch (Exception x) {
             return null;

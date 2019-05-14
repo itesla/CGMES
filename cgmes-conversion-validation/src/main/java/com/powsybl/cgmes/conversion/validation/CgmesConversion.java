@@ -6,7 +6,6 @@ import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternat
 import com.powsybl.cgmes.interpretation.model.interpreted.InterpretationAlternative.Xfmr3RatioPhaseInterpretationAlternative;
 import com.powsybl.cgmes.model.CgmesModel;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.triplestore.api.PropertyBag;
 
 public class CgmesConversion {
 
@@ -113,10 +112,22 @@ public class CgmesConversion {
                 break;
         }
 
-        if (modelMapping.getXfmr3Ratio0StarBusSide() == Xfmr3RatioPhaseInterpretationAlternative.NETWORK_SIDE) {
-            config.setXfmr3Ratio0NetworkSide(true);
-        } else {
-            config.setXfmr3Ratio0NetworkSide(false);
+        switch (modelMapping.getXfmr3Ratio0Side()) {
+            case STAR_BUS_SIDE:
+                config.setXfmr3Ratio0StarBusSide(true);
+                break;
+            case NETWORK_SIDE:
+                config.setXfmr3Ratio0NetworkSide(true);
+                break;
+            case END1:
+                config.setXfmr3Ratio0End1(true);
+                break;
+            case END2:
+                config.setXfmr3Ratio0End2(true);
+                break;
+            case END3:
+                config.setXfmr3Ratio0End3(true);
+                break;
         }
 
         return config;
