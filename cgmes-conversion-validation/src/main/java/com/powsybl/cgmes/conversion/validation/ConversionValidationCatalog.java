@@ -31,9 +31,9 @@ import com.powsybl.triplestore.api.TripleStoreFactory;
  * @author Marcos de Miguel <demiguelm at aia.es>
  */
 
-public class ModelsConversionValidation extends CatalogReview {
+public class ConversionValidationCatalog extends CatalogReview {
 
-    public ModelsConversionValidation(CatalogLocation location) {
+    public ConversionValidationCatalog(CatalogLocation location) {
         super(location);
     }
 
@@ -161,5 +161,5 @@ public class ModelsConversionValidation extends CatalogReview {
 
     private Map<InterpretationAlternative, VerificationData> verificationDataForAllModelMapping;
     private static final Logger                              LOG = LoggerFactory
-            .getLogger(ModelsConversionValidation.class);
+            .getLogger(ConversionValidationCatalog.class);
 }
