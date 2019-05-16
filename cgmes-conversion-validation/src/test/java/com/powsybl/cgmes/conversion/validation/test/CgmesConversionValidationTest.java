@@ -17,6 +17,7 @@ import com.powsybl.cgmes.conformity.test.CgmesConformity1Catalog;
 import com.powsybl.cgmes.conversion.validation.CgmesModelConversion;
 import com.powsybl.cgmes.conversion.validation.ConversionValidationResult;
 import com.powsybl.cgmes.model.CgmesOnDataSource;
+import com.powsybl.cgmes.model.test.TestGridModel;
 import com.powsybl.commons.config.InMemoryPlatformConfig;
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import com.powsybl.loadflow.LoadFlowParameters;
@@ -34,9 +35,47 @@ public class CgmesConversionValidationTest {
     }
 
     @Test
-    public void microGridBaseCaseAssembled() throws IOException {
+    public void microGridBaseCaseBE() throws IOException {
+        test(catalog.microGridBaseCaseBE(), "microGridBaseCaseBE");
+    }
 
-        ReadOnlyDataSource ds = catalog.microGridBaseCaseAssembled().dataSource();
+    @Test
+    public void microGridBaseCaseNL() throws IOException {
+        test(catalog.microGridBaseCaseNL(), "microGridBaseCaseNL");
+    }
+
+    @Test
+    public void microGridBaseCaseAssembled() throws IOException {
+        test(catalog.microGridBaseCaseAssembled(), "microGridBaseCaseAssembled");
+    }
+
+    @Test
+    public void microGridType4BE() throws IOException {
+        test(catalog.microGridType4BE(), "microGridType4BE");
+    }
+
+    @Test
+    public void miniBusBranch() throws IOException {
+        test(catalog.miniBusBranch(), "miniBusBranch");
+    }
+
+    @Test
+    public void miniNodeBreaker() throws IOException {
+        test(catalog.miniNodeBreaker(), "miniNodeBreaker");
+    }
+
+    @Test
+    public void smallBusBranch() throws IOException {
+        test(catalog.smallBusBranch(), "smallBusBranch");
+    }
+
+    @Test
+    public void smallNodeBreaker() throws IOException {
+        test(catalog.smallNodeBreaker(), "smallNodeBreaker");
+    }
+
+    private void test(TestGridModel testGridModel, String modelName) throws IOException {
+        ReadOnlyDataSource ds = testGridModel.dataSource();
         String impl = TripleStoreFactory.defaultImplementation();
         double threshold = 0.01;
         try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
@@ -45,7 +84,7 @@ public class CgmesConversionValidationTest {
             CgmesModelConversion model = createCgmesModel(ds, impl);
             model.z0Nodes();
             ConversionValidationResult conversionValidationResult = new CgmesConversionValidationTester(model)
-                .test("microGridBaseCaseAssembled", config);
+                .test(modelName, config);
             assertFalse(getFailed(conversionValidationResult));
         }
     }
