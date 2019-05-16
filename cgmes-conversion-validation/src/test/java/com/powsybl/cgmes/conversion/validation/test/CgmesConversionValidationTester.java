@@ -60,17 +60,17 @@ public class CgmesConversionValidationTester {
             InterpretationAlternative mappingConfig,
             Network network, ValidationConfig config) {
         resetFlows(network);
-        Z0LineChecker z0checker = computeIidmFlows(network, config.getLoadFlowParameters());
+        Z0LineChecker z0checker = computeIidmFlows(network, config.getLoadFlowParameters(), mappingConfig.isLineRatio0());
 
         return ModelConversionValidation.validate(interpretedModel, mappingConfig, network, z0checker);
     }
 
-    private Z0LineChecker computeIidmFlows(Network network, LoadFlowParameters lfparams) {
+    private Z0LineChecker computeIidmFlows(Network network, LoadFlowParameters lfparams, boolean structuralRatioLineOn) {
         LoadFlowResultsCompletionParameters p = new LoadFlowResultsCompletionParameters(
                 LoadFlowResultsCompletionParameters.EPSILON_X_DEFAULT,
                 LoadFlowResultsCompletionParameters.APPLY_REACTANCE_CORRECTION_DEFAULT,
                 LoadFlowResultsCompletionParameters.Z0_THRESHOLD_DIFF_VOLTAGE_ANGLE,
-                true);
+                structuralRatioLineOn);
         LoadFlowResultsCompletion lf = new LoadFlowResultsCompletion(p, lfparams);
         try {
             lf.run(network, null);
