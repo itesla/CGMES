@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Terminal;
 import com.powsybl.iidm.network.ThreeWindingsTransformer;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
+import com.powsybl.loadflow.resultscompletion.z0flows.Z0LineChecker;
 
 /**
  * @author José Antonio Marqués <marquesja at aia.es>
@@ -25,7 +26,7 @@ public final class ModelConversionValidation {
     }
 
     public static VerificationData validate(CgmesModelForInterpretation interpretedModel, InterpretationAlternative mappingConfig,
-            Network network) {
+            Network network, Z0LineChecker z0checker) {
 
         VerificationData verificationData = new VerificationData();
         Map<String, FlowData> flowDataMap = verificationData.getFlowData();
@@ -33,7 +34,7 @@ public final class ModelConversionValidation {
         // Flows validation
         network.getLineStream().forEach(line -> {
             EndData2 endData = lineFlow(interpretedModel,
-                    mappingConfig, network, line);
+                    mappingConfig, network, z0checker, line);
             if (endData == null) {
                 return;
             }
@@ -80,9 +81,13 @@ public final class ModelConversionValidation {
     }
 
     private static EndData2 lineFlow(CgmesModelForInterpretation interpretedModel, InterpretationAlternative mappingConfig,
-            Network network, Line line) {
+            Network network, Z0LineChecker z0checker, Line line) {
 
         if (interpretedModel.getLine(line.getId()) == null) {
+            return null;
+        }
+
+        if (z0checker.isZ0(line)) {
             return null;
         }
 

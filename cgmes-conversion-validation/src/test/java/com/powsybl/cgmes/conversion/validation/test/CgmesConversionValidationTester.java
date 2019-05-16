@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.loadflow.resultscompletion.LoadFlowResultsCompletion;
 import com.powsybl.loadflow.resultscompletion.LoadFlowResultsCompletionParameters;
+import com.powsybl.loadflow.resultscompletion.z0flows.Z0LineChecker;
 import com.powsybl.loadflow.validation.ValidationConfig;
 
 public class CgmesConversionValidationTester {
@@ -59,12 +60,12 @@ public class CgmesConversionValidationTester {
             InterpretationAlternative mappingConfig,
             Network network, ValidationConfig config) {
         resetFlows(network);
-        computeIidmFlows(network, config.getLoadFlowParameters());
+        Z0LineChecker z0checker = computeIidmFlows(network, config.getLoadFlowParameters());
 
-        return ModelConversionValidation.validate(interpretedModel, mappingConfig, network);
+        return ModelConversionValidation.validate(interpretedModel, mappingConfig, network, z0checker);
     }
 
-    private void computeIidmFlows(Network network, LoadFlowParameters lfparams) {
+    private Z0LineChecker computeIidmFlows(Network network, LoadFlowParameters lfparams) {
         LoadFlowResultsCompletionParameters p = new LoadFlowResultsCompletionParameters(
                 LoadFlowResultsCompletionParameters.EPSILON_X_DEFAULT,
                 LoadFlowResultsCompletionParameters.APPLY_REACTANCE_CORRECTION_DEFAULT,
@@ -76,6 +77,7 @@ public class CgmesConversionValidationTester {
         } catch (Exception e) {
             LOG.error("computeFlows, error {}", e.getMessage());
         }
+        return lf.z0checker();
     }
 
     private void resetFlows(Network network) {
